@@ -2,7 +2,14 @@ import React, { useState } from "react";
 const AuthTokenBox = (props) => {
   const [value, setValue] = useState("");
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <text>AuthToken</text>
       <input
         required="required"

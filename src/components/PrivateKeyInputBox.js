@@ -2,7 +2,14 @@ import React, { useState } from "react";
 const PKBox = (props) => {
   const [value, setValue] = useState("");
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <text>Private Key</text>
       <input
         required="required"

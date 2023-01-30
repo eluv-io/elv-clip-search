@@ -2,8 +2,15 @@ import React, { useState } from "react";
 const SearchBox = (props) => {
   const [value, setValue] = useState("");
   return (
-    <div>
-      <text>Input search phrase</text>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <text>Search phrase</text>
       <input
         required="required"
         type="text"

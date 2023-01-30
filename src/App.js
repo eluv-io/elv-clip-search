@@ -57,7 +57,17 @@ const App = () => {
   };
   return (
     <div className="container">
-      <h1 className="mt-3">Elv ML Clip Search</h1>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <h1 className="mt-3">Elv ML Clip Search</h1>
+      </div>
+
       <div className="row mt-3">
         <PKBox
           handleSubmitClick={(txt) => {
