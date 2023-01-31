@@ -16,6 +16,7 @@ const App = () => {
   const [authToken, setAuthToken] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResopnse] = useState([]);
+  const [haveRes, setHaveRes] = useState(false);
   const getClient = async ({ pk }) => {
     var client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
@@ -51,6 +52,7 @@ const App = () => {
   };
   const curl = async (url) => {
     const res = await axios.get(url);
+    setHaveRes(true);
     return res;
   };
   return (
@@ -70,6 +72,7 @@ const App = () => {
         <PKBox
           handleSubmitClick={(txt) => {
             console.log(txt);
+            setHaveRes(false);
             setPK(txt);
           }}
         />
@@ -78,6 +81,7 @@ const App = () => {
         <ObjectInfoBox
           handleSubmitClick={(txt) => {
             console.log(txt);
+            setHaveRes(false);
             setObjId(txt);
           }}
         />
@@ -86,52 +90,122 @@ const App = () => {
         <SearchBox
           handleSubmitClick={(txt) => {
             console.log(txt);
+            setHaveRes(false);
             setSearch(txt);
           }}
         />
       </div>
-      <div className="row mt-3">
-        <span>PK: {pk}</span>
-        <span>Object txt: {objId}</span>
-        <span>Search txt: {search}</span>
-        <textarea value={url} readOnly></textarea>
-      </div>
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={() => {
-          genUrl().then((url) => {
-            curl(url)
-              .then((res) => {
-                // setResopnse(res["data"]["contents"]);
-                console.log(res["data"]["contents"]);
-                setResopnse(res["data"]["contents"]);
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-          });
-        }}
-      >
-        Let's go
-      </button>
-      <div
-        style={{
-          backgroundColor: "gray",
-          margin: 10,
-          height: 400,
-          width: "95%",
-          // flexDirection: "column",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <textarea
-          style={{ height: "90%", width: "95%" }}
-          value={JSON.stringify(response, null, 2)}
-        ></textarea>
-      </div>
+      {!haveRes ? (
+        <>
+          <div
+            style={{
+              margin: 10,
+              flexDirection: "column",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "lightgray",
+                borderRadius: 10,
+                margin: 10,
+                width: "100%",
+                flexDirection: "column",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  margin: 10,
+                  width: "80%",
+                  flexDirection: "row",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <text style={{ width: "30%" }}>PK:</text>
+                <text style={{ width: "70%" }}>{pk}</text>
+              </div>
+              <div
+                style={{
+                  margin: 10,
+                  width: "80%",
+                  flexDirection: "row",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <text style={{ width: "30%" }}>Object txt:</text>
+                <text style={{ width: "70%" }}>{objId}</text>
+              </div>
+              <div
+                style={{
+                  margin: 10,
+                  width: "80%",
+                  flexDirection: "row",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <text style={{ width: "30%" }}>Search txt:</text>
+                <text style={{ width: "70%" }}>{search}</text>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                genUrl().then((url) => {
+                  curl(url)
+                    .then((res) => {
+                      // setResopnse(res["data"]["contents"]);
+                      console.log(res["data"]["contents"]);
+                      setResopnse(res["data"]["contents"]);
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                    });
+                });
+              }}
+            >
+              Let's go
+            </button>
+          </div>
+        </>
+      ) : (
+        <div
+          style={{
+            backgroundColor: "lightgray",
+            borderRadius: 10,
+            margin: 10,
+            height: 600,
+            flexDirection: "column",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <text>Search url</text>
+          <textarea
+            value={url}
+            style={{ height: "30%", width: "95%", margin: "1%" }}
+            readOnly
+          ></textarea>
+          <text>returned content</text>
+          <textarea
+            style={{ height: "60%", width: "95%", margin: "1%" }}
+            value={JSON.stringify(response, null, 2)}
+            readOnly
+          ></textarea>
+        </div>
+      )}
 
       <div>
         {response.map((clip) => {
@@ -145,31 +219,6 @@ const App = () => {
             ></ClipRes>
           );
         })}
-        {/* {response.length > 0 ? (
-          <ClipRes
-            clipInfo={{
-              hash: "hq__5HRjVJf2fmjCNQxALJdG6DkU9GM91SkeXSqRXiuj4AE6JStHtSZmcn87ciagZamH6V7GJcwxHd",
-              id: "iq__bQt9d3PwJtUzLjowrwEYyA5ryRh",
-              qlib_id: "ilib2dh1ywazUPz4caGCkDhtgGRyztTi",
-              type: "hq__4vPghs9YV2vQcEJ5m3gah2VbNFxkmwGxU7u33EBc8yLb6DhhSAcwSJwHizE1wfFQUa1nKvKkFG",
-              meta: {
-                public: {
-                  asset_metadata: {
-                    title: "MASK OF ZORRO, THE",
-                  },
-                },
-              },
-              url: "/q/hq__5HRjVJf2fmjCNQxALJdG6DkU9GM91SkeXSqRXiuj4AE6JStHtSZmcn87ciagZamH6V7GJcwxHd/rep/playout/clips/options.json?clip_start=806.723000&clip_end=844.886000&ignore_trimming=true",
-              image_url:
-                "/q/hq__5HRjVJf2fmjCNQxALJdG6DkU9GM91SkeXSqRXiuj4AE6JStHtSZmcn87ciagZamH6V7GJcwxHd/rep/frame/clips/video?t=806.723000&ignore_trimming=true",
-              start: "13m26.723s",
-              end: "14m4.886s",
-              start_time: 806723,
-              end_time: 844886,
-              source_count: 1,
-            }}
-          ></ClipRes>
-        ) : null} */}
       </div>
     </div>
   );
