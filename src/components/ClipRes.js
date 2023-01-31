@@ -15,22 +15,6 @@ const ClipRes = (props) => {
         height: 400,
       }}
     >
-      {/* <div
-        style={{
-          width: "20%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          //   objectFit: "contain",
-        }}
-      >
-        <img
-          //   src={`${props.baseUrl}/qlibs/${props.clipInfo.qlib_id}${props.clipInfo.image_url}/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${props.token}`}
-          src={placeholdImage}
-          alt="poster"
-          style={{ width: "80%" }}
-        ></img>
-      </div> */}
       <div
         style={{
           display: " flex",
@@ -42,59 +26,39 @@ const ClipRes = (props) => {
           justifyContent: "center",
         }}
       >
-        <div style={{ flexDirection: "row", width: "80%" }}>
+        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
           <text>title: </text>
           <text>{props.clipInfo.meta.public.asset_metadata.title}</text>
         </div>
-        {/* <div style={{ flexDirection: "row", width: "80%" }}>
-          <text>hash: </text>
-          <text>{props.clipInfo.hash}</text>
-        </div> */}
-        <div style={{ flexDirection: "row", width: "80%" }}>
-          <text>qlibid: </text>
+        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
+          <text>library id: </text>
           <text>{props.clipInfo.qlib_id}</text>
         </div>
-        <div style={{ flexDirection: "row", width: "80%" }}>
-          <text>id: </text>
+        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
+          <text>content id: </text>
           <text>{props.clipInfo.id}</text>
         </div>
-        <div style={{ flexDirection: "row", width: "80%" }}>
+        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
           <text>start_time: </text>
-          <text>{props.clipInfo.start_time}</text>
+          <text>{props.clipInfo.start}</text>
         </div>
-        <div style={{ flexDirection: "row", width: "80%" }}>
+        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
           <text>end_time: </text>
-          <text>{props.clipInfo.end_time}</text>
+          <text>{props.clipInfo.end}</text>
         </div>
         <div
           style={{
-            height: "20%",
             width: "80%",
+            height: "50%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
+          <text>playout url</text>
           <textarea
-            value={props.clipInfo.image_url}
-            style={{ heigth: "100%", width: "100%" }}
-            readOnly
-          ></textarea>
-        </div>
-        <div
-          style={{
-            height: "20%",
-            width: "80%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* <text>{props.clipInfo.url}</text>
-           */}
-          <textarea
+            name="playout url"
             value={`${props.baseUrl}/qlibs/${props.libId}/q/${
               props.clipInfo.hash
             }/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${
@@ -102,19 +66,15 @@ const ClipRes = (props) => {
             }&&resolve=false&clip_start=${
               props.clipInfo.start_time / 1000
             }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
-            style={{ heigth: "100%", width: "100%" }}
+            style={{ height: "100%", width: "100%" }}
             readOnly
           ></textarea>
         </div>
       </div>
-      {/* <div style={{ width: "30%", flexDirection: "column" }}>
-        <text>Playout url</text>
-        <textarea>{props.clipInfo.url}</textarea>
-      </div> */}
       <div
         style={{
-          width: "40%",
-          heigtt: "100%",
+          width: "55%",
+          height: "100%",
           flexDirection: "colomn",
           margin: "2%",
           display: "flex",

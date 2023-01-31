@@ -43,9 +43,9 @@ const App = () => {
     });
     console.log(token);
     setAuthToken(token);
-    const searchTxt = "%22" + search.trim().split(" ").join("%20") + "%22";
-    console.log(searchTxt);
-    const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${searchTxt})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
+    // const searchTxt = "%22" + search.trim().split(" ").join("%20") + "%22";
+
+    const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
     console.log(url);
     setUrl(url);
     return url;
@@ -91,7 +91,7 @@ const App = () => {
           handleSubmitClick={(txt) => {
             console.log(txt);
             setHaveRes(false);
-            setSearch(txt);
+            setSearch(encodeURI(txt.trim()));
           }}
         />
       </div>
