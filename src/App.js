@@ -1,21 +1,19 @@
 import React, { useState } from "react";
 import { ElvClient } from "@eluvio/elv-client-js/dist/ElvClient-min.js";
+import AuthorizationClient from "@eluvio/elv-client-js/src/AuthorizationClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import SearchBox from "./components/SearchBox";
 import PKBox from "./components/PrivateKeyInputBox";
-import AuthTokenBox from "./components/AuthTokenBox";
+// import AuthTokenBox from "./components/AuthTokenBox";
 import ObjectInfoBox from "./components/ObjectInfo";
 import ClipRes from "./components/ClipRes";
 const App = () => {
-  const [value, setValue] = useState("I love you");
+  const [search, setSearch] = useState("");
   const [pk, setPK] = useState();
-  const [objId, setObjId] = useState("iq__2DTx9v7gYNFhYa2uNWEtT5qG2Jn3");
+  const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
-  const [authToken, setAuthToken] = useState(
-    "eyJxc3BhY2VfaWQiOiJpc3BjMlJVb1JlOWVSMnYzM0hBUlFVVlNwMXJZWHp3MSIsImFkZHIiOiIweDlkNzE4NmIxOGVjYmI1NzUxNzE5Nzk1NDE1ZTliODE0NmUxYmVkMmIiLCJ0eF9pZCI6IjB4MmU1NDNlZDdlMzMwNDVmZDJhMmQ2NjdjMzRmMjQ5MDkwZDczOTY2MTViYmU3YmNlMTY0NmMwYWJlYTZhN2ViMSIsInFsaWJfaWQiOiJpbGliNEwzTm1UR2kxaVpYclp2cUxUeEpybk5UczI0RyJ9.RVMyNTZLXzgyYWR4Z2VxOW94alRkMmJwVk1TdWhkTnR5OHNSRFRSSEdGMk03dHF6YmZXTWVMOW5td0FVcG5HbXdVeWV6Qk1iYzhlTjhGTnJNN3A1TkxrckZqWDZOQVRW"
-  );
-  // const [signedToken, setSignedToken] = useState("");
+  const [authToken, setAuthToken] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResopnse] = useState([]);
   const getClient = async ({ pk }) => {
@@ -27,26 +25,26 @@ const App = () => {
     client.SetSigner({ signer });
     return client;
   };
-  const getToken = async ({ client, libId, objId }) => {
-    const authToken = await client.CreateSignedToken({
-      libraryId: libId,
-      objectId: objId,
-    });
-
-    return authToken;
-  };
   const genUrl = async () => {
     const client = await getClient({ pk });
     const libId = await client.ContentObjectLibraryId({
       objectId: objId,
     });
     setLibId(libId);
-    const token = await getToken({ client, libId, objId });
+    console.log(libId);
+    const authClient = new AuthorizationClient({
+      client,
+      contentSpaceId: "ispc2RUoRe9eR2v33HARQUVSp1rYXzw1",
+    });
+    const token = await authClient.AuthorizationToken({
+      libraryId: libId,
+      objectId: objId,
+    });
     console.log(token);
-    // setSignedToken(token);
-    const searchTxt = "%22" + value.trim().split(" ").join("%20") + "%22";
+    setAuthToken(token);
+    const searchTxt = "%22" + search.trim().split(" ").join("%20") + "%22";
     console.log(searchTxt);
-    const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${searchTxt})&authorization=${authToken}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
+    const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${searchTxt})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
     console.log(url);
     setUrl(url);
     return url;
@@ -77,14 +75,6 @@ const App = () => {
         />
       </div>
       <div className="row mt-3">
-        <AuthTokenBox
-          handleSubmitClick={(txt) => {
-            console.log(txt);
-            setAuthToken(txt);
-          }}
-        />
-      </div>
-      <div className="row mt-3">
         <ObjectInfoBox
           handleSubmitClick={(txt) => {
             console.log(txt);
@@ -96,16 +86,15 @@ const App = () => {
         <SearchBox
           handleSubmitClick={(txt) => {
             console.log(txt);
-            setValue(txt);
+            setSearch(txt);
           }}
         />
       </div>
       <div className="row mt-3">
-        <span>Search txt: {value}</span>
-        <span>Object txt: {objId}</span>
         <span>PK: {pk}</span>
-        <span>AuthToken: {authToken}</span>
-        <span>URL: {url}</span>
+        <span>Object txt: {objId}</span>
+        <span>Search txt: {search}</span>
+        <textarea value={url} readOnly></textarea>
       </div>
       <button
         type="button"
