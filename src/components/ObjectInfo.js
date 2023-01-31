@@ -10,7 +10,7 @@ const ObjectInfoBox = (props) => {
         justifyContent: "center",
       }}
     >
-      <text>Search objectId</text>
+      <text>Search Index</text>
       <input
         required="required"
         type="text"
