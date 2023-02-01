@@ -74,10 +74,12 @@ const ClipRes = (props) => {
       <div
         style={{
           width: "55%",
-          height: "100%",
+          height: "90%",
           flexDirection: "colomn",
           margin: "2%",
           display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <ReactHlsPlayer
@@ -88,7 +90,6 @@ const ClipRes = (props) => {
           }&&resolve=false&clip_start=${
             props.clipInfo.start_time / 1000
           }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
-          //   url="https://www.youtube.com/watch?v=ysz5S6PUM-U"
           width="100%"
           height="auto"
           autoPlay={false}
