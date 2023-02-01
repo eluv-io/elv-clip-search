@@ -5,9 +5,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import SearchBox from "./components/SearchBox";
 import PKBox from "./components/PrivateKeyInputBox";
-// import AuthTokenBox from "./components/AuthTokenBox";
 import ObjectInfoBox from "./components/ObjectInfo";
 import ClipRes from "./components/ClipRes";
+import logo from "./static/images/Eluvio Favicon full.png";
 const App = () => {
   const [search, setSearch] = useState("");
   const [pk, setPK] = useState();
@@ -65,8 +65,10 @@ const App = () => {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
+          height: 100,
         }}
       >
+        <img src={logo} style={{ height: "90%", margin: 30 }} />
         <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
       </div>
 
