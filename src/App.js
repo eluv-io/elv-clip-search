@@ -4,13 +4,14 @@ import AuthorizationClient from "@eluvio/elv-client-js/src/AuthorizationClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import SearchBox from "./components/SearchBox";
-import PKBox from "./components/PrivateKeyInputBox";
 import ObjectInfoBox from "./components/ObjectInfo";
 import ClipRes from "./components/ClipRes";
 import logo from "./static/images/Eluvio Favicon full.png";
+import config from "./config.json";
+
 const App = () => {
   const [search, setSearch] = useState("");
-  const [pk, setPK] = useState();
+  // const [pk, setPK] = useState();
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
   const [authToken, setAuthToken] = useState("");
@@ -28,7 +29,7 @@ const App = () => {
     return client;
   };
   const genUrl = async () => {
-    const client = await getClient({ pk });
+    const client = await getClient({ pk: config["ethereum"]["private_key"] });
     const libId = await client.ContentObjectLibraryId({
       objectId: objId,
     });
@@ -36,7 +37,7 @@ const App = () => {
     console.log(libId);
     const authClient = new AuthorizationClient({
       client,
-      contentSpaceId: "ispc2RUoRe9eR2v33HARQUVSp1rYXzw1",
+      contentSpaceId: config["space_id"],
     });
     const token = await authClient.AuthorizationToken({
       libraryId: libId,
@@ -44,7 +45,6 @@ const App = () => {
     });
     console.log(token);
     setAuthToken(token);
-    // const searchTxt = "%22" + search.trim().split(" ").join("%20") + "%22";
 
     const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
     console.log(url);
@@ -68,24 +68,15 @@ const App = () => {
           height: 100,
         }}
       >
-        <img src={logo} style={{ height: "90%", margin: 30 }} />
+        <img src={logo} alt="logo" style={{ height: "90%", margin: 30 }} />
         <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
-      </div>
-
-      <div className="row mt-3">
-        <PKBox
-          handleSubmitClick={(txt) => {
-            console.log(txt);
-            setHaveRes(false);
-            setPK(txt);
-          }}
-        />
       </div>
       <div className="row mt-3">
         <ObjectInfoBox
           handleSubmitClick={(txt) => {
             console.log(txt);
             setHaveRes(false);
+            setLoading(false);
             setObjId(txt);
           }}
         />
@@ -95,6 +86,7 @@ const App = () => {
           handleSubmitClick={(txt) => {
             console.log(txt);
             setHaveRes(false);
+            setLoading(false);
             setSearch(encodeURI(txt.trim()));
           }}
         />
@@ -132,20 +124,7 @@ const App = () => {
                   justifyContent: "center",
                 }}
               >
-                <text style={{ width: "30%" }}>PK:</text>
-                <text style={{ width: "70%" }}>{pk}</text>
-              </div>
-              <div
-                style={{
-                  margin: 10,
-                  width: "80%",
-                  flexDirection: "row",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <text style={{ width: "30%" }}>Object txt:</text>
+                <text style={{ width: "30%" }}>Search Objext Index:</text>
                 <text style={{ width: "70%" }}>{objId}</text>
               </div>
               <div
@@ -158,7 +137,7 @@ const App = () => {
                   justifyContent: "center",
                 }}
               >
-                <text style={{ width: "30%" }}>Search txt:</text>
+                <text style={{ width: "30%" }}>Search Phrase:</text>
                 <text style={{ width: "70%" }}>{search}</text>
               </div>
             </div>
