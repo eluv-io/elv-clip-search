@@ -17,6 +17,7 @@ const App = () => {
   const [url, setUrl] = useState("");
   const [response, setResopnse] = useState([]);
   const [haveRes, setHaveRes] = useState(false);
+  const [loading, setLoading] = useState(false);
   const getClient = async ({ pk }) => {
     var client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
@@ -53,6 +54,7 @@ const App = () => {
   const curl = async (url) => {
     const res = await axios.get(url);
     setHaveRes(true);
+    setLoading(false);
     return res;
   };
   return (
@@ -65,7 +67,7 @@ const App = () => {
           justifyContent: "center",
         }}
       >
-        <h1 className="mt-3">Elv ML Clip Search</h1>
+        <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
       </div>
 
       <div className="row mt-3">
@@ -162,6 +164,7 @@ const App = () => {
               type="button"
               className="btn btn-primary"
               onClick={() => {
+                setLoading(true);
                 genUrl().then((url) => {
                   curl(url)
                     .then((res) => {
@@ -207,19 +210,25 @@ const App = () => {
         </div>
       )}
 
-      <div>
-        {response.map((clip) => {
-          console.log(clip);
-          return (
-            <ClipRes
-              clipInfo={clip}
-              baseUrl="https://host-76-74-91-12.contentfabric.io"
-              token={authToken}
-              libId={libId}
-            ></ClipRes>
-          );
-        })}
-      </div>
+      {loading ? (
+        <div>
+          <text>loading</text>
+        </div>
+      ) : haveRes ? (
+        <div>
+          {response.map((clip) => {
+            console.log(clip);
+            return (
+              <ClipRes
+                clipInfo={clip}
+                baseUrl="https://host-76-74-91-12.contentfabric.io"
+                token={authToken}
+                libId={libId}
+              ></ClipRes>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 };
