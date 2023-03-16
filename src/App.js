@@ -203,7 +203,7 @@ const App = () => {
               <ClipRes
                 clipInfo={clip}
                 baseUrl="https://host-76-74-91-12.contentfabric.io"
-                token={authToken}
+                token={config["playout_token"]}
                 libId={libId}
               ></ClipRes>
             );
