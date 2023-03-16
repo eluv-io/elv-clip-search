@@ -59,13 +59,13 @@ const ClipRes = (props) => {
           <text>playout url</text>
           <textarea
             name="playout url"
-            value={`${props.baseUrl}/qlibs/${props.libId}/q/${
+            value={`${props.baseUrl}/qlibs/${props.clipInfo.qlib_id}/q/${
               props.clipInfo.hash
-            }/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${
-              props.token
-            }&&resolve=false&clip_start=${
+            }/rep/playout/clips/hls-aes128/playlist.m3u8?authorization=${"ascsj_LhPvmqhaaUqJCyUdfnvH79hXGFEE2FXUgNGSdxMPa7RvscFe3bt4ohw62NioAh9J9f4SinztJePmfAnNoo98GHsVQj9z2jnbyBSfGP2nn2mt8eFq7Rv1UUvkGbmcz2hBZTS5eUPDkA7yV2RkCUJQkUseLSdgiDwwjFc8rM18jZWnj79YyAxBwhVvy4EypSYmEEFFWXVoMtBK4Tnxyp6cXdYbL3ye4WRnWUK4TUeh1cShkwcXY6PU848xBS8VNaNMvmfAQmNWvJajBpVTWMoA53TBAhhqamAm7zXJd7V1J4RwuiGNJHSP8QrF8PiQQK6pkBjLr6eVSs9k6p3ae7rck19Md6AdM3pvLbZHzEC8U7C8i1p95EjmYCaM9spTee3VFrriaS9S9THvjMVyTpQHsora8wZC56oCjUbXajfgtesByUf6SMKWp8DPQfKxG6y5EDuB4uKXum9yaKB8H7DrwEKB8TXnRooeryzEsW3mHNXQoZQzzgfzPvcsP8RKvwtkHiWxsnABr9jDdiT9ZhVDXp3iZTczb4FBJTr9rZPFbHK5yT3E3N7X44CLaUFZfxHckTA6qqb6hV2dHWQdEaj7FzfTD3koJjzDi8HSLiY1HQ999a6UY1shg8rN25ktzEGoY6Lp9boz4uxCf3tbYq4Cx82MEQZsQPZHeQiMAquyAwhGdNizSuY1sfpFakjo4KTRpYRWH9TUQrzT2EmGzspkKLE7aGENWdb4zo443J2mWCknQC22Q9RDp2b9nJLfNQPN5mTrbyR86KyyZMm9Snv5XPRPKxjPEyz7bbEAWgMuuwfeiZbkZUK7BwVSGsnS7PGKKB7oGG6PKFmt4qnJNFg9YoCZxY1LMmNqTzRKtGw6tSYCbkwDQ65XuzTJA6donStkP1mTCE9mCJBAE1XPV7mJffPJ1Qo8gKXstMXSNcyMGX9LaYhK4CEg"}&&resolve=false&sid=DFE4232B8A12&player_profile=hls-js&clip_start=${
               props.clipInfo.start_time / 1000
-            }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
+            }&clip_end=${
+              props.clipInfo.end_time / 1000
+            }&ignore_trimming=true&sid=E7CFDAA6711A`}
             style={{ height: "100%", width: "100%" }}
             readOnly
           ></textarea>
@@ -83,13 +83,13 @@ const ClipRes = (props) => {
         }}
       >
         <ReactHlsPlayer
-          src={`${props.baseUrl}/qlibs/${props.libId}/q/${
+          src={`${props.baseUrl}/qlibs/${props.clipInfo.qlib_id}/q/${
             props.clipInfo.hash
-          }/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${
-            props.token
-          }&&resolve=false&clip_start=${
+          }/rep/playout/clips/hls-aes128/playlist.m3u8?authorization=${"ascsj_LhPvmqhaaUqJCyUdfnvH79hXGFEE2FXUgNGSdxMPa7RvscFe3bt4ohw62NioAh9J9f4SinztJePmfAnNoo98GHsVQj9z2jnbyBSfGP2nn2mt8eFq7Rv1UUvkGbmcz2hBZTS5eUPDkA7yV2RkCUJQkUseLSdgiDwwjFc8rM18jZWnj79YyAxBwhVvy4EypSYmEEFFWXVoMtBK4Tnxyp6cXdYbL3ye4WRnWUK4TUeh1cShkwcXY6PU848xBS8VNaNMvmfAQmNWvJajBpVTWMoA53TBAhhqamAm7zXJd7V1J4RwuiGNJHSP8QrF8PiQQK6pkBjLr6eVSs9k6p3ae7rck19Md6AdM3pvLbZHzEC8U7C8i1p95EjmYCaM9spTee3VFrriaS9S9THvjMVyTpQHsora8wZC56oCjUbXajfgtesByUf6SMKWp8DPQfKxG6y5EDuB4uKXum9yaKB8H7DrwEKB8TXnRooeryzEsW3mHNXQoZQzzgfzPvcsP8RKvwtkHiWxsnABr9jDdiT9ZhVDXp3iZTczb4FBJTr9rZPFbHK5yT3E3N7X44CLaUFZfxHckTA6qqb6hV2dHWQdEaj7FzfTD3koJjzDi8HSLiY1HQ999a6UY1shg8rN25ktzEGoY6Lp9boz4uxCf3tbYq4Cx82MEQZsQPZHeQiMAquyAwhGdNizSuY1sfpFakjo4KTRpYRWH9TUQrzT2EmGzspkKLE7aGENWdb4zo443J2mWCknQC22Q9RDp2b9nJLfNQPN5mTrbyR86KyyZMm9Snv5XPRPKxjPEyz7bbEAWgMuuwfeiZbkZUK7BwVSGsnS7PGKKB7oGG6PKFmt4qnJNFg9YoCZxY1LMmNqTzRKtGw6tSYCbkwDQ65XuzTJA6donStkP1mTCE9mCJBAE1XPV7mJffPJ1Qo8gKXstMXSNcyMGX9LaYhK4CEg"}&&resolve=false&sid=DFE4232B8A12&player_profile=hls-js&clip_start=${
             props.clipInfo.start_time / 1000
-          }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
+          }&clip_end=${
+            props.clipInfo.end_time / 1000
+          }&ignore_trimming=true&sid=E7CFDAA6711A`}
           width="100%"
           height="auto"
           autoPlay={false}
