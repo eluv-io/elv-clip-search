@@ -16,7 +16,7 @@ const App = () => {
   const [response, setResopnse] = useState([]);
   const [haveRes, setHaveRes] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(0);
+  const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [loadedPlauoutUrl, setLoadedPlayoutUrl] = useState(0);
   const [totalPlauoutUrl, setTotalPlayoutUrl] = useState(0);
   const getClient = async ({ pk }) => {
@@ -170,6 +170,7 @@ const App = () => {
               className="btn btn-primary"
               onClick={() => {
                 setLoading(true);
+                setLoadedPlayoutUrl(0);
                 genUrl().then(({ url, client }) => {
                   curl(url, client)
                     .then((res) => {
