@@ -11,14 +11,14 @@ import config from "./config.json";
 
 const App = () => {
   const [search, setSearch] = useState("");
-  // const [pk, setPK] = useState();
   const [objId, setObjId] = useState("");
-  const [libId, setLibId] = useState("");
-  const [authToken, setAuthToken] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResopnse] = useState([]);
   const [haveRes, setHaveRes] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(0);
+  const [loadedPlauoutUrl, setLoadedPlayoutUrl] = useState(0);
+  const [totalPlauoutUrl, setTotalPlayoutUrl] = useState(0);
   const getClient = async ({ pk }) => {
     var client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
@@ -33,8 +33,6 @@ const App = () => {
     const libId = await client.ContentObjectLibraryId({
       objectId: objId,
     });
-    setLibId(libId);
-    console.log(libId);
     const authClient = new AuthorizationClient({
       client,
       contentSpaceId: config["space_id"],
@@ -44,17 +42,43 @@ const App = () => {
       objectId: objId,
     });
     console.log(token);
-    setAuthToken(token);
 
     const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
     console.log(url);
     setUrl(url);
-    return url;
+    return { url, client };
   };
-  const curl = async (url) => {
+  const curl = async (url, client) => {
     const res = await axios.get(url);
-    setHaveRes(true);
+    console.log(res);
     setLoading(false);
+    setTotalPlayoutUrl(res["data"]["contents"].length);
+    setLoadingPlayoutUrl(true);
+    const dic = {};
+    let cnt = 0;
+    for (let item of res["data"]["contents"]) {
+      const objectId = item["id"];
+      if (objectId in dic) {
+        item["url"] = dic[objectId];
+      } else {
+        const playoutOptions = await client.PlayoutOptions({
+          objectId,
+          protocols: ["hls"],
+          drms: ["aes-128"],
+        });
+        const playoutMethods = playoutOptions["hls"].playoutMethods;
+        const playoutInfo = playoutMethods["aes-128"];
+        const videoUrl = playoutInfo.playoutUrl;
+        dic[objectId] = videoUrl;
+        console.log(videoUrl);
+        item["url"] = videoUrl;
+      }
+      cnt += 1;
+      setLoadedPlayoutUrl(cnt);
+    }
+    console.log(dic);
+    setLoadingPlayoutUrl(false);
+    setHaveRes(true);
     return res;
   };
   return (
@@ -146,8 +170,8 @@ const App = () => {
               className="btn btn-primary"
               onClick={() => {
                 setLoading(true);
-                genUrl().then((url) => {
-                  curl(url)
+                genUrl().then(({ url, client }) => {
+                  curl(url, client)
                     .then((res) => {
                       // setResopnse(res["data"]["contents"]);
                       console.log(res["data"]["contents"]);
@@ -193,21 +217,19 @@ const App = () => {
 
       {loading ? (
         <div>
-          <text>loading</text>
+          <text>curling the search object</text>
         </div>
       ) : haveRes ? (
         <div>
           {response.map((clip) => {
-            console.log(clip);
-            return (
-              <ClipRes
-                clipInfo={clip}
-                baseUrl="https://host-76-74-91-12.contentfabric.io"
-                token={config["playout_token"]}
-                libId={libId}
-              ></ClipRes>
-            );
+            return <ClipRes clipInfo={clip}></ClipRes>;
           })}
+        </div>
+      ) : loadingPlauoutUrl ? (
+        <div>
+          <text>
+            {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${totalPlauoutUrl}`}
+          </text>
         </div>
       ) : null}
     </div>
