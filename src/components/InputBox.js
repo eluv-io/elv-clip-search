@@ -18,7 +18,13 @@ const InputBox = (props) => {
   const [value, setValue] = useState("");
   return (
     <div style={body}>
-      <text style={{ width: "10%" }}>{props.text}</text>
+      <div
+        style={{
+          width: "10%",
+        }}
+      >
+        {props.text}
+      </div>
       <input
         required="required"
         type="text"
@@ -30,6 +36,7 @@ const InputBox = (props) => {
         type="button"
         className="btn btn-primary"
         onClick={() => props.handleSubmitClick(value)}
+        disabled={props.disabled}
       >
         Submit
       </button>

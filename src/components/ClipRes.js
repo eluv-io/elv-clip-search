@@ -3,7 +3,7 @@ import ReactHlsPlayer from "react-hls-player";
 const body = {
   display: "flex",
   flexDirection: "row",
-  backgroundColor: "lavender",
+  backgroundColor: "whitesmoke",
   alignItems: "center",
   marginTop: 10,
   borderRadius: 10,
@@ -13,21 +13,25 @@ const body = {
 const info = {
   display: " flex",
   flexDirection: "column",
-  width: "40%",
-  height: "80%",
+  width: "50%",
+  height: "90%",
   margin: "2%",
   alignItems: "center",
   justifyContent: "center",
 };
 
 const shortInfo = {
+  display: "flex",
   flexDirection: "row",
-  width: "90%",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "95%",
   height: "8%",
+  marginTop: "0.5%",
 };
 
 const longInfo = {
-  width: "90%",
+  width: "95%",
   height: "50%",
   display: "flex",
   flexDirection: "column",
@@ -36,10 +40,10 @@ const longInfo = {
 };
 
 const videoPlayer = {
-  width: "55%",
-  height: "90%",
+  width: "50%",
+  height: "98%",
   flexDirection: "colomn",
-  margin: "5%",
+  marginRight: "3%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -77,7 +81,13 @@ const ClipRes = (props) => {
           <textarea
             name="playout url"
             value={url}
-            style={{ height: "100%", width: "100%" }}
+            style={{
+              height: "100%",
+              width: "100%",
+              padding: 5,
+              borderStyle: "None",
+              borderRadius: 10,
+            }}
             readOnly
           ></textarea>
         </div>

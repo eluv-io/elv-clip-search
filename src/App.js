@@ -7,6 +7,81 @@ import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
 import logo from "./static/images/Eluvio Favicon full.png";
 import config from "./config.json";
+const title = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 100,
+};
+
+const inputCheckContainer = {
+  margin: 10,
+  flexDirection: "column",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const inputInfoContainer = {
+  backgroundColor: "whitesmoke",
+  borderRadius: 10,
+  margin: 10,
+  width: "100%",
+  flexDirection: "column",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const inputInfo = {
+  margin: 10,
+  width: "90%",
+  flexDirection: "row",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const curlResContainer = {
+  backgroundColor: "whitesmoke",
+  borderRadius: 10,
+  marginTop: 20,
+  marginBottom: 40,
+  padding: 10,
+  height: 600,
+  flexDirection: "column",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const curlRes = {
+  flex: "1",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  width: "100%",
+};
+
+const curlResTextArea = {
+  width: "95%",
+  flex: 9,
+  padding: 10,
+  marginBottom: 20,
+  borderStyle: "None",
+  borderRadius: 20,
+};
+
+const hint = {
+  width: "100%",
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+  marginTop: 40,
+};
 
 const App = () => {
   const [search, setSearch] = useState("");
@@ -51,7 +126,6 @@ const App = () => {
   const curl = async (url, client) => {
     try {
       const res = await axios.get(url, { timeout: 10000 });
-      console.log(res);
       setLoading(false);
       setTotalPlayoutUrl(res["data"]["contents"].length);
       setLoadingPlayoutUrl(true);
@@ -60,6 +134,7 @@ const App = () => {
       for (let item of res["data"]["contents"]) {
         const objectId = item["id"];
         if (objectId in dic) {
+          console.log("find in dic");
           item["url"] = dic[objectId];
         } else {
           const playoutOptions = await client.PlayoutOptions({
@@ -71,13 +146,11 @@ const App = () => {
           const playoutInfo = playoutMethods["aes-128"];
           const videoUrl = playoutInfo.playoutUrl;
           dic[objectId] = videoUrl;
-          console.log(videoUrl);
           item["url"] = videoUrl;
         }
         cnt += 1;
         setLoadedPlayoutUrl(cnt);
       }
-      console.log(dic);
       setLoadingPlayoutUrl(false);
       setHaveRes(true);
       return res;
@@ -88,23 +161,34 @@ const App = () => {
       return null;
     }
   };
+  const getRes = () => {
+    setLoading(true);
+    setLoadedPlayoutUrl(0);
+    genUrl().then(({ url, client }) => {
+      curl(url, client)
+        .then((res) => {
+          if (res != null) {
+            console.log(res["data"]["contents"]);
+            setResopnse(res["data"]["contents"]);
+          } else {
+            // maybe popup window to alert here
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+  };
   return (
     <div className="container">
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          height: 100,
-        }}
-      >
+      <div style={title}>
         <img src={logo} alt="logo" style={{ height: "90%", margin: 30 }} />
         <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
       </div>
       <div className="row mt-3">
         <InputBox
           text="Search object"
+          disabled={loading || loadingPlauoutUrl}
           handleSubmitClick={(txt) => {
             setHaveRes(false);
             setLoading(false);
@@ -116,6 +200,7 @@ const App = () => {
       <div className="row mt-3">
         <InputBox
           text="Search term"
+          disabled={loading || loadingPlauoutUrl}
           handleSubmitClick={(txt) => {
             setHaveRes(false);
             setLoading(false);
@@ -125,111 +210,46 @@ const App = () => {
         />
       </div>
       {!haveRes ? (
-        <div
-          style={{
-            margin: 10,
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "lightgray",
-              borderRadius: 10,
-              margin: 10,
-              width: "100%",
-              flexDirection: "column",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div
-              style={{
-                margin: 10,
-                width: "80%",
-                flexDirection: "row",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <text style={{ width: "30%" }}>Search Objext Index:</text>
-              <text style={{ width: "70%" }}>{objId}</text>
+        <div style={inputCheckContainer}>
+          <div style={inputInfoContainer}>
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>Search Objext Index:</div>
+              <div style={{ flex: 3 }}>{objId}</div>
             </div>
-            <div
-              style={{
-                margin: 10,
-                width: "80%",
-                flexDirection: "row",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <text style={{ width: "30%" }}>Search Phrase:</text>
-              <text style={{ width: "70%" }}>{search}</text>
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>Search Phrase:</div>
+              <div style={{ flex: 3 }}>{search}</div>
             </div>
           </div>
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => {
-              setLoading(true);
-              setLoadedPlayoutUrl(0);
-              genUrl().then(({ url, client }) => {
-                curl(url, client)
-                  .then((res) => {
-                    // setResopnse(res["data"]["contents"]);
-                    if (res != null) {
-                      console.log(res["data"]["contents"]);
-                      setResopnse(res["data"]["contents"]);
-                    } else {
-                    }
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  });
-              });
-            }}
+            onClick={getRes}
+            disabled={loading || loadingPlauoutUrl}
           >
             Let's go
           </button>
         </div>
       ) : (
-        <div
-          style={{
-            backgroundColor: "lightgray",
-            borderRadius: 10,
-            marginTop: 20,
-            marginBottom: 40,
-            height: 600,
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <text>Search url</text>
-          <textarea
-            value={url}
-            style={{ height: "30%", width: "95%", marginBottom: "1%" }}
-            readOnly
-          ></textarea>
-          <text>returned content</text>
-          <textarea
-            style={{ height: "60%", width: "95%", marginBottom: "1%" }}
-            value={JSON.stringify(response, null, 4)}
-            readOnly
-          ></textarea>
+        <div style={curlResContainer}>
+          <div style={curlRes}>
+            <div style={{ flex: 1 }}>Search url</div>
+            <textarea style={curlResTextArea} value={url} readOnly></textarea>
+          </div>
+          <div style={curlRes}>
+            <div style={{ flex: 1 }}>returned content</div>
+            <textarea
+              style={curlResTextArea}
+              value={JSON.stringify(response, null, 4)}
+              readOnly
+            ></textarea>
+          </div>
         </div>
       )}
 
       {loading ? (
-        <div>
-          <text>curling the search object</text>
+        <div style={hint}>
+          <p>curling the search object</p>
         </div>
       ) : haveRes ? (
         <div>
@@ -243,14 +263,14 @@ const App = () => {
           })}
         </div>
       ) : loadingPlauoutUrl ? (
-        <div>
-          <text>
+        <div style={hint}>
+          <p>
             {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${totalPlauoutUrl}`}
-          </text>
+          </p>
         </div>
       ) : timeoutErr ? (
-        <div>
-          <text>Curl search node timeout err </text>
+        <div style={hint}>
+          <p>Curl search node timeout err </p>
         </div>
       ) : null}
     </div>
