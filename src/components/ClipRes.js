@@ -57,27 +57,27 @@ const ClipRes = (props) => {
     <div style={body}>
       <div style={info}>
         <div style={shortInfo}>
-          <text>title: </text>
-          <text>{props.clipInfo.meta.public.asset_metadata.title}</text>
+          <div>title: </div>
+          <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
         </div>
         <div style={shortInfo}>
-          <text>library id: </text>
-          <text>{props.clipInfo.qlib_id}</text>
+          <div>library id: </div>
+          <div>{props.clipInfo.qlib_id}</div>
         </div>
         <div style={shortInfo}>
-          <text>content id: </text>
-          <text>{props.clipInfo.id}</text>
+          <div>content id: </div>
+          <div>{props.clipInfo.id}</div>
         </div>
         <div style={shortInfo}>
-          <text>start_time: </text>
-          <text>{props.clipInfo.start}</text>
+          <div>start_time: </div>
+          <div>{props.clipInfo.start}</div>
         </div>
         <div style={shortInfo}>
-          <text>end_time: </text>
-          <text>{props.clipInfo.end}</text>
+          <div>end_time: </div>
+          <div>{props.clipInfo.end}</div>
         </div>
         <div style={longInfo}>
-          <text>playout url</text>
+          <div>playout url</div>
           <textarea
             name="playout url"
             value={url}

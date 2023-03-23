@@ -131,6 +131,7 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       const dic = {};
       let cnt = 0;
+      const clips = [];
       for (let item of res["data"]["contents"]) {
         const objectId = item["id"];
         if (objectId in dic) {
@@ -148,12 +149,13 @@ const App = () => {
           dic[objectId] = videoUrl;
           item["url"] = videoUrl;
         }
+        clips.push(item);
         cnt += 1;
         setLoadedPlayoutUrl(cnt);
       }
       setLoadingPlayoutUrl(false);
       setHaveRes(true);
-      return res;
+      return clips;
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoading(false);
@@ -168,8 +170,8 @@ const App = () => {
       curl(url, client)
         .then((res) => {
           if (res != null) {
-            console.log(res["data"]["contents"]);
-            setResopnse(res["data"]["contents"]);
+            console.log(res);
+            setResopnse(res);
           } else {
             // maybe popup window to alert here
           }
