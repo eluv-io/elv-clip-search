@@ -1,7 +1,5 @@
 import React from "react";
-// import ReactPlayer from "react-player";
 import ReactHlsPlayer from "react-hls-player";
-// import placeholdImage from "../static/images/smallLogo.jpg";
 const ClipRes = (props) => {
   return (
     <div
