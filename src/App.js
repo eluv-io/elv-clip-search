@@ -50,7 +50,7 @@ const App = () => {
   };
   const curl = async (url, client) => {
     try {
-      const res = await axios.get(url, { timeout: 100 });
+      const res = await axios.get(url, { timeout: 10000 });
       console.log(res);
       setLoading(false);
       setTotalPlayoutUrl(res["data"]["contents"].length);
