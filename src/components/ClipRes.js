@@ -5,7 +5,7 @@ const body = {
   flexDirection: "row",
   backgroundColor: "lavender",
   alignItems: "center",
-  margin: 10,
+  marginTop: 10,
   borderRadius: 10,
   height: 400,
 };
@@ -39,7 +39,7 @@ const videoPlayer = {
   width: "55%",
   height: "90%",
   flexDirection: "colomn",
-  margin: "2%",
+  margin: "5%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

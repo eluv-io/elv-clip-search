@@ -115,10 +115,21 @@ const App = () => {
         />
       </div>
       {!haveRes ? (
-        <>
+        <div
+          style={{
+            margin: 10,
+            flexDirection: "column",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <div
             style={{
+              backgroundColor: "lightgray",
+              borderRadius: 10,
               margin: 10,
+              width: "100%",
               flexDirection: "column",
               display: "flex",
               alignItems: "center",
@@ -127,72 +138,60 @@ const App = () => {
           >
             <div
               style={{
-                backgroundColor: "lightgray",
-                borderRadius: 10,
                 margin: 10,
-                width: "100%",
-                flexDirection: "column",
+                width: "80%",
+                flexDirection: "row",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <div
-                style={{
-                  margin: 10,
-                  width: "80%",
-                  flexDirection: "row",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <text style={{ width: "30%" }}>Search Objext Index:</text>
-                <text style={{ width: "70%" }}>{objId}</text>
-              </div>
-              <div
-                style={{
-                  margin: 10,
-                  width: "80%",
-                  flexDirection: "row",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <text style={{ width: "30%" }}>Search Phrase:</text>
-                <text style={{ width: "70%" }}>{search}</text>
-              </div>
+              <text style={{ width: "30%" }}>Search Objext Index:</text>
+              <text style={{ width: "70%" }}>{objId}</text>
             </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                setLoading(true);
-                setLoadedPlayoutUrl(0);
-                genUrl().then(({ url, client }) => {
-                  curl(url, client)
-                    .then((res) => {
-                      // setResopnse(res["data"]["contents"]);
-                      console.log(res["data"]["contents"]);
-                      setResopnse(res["data"]["contents"]);
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                    });
-                });
+            <div
+              style={{
+                margin: 10,
+                width: "80%",
+                flexDirection: "row",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Let's go
-            </button>
+              <text style={{ width: "30%" }}>Search Phrase:</text>
+              <text style={{ width: "70%" }}>{search}</text>
+            </div>
           </div>
-        </>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setLoading(true);
+              setLoadedPlayoutUrl(0);
+              genUrl().then(({ url, client }) => {
+                curl(url, client)
+                  .then((res) => {
+                    // setResopnse(res["data"]["contents"]);
+                    console.log(res["data"]["contents"]);
+                    setResopnse(res["data"]["contents"]);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+              });
+            }}
+          >
+            Let's go
+          </button>
+        </div>
       ) : (
         <div
           style={{
             backgroundColor: "lightgray",
             borderRadius: 10,
-            margin: 10,
+            marginTop: 20,
+            marginBottom: 40,
             height: 600,
             flexDirection: "column",
             display: "flex",
@@ -203,13 +202,13 @@ const App = () => {
           <text>Search url</text>
           <textarea
             value={url}
-            style={{ height: "30%", width: "95%", margin: "1%" }}
+            style={{ height: "30%", width: "95%", marginBottom: "1%" }}
             readOnly
           ></textarea>
           <text>returned content</text>
           <textarea
-            style={{ height: "60%", width: "95%", margin: "1%" }}
-            value={JSON.stringify(response, null, 2)}
+            style={{ height: "60%", width: "95%", marginBottom: "1%" }}
+            value={JSON.stringify(response, null, 4)}
             readOnly
           ></textarea>
         </div>
@@ -223,7 +222,10 @@ const App = () => {
         <div>
           {response.map((clip) => {
             return (
-              <ClipRes clipInfo={clip} key={clip.id + clip.start}></ClipRes>
+              <ClipRes
+                clipInfo={clip}
+                key={clip.id + clip.start_time}
+              ></ClipRes>
             );
           })}
         </div>
