@@ -3,8 +3,7 @@ import { ElvClient } from "@eluvio/elv-client-js/dist/ElvClient-min.js";
 import AuthorizationClient from "@eluvio/elv-client-js/src/AuthorizationClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import SearchBox from "./components/SearchBox";
-import ObjectInfoBox from "./components/ObjectInfo";
+import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
 import logo from "./static/images/Eluvio Favicon full.png";
 import config from "./config.json";
@@ -96,9 +95,9 @@ const App = () => {
         <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
       </div>
       <div className="row mt-3">
-        <ObjectInfoBox
+        <InputBox
+          text="Search object"
           handleSubmitClick={(txt) => {
-            console.log(txt);
             setHaveRes(false);
             setLoading(false);
             setObjId(txt);
@@ -106,9 +105,9 @@ const App = () => {
         />
       </div>
       <div className="row mt-3">
-        <SearchBox
+        <InputBox
+          text="Search term"
           handleSubmitClick={(txt) => {
-            console.log(txt);
             setHaveRes(false);
             setLoading(false);
             setSearch(encodeURI(txt.trim()));
@@ -223,7 +222,9 @@ const App = () => {
       ) : haveRes ? (
         <div>
           {response.map((clip) => {
-            return <ClipRes clipInfo={clip}></ClipRes>;
+            return (
+              <ClipRes clipInfo={clip} key={clip.id + clip.start}></ClipRes>
+            );
           })}
         </div>
       ) : loadingPlauoutUrl ? (

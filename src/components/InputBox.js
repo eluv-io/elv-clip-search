@@ -1,20 +1,28 @@
 import React, { useState } from "react";
-const ObjectInfoBox = (props) => {
+const body = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+};
+const box = {
+  width: "70%",
+  height: "90%",
+  paddingLeft: 20,
+  borderRadius: 5,
+  borderWidth: 1,
+  borderColor: "grey",
+  borderStyle: "ridge",
+};
+const InputBox = (props) => {
   const [value, setValue] = useState("");
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <text>Search Index</text>
+    <div style={body}>
+      <text style={{ width: "10%" }}>{props.text}</text>
       <input
         required="required"
         type="text"
-        className="form-control mr-3"
+        style={box}
         id="ObjId"
         onChange={(event) => setValue(event.target.value)}
       />
@@ -29,4 +37,4 @@ const ObjectInfoBox = (props) => {
   );
 };
 
-export default ObjectInfoBox;
+export default InputBox;
