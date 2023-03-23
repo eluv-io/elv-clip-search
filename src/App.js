@@ -18,6 +18,7 @@ const App = () => {
   const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [loadedPlauoutUrl, setLoadedPlayoutUrl] = useState(0);
   const [totalPlauoutUrl, setTotalPlayoutUrl] = useState(0);
+  const [timeoutErr, setTimeoutErr] = useState(false);
   const getClient = async ({ pk }) => {
     var client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
@@ -48,37 +49,44 @@ const App = () => {
     return { url, client };
   };
   const curl = async (url, client) => {
-    const res = await axios.get(url);
-    console.log(res);
-    setLoading(false);
-    setTotalPlayoutUrl(res["data"]["contents"].length);
-    setLoadingPlayoutUrl(true);
-    const dic = {};
-    let cnt = 0;
-    for (let item of res["data"]["contents"]) {
-      const objectId = item["id"];
-      if (objectId in dic) {
-        item["url"] = dic[objectId];
-      } else {
-        const playoutOptions = await client.PlayoutOptions({
-          objectId,
-          protocols: ["hls"],
-          drms: ["aes-128"],
-        });
-        const playoutMethods = playoutOptions["hls"].playoutMethods;
-        const playoutInfo = playoutMethods["aes-128"];
-        const videoUrl = playoutInfo.playoutUrl;
-        dic[objectId] = videoUrl;
-        console.log(videoUrl);
-        item["url"] = videoUrl;
+    try {
+      const res = await axios.get(url, { timeout: 100 });
+      console.log(res);
+      setLoading(false);
+      setTotalPlayoutUrl(res["data"]["contents"].length);
+      setLoadingPlayoutUrl(true);
+      const dic = {};
+      let cnt = 0;
+      for (let item of res["data"]["contents"]) {
+        const objectId = item["id"];
+        if (objectId in dic) {
+          item["url"] = dic[objectId];
+        } else {
+          const playoutOptions = await client.PlayoutOptions({
+            objectId,
+            protocols: ["hls"],
+            drms: ["aes-128"],
+          });
+          const playoutMethods = playoutOptions["hls"].playoutMethods;
+          const playoutInfo = playoutMethods["aes-128"];
+          const videoUrl = playoutInfo.playoutUrl;
+          dic[objectId] = videoUrl;
+          console.log(videoUrl);
+          item["url"] = videoUrl;
+        }
+        cnt += 1;
+        setLoadedPlayoutUrl(cnt);
       }
-      cnt += 1;
-      setLoadedPlayoutUrl(cnt);
+      console.log(dic);
+      setLoadingPlayoutUrl(false);
+      setHaveRes(true);
+      return res;
+    } catch (err) {
+      console.log(`Error message : ${err.message} - `, err.code);
+      setLoading(false);
+      setTimeoutErr(true);
+      return null;
     }
-    console.log(dic);
-    setLoadingPlayoutUrl(false);
-    setHaveRes(true);
-    return res;
   };
   return (
     <div className="container">
@@ -100,6 +108,7 @@ const App = () => {
           handleSubmitClick={(txt) => {
             setHaveRes(false);
             setLoading(false);
+            setTimeoutErr(false);
             setObjId(txt);
           }}
         />
@@ -110,6 +119,7 @@ const App = () => {
           handleSubmitClick={(txt) => {
             setHaveRes(false);
             setLoading(false);
+            setTimeoutErr(false);
             setSearch(encodeURI(txt.trim()));
           }}
         />
@@ -173,8 +183,11 @@ const App = () => {
                 curl(url, client)
                   .then((res) => {
                     // setResopnse(res["data"]["contents"]);
-                    console.log(res["data"]["contents"]);
-                    setResopnse(res["data"]["contents"]);
+                    if (res != null) {
+                      console.log(res["data"]["contents"]);
+                      setResopnse(res["data"]["contents"]);
+                    } else {
+                    }
                   })
                   .catch((err) => {
                     console.log(err);
@@ -234,6 +247,10 @@ const App = () => {
           <text>
             {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${totalPlauoutUrl}`}
           </text>
+        </div>
+      ) : timeoutErr ? (
+        <div>
+          <text>Curl search node timeout err </text>
         </div>
       ) : null}
     </div>
