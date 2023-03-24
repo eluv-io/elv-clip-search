@@ -98,17 +98,17 @@ const App = () => {
   const pages = useRef({});
   const currentPage = useRef(1);
   const playoutTokens = useRef({});
-  const [client, setClient] = useState(null);
+  const client = useRef(null);
 
   const getClient = async ({ pk }) => {
-    var client = await ElvClient.FromConfigurationUrl({
+    var _client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
     });
-    const wallet = client.GenerateWallet();
+    const wallet = _client.GenerateWallet();
     const signer = wallet.AddAccount({ privateKey: pk });
-    client.SetSigner({ signer });
-    setClient(client);
-    return client;
+    _client.SetSigner({ signer });
+    client.current = _client;
+    return _client;
   };
   const getSearchUrl = async () => {
     const client = await getClient({ pk: config["ethereum"]["private_key"] });
@@ -147,7 +147,7 @@ const App = () => {
         console.log("find in dic");
         item["url"] = dic[objectId];
       } else {
-        const playoutOptions = await client.PlayoutOptions({
+        const playoutOptions = await client.current.PlayoutOptions({
           objectId,
           protocols: ["hls"],
           drms: ["aes-128"],
@@ -365,7 +365,10 @@ const App = () => {
         </div>
       ) : timeoutErr ? (
         <div style={hint}>
-          <p>Curl search node timeout err </p>
+          <p>
+            Curl search url timeout err, search node retrieving index, please
+            try again later
+          </p>
         </div>
       ) : null}
     </div>
