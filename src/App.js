@@ -97,12 +97,12 @@ const App = () => {
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
   const [timeoutErr, setTimeoutErr] = useState(false);
-
+  const [loadedContent, setLoadedContent] = useState(0);
+  const [totalContent, setTotalContent] = useState(0);
   // processed info
   const pages = useRef({});
   const numPages = useRef(0);
   const currentPage = useRef(1);
-  const playoutTokens = useRef({});
   const client = useRef(null);
 
   const resetLoadStatus = () => {
@@ -111,6 +111,8 @@ const App = () => {
     setHaveSearchRes(false);
     setLoadingSearchRes(false);
     setTimeoutErr(false);
+    setLoadedContent(0);
+    setTotalContent(0);
   };
 
   const getClient = async ({ pk }) => {
@@ -143,44 +145,19 @@ const App = () => {
     setUrl(url);
     return { url, client };
   };
+
   const jumpToPage = async (pageIndex) => {
     currentPage.current = pageIndex;
-    const clip_per_page = pages.current;
-    if (clip_per_page[pageIndex]["processed"]) {
-      return clip_per_page[pageIndex]["clips"];
-    }
-    setLoadingPlayoutUrl(true);
-    setHavePlayoutUrl(false);
-    const dic = playoutTokens.current;
-    for (let item of clip_per_page[pageIndex]["clips"]) {
-      const objectId = item["id"];
-      if (objectId in dic) {
-        console.log("find in dic");
-        item["url"] = dic[objectId];
-      } else {
-        const playoutOptions = await client.current.PlayoutOptions({
-          objectId,
-          protocols: ["hls"],
-          drms: ["aes-128"],
-        });
-        const playoutMethods = playoutOptions["hls"].playoutMethods;
-        const playoutInfo = playoutMethods["aes-128"];
-        const videoUrl = playoutInfo.playoutUrl;
-        dic[objectId] = videoUrl;
-        item["url"] = videoUrl;
-      }
-    }
-    setLoadingPlayoutUrl(false);
-    setHavePlayoutUrl(true);
-    playoutTokens.current = dic;
-    pages.current = clip_per_page;
-    return clip_per_page[pageIndex]["clips"];
+    return pages.current[pageIndex]["clips"];
   };
+
   const curl = async (url, client) => {
     try {
       const res = await axios.get(url, { timeout: 10000 });
       const dic = {};
       const num_pages = Math.ceil(res["data"]["contents"].length / 5);
+      setTotalContent(res["data"]["contents"].length);
+      setResopnse(res["data"]["contents"]);
       numPages.current = num_pages;
       const clip_per_page = {};
       for (let i = 1; i <= num_pages; i++) {
@@ -188,7 +165,6 @@ const App = () => {
       }
       for (let i = 0; i < res["data"]["contents"].length; i++) {
         const pageIndex = Math.floor(i / 5) + 1;
-        console.log(pageIndex);
         clip_per_page[pageIndex]["clips"].push(res["data"]["contents"][i]);
       }
       setLoadingSearchRes(false);
@@ -197,28 +173,31 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       pages.current = clip_per_page;
       currentPage.current = 1;
-      console.log(clip_per_page);
-      for (let item of clip_per_page[1]["clips"]) {
-        const objectId = item["id"];
-        if (objectId in dic) {
-          console.log("find in dic");
-          item["url"] = dic[objectId];
-        } else {
-          const playoutOptions = await client.PlayoutOptions({
-            objectId,
-            protocols: ["hls"],
-            drms: ["aes-128"],
-          });
-          const playoutMethods = playoutOptions["hls"].playoutMethods;
-          const playoutInfo = playoutMethods["aes-128"];
-          const videoUrl = playoutInfo.playoutUrl;
-          dic[objectId] = videoUrl;
-          item["url"] = videoUrl;
+      let cnt = 0;
+      for (let pageIndex in clip_per_page) {
+        for (let item of clip_per_page[pageIndex]["clips"]) {
+          const objectId = item["id"];
+          if (objectId in dic) {
+            item["url"] = dic[objectId];
+          } else {
+            const playoutOptions = await client.PlayoutOptions({
+              objectId,
+              protocols: ["hls"],
+              drms: ["aes-128"],
+            });
+            const playoutMethods = playoutOptions["hls"].playoutMethods;
+            const playoutInfo = playoutMethods["aes-128"];
+            const videoUrl = playoutInfo.playoutUrl;
+            dic[objectId] = videoUrl;
+            item["url"] = videoUrl;
+          }
+          cnt += 1;
+          setLoadedContent(cnt);
         }
+        clip_per_page[pageIndex]["processed"] = true;
       }
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(true);
-      playoutTokens.current = dic;
       pages.current = clip_per_page;
       return clip_per_page[1]["clips"];
     } catch (err) {
@@ -234,7 +213,6 @@ const App = () => {
       curl(url, client)
         .then((res) => {
           if (res != null) {
-            console.log(res);
             setResopnse(res);
           } else {
             // maybe popup window to alert here
@@ -324,7 +302,6 @@ const App = () => {
             const pageIndex = data.selected + 1;
             jumpToPage(pageIndex).then((res) => {
               if (res != null) {
-                console.log(res);
                 setResopnse(res);
               } else {
                 // maybe popup window to alert here
@@ -349,7 +326,9 @@ const App = () => {
       {/* loading status or video player */}
       {loadingSearchRes || loadingPlayoutUrl ? (
         <div style={hint}>
-          <p>loading res</p>
+          <p>
+            loading res, progress {loadedContent} / {totalContent}
+          </p>
         </div>
       ) : havePlayoutUrl ? (
         <div>
