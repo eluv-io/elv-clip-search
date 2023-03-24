@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { ElvClient } from "@eluvio/elv-client-js/dist/ElvClient-min.js";
 import AuthorizationClient from "@eluvio/elv-client-js/src/AuthorizationClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
+// import PageBar from "./components/PageBar";
+import ReactPaginate from "react-paginate";
 import logo from "./static/images/Eluvio Favicon full.png";
 import config from "./config.json";
 const title = {
@@ -92,8 +94,12 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [loadedPlauoutUrl, setLoadedPlayoutUrl] = useState(0);
-  const [totalPlauoutUrl, setTotalPlayoutUrl] = useState(0);
   const [timeoutErr, setTimeoutErr] = useState(false);
+  const pages = useRef({});
+  const currentPage = useRef(1);
+  const playoutTokens = useRef({});
+  const [client, setClient] = useState(null);
+
   const getClient = async ({ pk }) => {
     var client = await ElvClient.FromConfigurationUrl({
       configUrl: "https://main.net955305.contentfabric.io/config",
@@ -101,9 +107,10 @@ const App = () => {
     const wallet = client.GenerateWallet();
     const signer = wallet.AddAccount({ privateKey: pk });
     client.SetSigner({ signer });
+    setClient(client);
     return client;
   };
-  const genUrl = async () => {
+  const getSearchUrl = async () => {
     const client = await getClient({ pk: config["ethereum"]["private_key"] });
     const libId = await client.ContentObjectLibraryId({
       objectId: objId,
@@ -123,16 +130,64 @@ const App = () => {
     setUrl(url);
     return { url, client };
   };
+  const jumpToPage = async (pageIndex) => {
+    currentPage.current = pageIndex;
+    const clip_per_page = pages.current;
+    if (clip_per_page[pageIndex]["processed"]) {
+      return clip_per_page[pageIndex]["clips"];
+    }
+    setLoadingPlayoutUrl(true);
+    setHaveRes(false);
+    const dic = playoutTokens.current;
+    let cnt = 0;
+    setLoadedPlayoutUrl(0);
+    for (let item of clip_per_page[pageIndex]["clips"]) {
+      const objectId = item["id"];
+      if (objectId in dic) {
+        console.log("find in dic");
+        item["url"] = dic[objectId];
+      } else {
+        const playoutOptions = await client.PlayoutOptions({
+          objectId,
+          protocols: ["hls"],
+          drms: ["aes-128"],
+        });
+        const playoutMethods = playoutOptions["hls"].playoutMethods;
+        const playoutInfo = playoutMethods["aes-128"];
+        const videoUrl = playoutInfo.playoutUrl;
+        dic[objectId] = videoUrl;
+        item["url"] = videoUrl;
+      }
+      cnt += 1;
+      setLoadedPlayoutUrl(cnt);
+    }
+    setLoadingPlayoutUrl(false);
+    setHaveRes(true);
+    playoutTokens.current = dic;
+    pages.current = clip_per_page;
+    return clip_per_page[pageIndex]["clips"];
+  };
   const curl = async (url, client) => {
     try {
       const res = await axios.get(url, { timeout: 10000 });
-      setLoading(false);
-      setTotalPlayoutUrl(res["data"]["contents"].length);
-      setLoadingPlayoutUrl(true);
       const dic = {};
+      const num_pages = Math.ceil(res["data"]["contents"].length / 5);
+      const clip_per_page = {};
+      for (let i = 1; i <= num_pages; i++) {
+        clip_per_page[i] = { processed: false, clips: [] };
+      }
+      for (let i = 0; i < res["data"]["contents"].length; i++) {
+        const pageIndex = Math.floor(i / 5) + 1;
+        console.log(pageIndex);
+        clip_per_page[pageIndex]["clips"].push(res["data"]["contents"][i]);
+      }
+      setLoading(false);
+      setLoadingPlayoutUrl(true);
+      pages.current = clip_per_page;
+      currentPage.current = 1;
+      console.log(clip_per_page);
       let cnt = 0;
-      const clips = [];
-      for (let item of res["data"]["contents"]) {
+      for (let item of clip_per_page[1]["clips"]) {
         const objectId = item["id"];
         if (objectId in dic) {
           console.log("find in dic");
@@ -149,13 +204,14 @@ const App = () => {
           dic[objectId] = videoUrl;
           item["url"] = videoUrl;
         }
-        clips.push(item);
         cnt += 1;
         setLoadedPlayoutUrl(cnt);
       }
       setLoadingPlayoutUrl(false);
       setHaveRes(true);
-      return clips;
+      playoutTokens.current = dic;
+      pages.current = clip_per_page;
+      return clip_per_page[1]["clips"];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoading(false);
@@ -166,7 +222,7 @@ const App = () => {
   const getRes = () => {
     setLoading(true);
     setLoadedPlayoutUrl(0);
-    genUrl().then(({ url, client }) => {
+    getSearchUrl().then(({ url, client }) => {
       curl(url, client)
         .then((res) => {
           if (res != null) {
@@ -196,6 +252,8 @@ const App = () => {
             setLoading(false);
             setTimeoutErr(false);
             setObjId(txt);
+            pages.current = {};
+            currentPage.current = 1;
           }}
         />
       </div>
@@ -208,9 +266,13 @@ const App = () => {
             setLoading(false);
             setTimeoutErr(false);
             setSearch(encodeURI(txt.trim()));
+            pages.current = {};
+            currentPage.current = 1;
           }}
         />
       </div>
+
+      {/* show the text info for both input and the search output */}
       {!haveRes ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
@@ -249,6 +311,35 @@ const App = () => {
         </div>
       )}
 
+      {/* paginaiton bar */}
+      <ReactPaginate
+        breakLabel="..."
+        nextLabel=">"
+        onPageChange={(data) => {
+          const pageIndex = data.selected + 1;
+          jumpToPage(pageIndex).then((res) => {
+            if (res != null) {
+              console.log(res);
+              setResopnse(res);
+            } else {
+              // maybe popup window to alert here
+            }
+          });
+        }}
+        pageRangeDisplayed={3}
+        pageCount={Object.keys(pages.current).length}
+        previousLabel="<"
+        renderOnZeroPageCount={null}
+        containerClassName="pagination justify-content-center"
+        pageClassName="page-item"
+        pageLinkClassName="page-link"
+        previousClassName="page-item"
+        previousLinkClassName="page-link"
+        nextClassName="page-item"
+        nextLinkClassName="page-link"
+        activeClassName="active"
+      />
+
       {loading ? (
         <div style={hint}>
           <p>curling the search object</p>
@@ -267,7 +358,9 @@ const App = () => {
       ) : loadingPlauoutUrl ? (
         <div style={hint}>
           <p>
-            {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${totalPlauoutUrl}`}
+            {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${
+              pages.current[currentPage.current]["clips"].length
+            }`}
           </p>
         </div>
       ) : timeoutErr ? (
