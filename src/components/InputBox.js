@@ -18,13 +18,7 @@ const InputBox = (props) => {
   const [value, setValue] = useState("");
   return (
     <div style={body}>
-      <div
-        style={{
-          width: "10%",
-        }}
-      >
-        {props.text}
-      </div>
+      <div style={{ width: "10%" }}>{props.text}</div>
       <input
         required="required"
         type="text"
