@@ -5,7 +5,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
-// import PageBar from "./components/PageBar";
 import ReactPaginate from "react-paginate";
 import logo from "./static/images/Eluvio Favicon full.png";
 import config from "./config.json";
@@ -86,19 +85,33 @@ const hint = {
 };
 
 const App = () => {
+  // basic info
   const [search, setSearch] = useState("");
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResopnse] = useState([]);
-  const [haveRes, setHaveRes] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loadingPlauoutUrl, setLoadingPlayoutUrl] = useState(false);
-  const [loadedPlauoutUrl, setLoadedPlayoutUrl] = useState(0);
+
+  // loading status
+  const [loadingSearchRes, setLoadingSearchRes] = useState(false);
+  const [haveSearchRes, setHaveSearchRes] = useState(false);
+  const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
+  const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
   const [timeoutErr, setTimeoutErr] = useState(false);
+
+  // processed info
   const pages = useRef({});
+  const numPages = useRef(0);
   const currentPage = useRef(1);
   const playoutTokens = useRef({});
   const client = useRef(null);
+
+  const resetLoadStatus = () => {
+    setHavePlayoutUrl(false);
+    setLoadingPlayoutUrl(false);
+    setHaveSearchRes(false);
+    setLoadingSearchRes(false);
+    setTimeoutErr(false);
+  };
 
   const getClient = async ({ pk }) => {
     var _client = await ElvClient.FromConfigurationUrl({
@@ -124,7 +137,7 @@ const App = () => {
       objectId: objId,
     });
     console.log(token);
-
+    console.log(client.utils.DecodeAuthorizationToken(token));
     const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
     console.log(url);
     setUrl(url);
@@ -137,10 +150,8 @@ const App = () => {
       return clip_per_page[pageIndex]["clips"];
     }
     setLoadingPlayoutUrl(true);
-    setHaveRes(false);
+    setHavePlayoutUrl(false);
     const dic = playoutTokens.current;
-    let cnt = 0;
-    setLoadedPlayoutUrl(0);
     for (let item of clip_per_page[pageIndex]["clips"]) {
       const objectId = item["id"];
       if (objectId in dic) {
@@ -158,11 +169,9 @@ const App = () => {
         dic[objectId] = videoUrl;
         item["url"] = videoUrl;
       }
-      cnt += 1;
-      setLoadedPlayoutUrl(cnt);
     }
     setLoadingPlayoutUrl(false);
-    setHaveRes(true);
+    setHavePlayoutUrl(true);
     playoutTokens.current = dic;
     pages.current = clip_per_page;
     return clip_per_page[pageIndex]["clips"];
@@ -172,6 +181,7 @@ const App = () => {
       const res = await axios.get(url, { timeout: 10000 });
       const dic = {};
       const num_pages = Math.ceil(res["data"]["contents"].length / 5);
+      numPages.current = num_pages;
       const clip_per_page = {};
       for (let i = 1; i <= num_pages; i++) {
         clip_per_page[i] = { processed: false, clips: [] };
@@ -181,12 +191,13 @@ const App = () => {
         console.log(pageIndex);
         clip_per_page[pageIndex]["clips"].push(res["data"]["contents"][i]);
       }
-      setLoading(false);
+      setLoadingSearchRes(false);
+      setHaveSearchRes(true);
+
       setLoadingPlayoutUrl(true);
       pages.current = clip_per_page;
       currentPage.current = 1;
       console.log(clip_per_page);
-      let cnt = 0;
       for (let item of clip_per_page[1]["clips"]) {
         const objectId = item["id"];
         if (objectId in dic) {
@@ -204,24 +215,21 @@ const App = () => {
           dic[objectId] = videoUrl;
           item["url"] = videoUrl;
         }
-        cnt += 1;
-        setLoadedPlayoutUrl(cnt);
       }
       setLoadingPlayoutUrl(false);
-      setHaveRes(true);
+      setHavePlayoutUrl(true);
       playoutTokens.current = dic;
       pages.current = clip_per_page;
       return clip_per_page[1]["clips"];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
-      setLoading(false);
+      setLoadingSearchRes(false);
       setTimeoutErr(true);
       return null;
     }
   };
   const getRes = () => {
-    setLoading(true);
-    setLoadedPlayoutUrl(0);
+    setLoadingSearchRes(true);
     getSearchUrl().then(({ url, client }) => {
       curl(url, client)
         .then((res) => {
@@ -246,11 +254,9 @@ const App = () => {
       <div className="row mt-3">
         <InputBox
           text="Search object"
-          disabled={loading || loadingPlauoutUrl}
+          disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
-            setHaveRes(false);
-            setLoading(false);
-            setTimeoutErr(false);
+            resetLoadStatus();
             setObjId(txt);
             pages.current = {};
             currentPage.current = 1;
@@ -260,11 +266,9 @@ const App = () => {
       <div className="row mt-3">
         <InputBox
           text="Search term"
-          disabled={loading || loadingPlauoutUrl}
+          disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
-            setHaveRes(false);
-            setLoading(false);
-            setTimeoutErr(false);
+            resetLoadStatus();
             setSearch(encodeURI(txt.trim()));
             pages.current = {};
             currentPage.current = 1;
@@ -273,7 +277,7 @@ const App = () => {
       </div>
 
       {/* show the text info for both input and the search output */}
-      {!haveRes ? (
+      {!haveSearchRes ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
@@ -289,7 +293,7 @@ const App = () => {
             type="button"
             className="btn btn-primary"
             onClick={getRes}
-            disabled={loading || loadingPlauoutUrl}
+            disabled={loadingSearchRes || loadingPlayoutUrl}
           >
             Let's go
           </button>
@@ -312,39 +316,42 @@ const App = () => {
       )}
 
       {/* paginaiton bar */}
-      <ReactPaginate
-        breakLabel="..."
-        nextLabel=">"
-        onPageChange={(data) => {
-          const pageIndex = data.selected + 1;
-          jumpToPage(pageIndex).then((res) => {
-            if (res != null) {
-              console.log(res);
-              setResopnse(res);
-            } else {
-              // maybe popup window to alert here
-            }
-          });
-        }}
-        pageRangeDisplayed={3}
-        pageCount={Object.keys(pages.current).length}
-        previousLabel="<"
-        renderOnZeroPageCount={null}
-        containerClassName="pagination justify-content-center"
-        pageClassName="page-item"
-        pageLinkClassName="page-link"
-        previousClassName="page-item"
-        previousLinkClassName="page-link"
-        nextClassName="page-item"
-        nextLinkClassName="page-link"
-        activeClassName="active"
-      />
+      {haveSearchRes ? (
+        <ReactPaginate
+          breakLabel="..."
+          nextLabel=">"
+          onPageChange={(data) => {
+            const pageIndex = data.selected + 1;
+            jumpToPage(pageIndex).then((res) => {
+              if (res != null) {
+                console.log(res);
+                setResopnse(res);
+              } else {
+                // maybe popup window to alert here
+              }
+            });
+          }}
+          pageRangeDisplayed={3}
+          pageCount={numPages.current}
+          previousLabel="<"
+          renderOnZeroPageCount={null}
+          containerClassName="pagination justify-content-center"
+          pageClassName="page-item"
+          pageLinkClassName="page-link"
+          previousClassName="page-item"
+          previousLinkClassName="page-link"
+          nextClassName="page-item"
+          nextLinkClassName="page-link"
+          activeClassName="active"
+        />
+      ) : null}
 
-      {loading ? (
+      {/* loading status or video player */}
+      {loadingSearchRes || loadingPlayoutUrl ? (
         <div style={hint}>
-          <p>curling the search object</p>
+          <p>loading res</p>
         </div>
-      ) : haveRes ? (
+      ) : havePlayoutUrl ? (
         <div>
           {response.map((clip) => {
             return (
@@ -354,14 +361,6 @@ const App = () => {
               ></ClipRes>
             );
           })}
-        </div>
-      ) : loadingPlauoutUrl ? (
-        <div style={hint}>
-          <p>
-            {`loading playoutUrl for each clip, please wait for a moment; finished: ${loadedPlauoutUrl} / ${
-              pages.current[currentPage.current]["clips"].length
-            }`}
-          </p>
         </div>
       ) : timeoutErr ? (
         <div style={hint}>
