@@ -1,95 +1,100 @@
 import React from "react";
-// import ReactPlayer from "react-player";
 import ReactHlsPlayer from "react-hls-player";
-// import placeholdImage from "../static/images/smallLogo.jpg";
+const body = {
+  display: "flex",
+  flexDirection: "row",
+  backgroundColor: "whitesmoke",
+  alignItems: "center",
+  marginTop: 10,
+  borderRadius: 10,
+  height: 400,
+};
+
+const info = {
+  display: " flex",
+  flexDirection: "column",
+  width: "50%",
+  height: "90%",
+  margin: "2%",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const shortInfo = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "95%",
+  height: "8%",
+  marginTop: "0.5%",
+};
+
+const longInfo = {
+  width: "95%",
+  height: "50%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const videoPlayer = {
+  width: "50%",
+  height: "98%",
+  flexDirection: "colomn",
+  marginRight: "3%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
 const ClipRes = (props) => {
+  const url = `${props.clipInfo.url}&resolve=false&clip_start=${
+    props.clipInfo.start_time / 1000
+  }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        backgroundColor: "lavender",
-        alignItems: "center",
-        margin: 10,
-        borderRadius: 10,
-        height: 400,
-      }}
-    >
-      <div
-        style={{
-          display: " flex",
-          flexDirection: "column",
-          width: "40%",
-          height: "80%",
-          margin: "2%",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
-          <text>title: </text>
-          <text>{props.clipInfo.meta.public.asset_metadata.title}</text>
+    <div style={body}>
+      <div style={info}>
+        <div style={shortInfo}>
+          <div>title: </div>
+          <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
         </div>
-        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
-          <text>library id: </text>
-          <text>{props.clipInfo.qlib_id}</text>
+        <div style={shortInfo}>
+          <div>library id: </div>
+          <div>{props.clipInfo.qlib_id}</div>
         </div>
-        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
-          <text>content id: </text>
-          <text>{props.clipInfo.id}</text>
+        <div style={shortInfo}>
+          <div>content id: </div>
+          <div>{props.clipInfo.id}</div>
         </div>
-        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
-          <text>start_time: </text>
-          <text>{props.clipInfo.start}</text>
+        <div style={shortInfo}>
+          <div>start_time: </div>
+          <div>{props.clipInfo.start}</div>
         </div>
-        <div style={{ flexDirection: "row", width: "90%", height: "8%" }}>
-          <text>end_time: </text>
-          <text>{props.clipInfo.end}</text>
+        <div style={shortInfo}>
+          <div>end_time: </div>
+          <div>{props.clipInfo.end}</div>
         </div>
-        <div
-          style={{
-            width: "80%",
-            height: "50%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <text>playout url</text>
+        <div style={longInfo}>
+          <div>playout url</div>
           <textarea
             name="playout url"
-            value={`${props.baseUrl}/qlibs/${props.libId}/q/${
-              props.clipInfo.hash
-            }/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${
-              props.token
-            }&&resolve=false&clip_start=${
-              props.clipInfo.start_time / 1000
-            }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
-            style={{ height: "100%", width: "100%" }}
+            value={url}
+            style={{
+              height: "100%",
+              width: "100%",
+              padding: 5,
+              borderStyle: "None",
+              borderRadius: 10,
+            }}
             readOnly
           ></textarea>
         </div>
       </div>
-      <div
-        style={{
-          width: "55%",
-          height: "90%",
-          flexDirection: "colomn",
-          margin: "2%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div style={videoPlayer}>
         <ReactHlsPlayer
-          src={`${props.baseUrl}/qlibs/${props.libId}/q/${
-            props.clipInfo.hash
-          }/rep/playout/clips_clear/hls-clear/playlist.m3u8?authorization=${
-            props.token
-          }&&resolve=false&clip_start=${
-            props.clipInfo.start_time / 1000
-          }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`}
+          src={url}
           width="100%"
           height="auto"
           autoPlay={false}
