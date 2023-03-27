@@ -1,9 +1,21 @@
-# Elv ML clipsearch demo
+# Eluvio Automatic Clip Generation-demo
 
-1. npm install
-2. npm start
-3. if run on a server, and trying to access on your local browser, run a port map before
+## Using as stand alone webapp
 
-   ssh -L 3000:localhost:3000 -Nf -l <user_name> 192.168.96.201
+User can do local hosting or run on a remote server, 
 
-4. This is a demo, please don't do search for a term that will return too many results (like "human"), that will take a long loading period
+```
+npm install
+npm start
+```
+If run on a remote server, and try to access on your local browser, open an SHSH tunnel in background
+
+```
+ssh -NfL localhost:3000:localhost:3000  <user_name>@<ssh_address>
+```
+then open `localhost:3000` in the local browser, you will get
+
+<img width="1189" alt="image" src="https://user-images.githubusercontent.com/52431045/215934597-2ee0f4d7-cc1d-4a5d-a908-6f912874f519.png">
+
+
+This is a demo, please don't do search for a term that will return too many results (like "human"), that will take a long loading period
