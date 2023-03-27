@@ -116,14 +116,18 @@ const App = () => {
   };
 
   const getClient = async ({ pk }) => {
-    var _client = await ElvClient.FromConfigurationUrl({
-      configUrl: "https://main.net955305.contentfabric.io/config",
-    });
-    const wallet = _client.GenerateWallet();
-    const signer = wallet.AddAccount({ privateKey: pk });
-    _client.SetSigner({ signer });
-    client.current = _client;
-    return _client;
+    if (client.current == null) {
+      var _client = await ElvClient.FromConfigurationUrl({
+        configUrl: "https://main.net955305.contentfabric.io/config",
+      });
+      const wallet = _client.GenerateWallet();
+      const signer = wallet.AddAccount({ privateKey: pk });
+      _client.SetSigner({ signer });
+      client.current = _client;
+      return _client;
+    } else {
+      return client.current;
+    }
   };
   const getSearchUrl = async () => {
     const client = await getClient({ pk: config["ethereum"]["private_key"] });
@@ -169,7 +173,7 @@ const App = () => {
       }
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
-
+      // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
       pages.current = clip_per_page;
       currentPage.current = 1;
