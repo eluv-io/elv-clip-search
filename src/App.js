@@ -97,6 +97,7 @@ const App = () => {
   const [timeoutErr, setTimeoutErr] = useState(false);
   const [loadedContent, setLoadedContent] = useState(0);
   const [totalContent, setTotalContent] = useState(0);
+  const [errMsg, setErrMsg] = useState("");
   // processed info
   const pages = useRef({});
   const numPages = useRef(0);
@@ -109,6 +110,15 @@ const App = () => {
     setHaveSearchRes(false);
     setLoadingSearchRes(false);
     setTimeoutErr(false);
+    setLoadedContent(0);
+    setTotalContent(0);
+  };
+
+  const setErrorStatus = () => {
+    setHavePlayoutUrl(false);
+    setLoadingPlayoutUrl(false);
+    setHaveSearchRes(false);
+    setTimeoutErr(true);
     setLoadedContent(0);
     setTotalContent(0);
   };
@@ -139,7 +149,7 @@ const App = () => {
       makeAccessRequest: true,
       queryParams: {
         terms: search,
-        select: "text",
+        select: "...,text,/public/asset_metadata/title",
         stats:
           "f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string",
         start: 0,
@@ -159,13 +169,13 @@ const App = () => {
   };
 
   const curl = async (url, client) => {
+    const clip_per_page = {};
+    // load and parse the res from curling search url
     try {
       const res = await axios.get(url, { timeout: 10000 });
-      const dic = {};
       const num_pages = Math.ceil(res["data"]["contents"].length / 5);
       setTotalContent(res["data"]["contents"].length);
       numPages.current = num_pages;
-      const clip_per_page = {};
       for (let i = 1; i <= num_pages; i++) {
         clip_per_page[i] = { processed: false, clips: [] };
       }
@@ -175,9 +185,19 @@ const App = () => {
       }
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
+    } catch (err) {
+      setErrMsg(
+        "Curl search url timeout err, search node retrieving index, please try again later"
+      );
+      setErrorStatus();
+      return null;
+    }
+
+    try {
       // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
+      const dic = {};
       let cnt = 0;
       for (let pageIndex in clip_per_page) {
         for (let item of clip_per_page[pageIndex]["clips"]) {
@@ -188,10 +208,13 @@ const App = () => {
             const playoutOptions = await client.PlayoutOptions({
               objectId,
               protocols: ["hls"],
-              drms: ["aes-128"],
+              drms: ["clear", "aes-128", "fairplay"],
             });
             const playoutMethods = playoutOptions["hls"].playoutMethods;
-            const playoutInfo = playoutMethods["aes-128"];
+            const playoutInfo =
+              playoutMethods.clear ||
+              playoutMethods["aes-128"] ||
+              playoutMethods.fairplay;
             const videoUrl = playoutInfo.playoutUrl;
             dic[objectId] = videoUrl;
             item["url"] = videoUrl;
@@ -207,8 +230,8 @@ const App = () => {
       return clip_per_page[1]["clips"];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
-      setLoadingSearchRes(false);
-      setTimeoutErr(true);
+      setErrMsg("loading playout url error");
+      setErrorStatus();
       return null;
     }
   };
@@ -219,8 +242,6 @@ const App = () => {
         .then((res) => {
           if (res != null) {
             setResopnse(res);
-          } else {
-            // maybe popup window to alert here
           }
         })
         .catch((err) => {
@@ -309,8 +330,6 @@ const App = () => {
             jumpToPage(pageIndex).then((res) => {
               if (res != null) {
                 setResopnse(res);
-              } else {
-                // maybe popup window to alert here
               }
             });
           }}
@@ -349,10 +368,7 @@ const App = () => {
         </div>
       ) : timeoutErr ? (
         <div style={hint}>
-          <p>
-            Curl search url timeout err, search node retrieving index, please
-            try again later
-          </p>
+          <p>{errMsg}</p>
         </div>
       ) : null}
     </div>
