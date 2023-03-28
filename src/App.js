@@ -1,13 +1,11 @@
 import React, { useState, useRef } from "react";
-import { ElvClient } from "@eluvio/elv-client-js/dist/ElvClient-min.js";
-import AuthorizationClient from "@eluvio/elv-client-js/src/AuthorizationClient";
+import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
 import logo from "./static/images/Eluvio Favicon full.png";
-import config from "./config.json";
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -115,14 +113,11 @@ const App = () => {
     setTotalContent(0);
   };
 
-  const getClient = async ({ pk }) => {
+  const getClient = () => {
     if (client.current == null) {
-      var _client = await ElvClient.FromConfigurationUrl({
-        configUrl: "https://main.net955305.contentfabric.io/config",
+      const _client = new FrameClient({
+        target: window.parent,
       });
-      const wallet = _client.GenerateWallet();
-      const signer = wallet.AddAccount({ privateKey: pk });
-      _client.SetSigner({ signer });
       client.current = _client;
       return _client;
     } else {
@@ -130,22 +125,30 @@ const App = () => {
     }
   };
   const getSearchUrl = async () => {
-    const client = await getClient({ pk: config["ethereum"]["private_key"] });
+    const client = getClient();
     const libId = await client.ContentObjectLibraryId({
       objectId: objId,
     });
-    const authClient = new AuthorizationClient({
-      client,
-      contentSpaceId: config["space_id"],
-    });
-    const token = await authClient.AuthorizationToken({
+
+    // const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
+    const url = await client.Rep({
       libraryId: libId,
       objectId: objId,
+      rep: "search",
+      service: "search",
+      makeAccessRequest: true,
+      queryParams: {
+        terms: search,
+        select: "text",
+        stats:
+          "f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string",
+        start: 0,
+        clips_include_source_tags: false,
+        clips: true,
+        sort: "f_start_time@asc",
+      },
     });
-    console.log(token);
-    console.log(client.utils.DecodeAuthorizationToken(token));
-    const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
-    console.log(url);
+
     setUrl(url);
     return { url, client };
   };
@@ -161,7 +164,6 @@ const App = () => {
       const dic = {};
       const num_pages = Math.ceil(res["data"]["contents"].length / 5);
       setTotalContent(res["data"]["contents"].length);
-      setResopnse(res["data"]["contents"]);
       numPages.current = num_pages;
       const clip_per_page = {};
       for (let i = 1; i <= num_pages; i++) {
@@ -175,7 +177,6 @@ const App = () => {
       setHaveSearchRes(true);
       // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
-      pages.current = clip_per_page;
       currentPage.current = 1;
       let cnt = 0;
       for (let pageIndex in clip_per_page) {
@@ -200,9 +201,9 @@ const App = () => {
         }
         clip_per_page[pageIndex]["processed"] = true;
       }
+      pages.current = clip_per_page;
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(true);
-      pages.current = clip_per_page;
       return clip_per_page[1]["clips"];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
@@ -251,7 +252,8 @@ const App = () => {
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
             resetLoadStatus();
-            setSearch(encodeURI(txt.trim()));
+            // setSearch(encodeURI(txt.trim()));
+            setSearch(txt.trim());
             pages.current = {};
             currentPage.current = 1;
           }}
@@ -334,7 +336,7 @@ const App = () => {
             loading res, progress {loadedContent} / {totalContent}
           </p>
         </div>
-      ) : havePlayoutUrl ? (
+      ) : havePlayoutUrl && response.length > 0 ? (
         <div>
           {response.map((clip) => {
             return (
