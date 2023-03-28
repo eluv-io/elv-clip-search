@@ -56,10 +56,10 @@ const ClipRes = (props) => {
   return (
     <div style={body}>
       <div style={info}>
-        <div style={shortInfo}>
+        {/* <div style={shortInfo}>
           <div>title: </div>
           <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
-        </div>
+        </div> */}
         <div style={shortInfo}>
           <div>library id: </div>
           <div>{props.clipInfo.qlib_id}</div>
