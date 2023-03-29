@@ -3,6 +3,7 @@ import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
+import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
 const title = {
@@ -281,6 +282,19 @@ const App = () => {
       </div>
       <div className="row mt-3">
         <InputBox
+          text="Search term"
+          disabled={loadingSearchRes || loadingPlayoutUrl}
+          handleSubmitClick={(txt) => {
+            resetLoadStatus();
+            // setSearch(encodeURI(txt.trim()));
+            setSearch(txt.trim());
+            pages.current = {};
+            currentPage.current = 1;
+          }}
+        />
+      </div>
+      <div className="row mt-3">
+        <SearchBox
           text="Search term"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
