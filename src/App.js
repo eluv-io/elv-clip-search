@@ -150,9 +150,8 @@ const App = () => {
       queryParams: {
         terms: search,
         select: "...,text,/public/asset_metadata/title",
-        stats:
-          "f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string",
         start: 0,
+        limit: 80,
         clips_include_source_tags: false,
         clips: true,
         sort: "f_start_time@asc",
@@ -198,6 +197,8 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
       const dic = {};
+      let offering = null;
+      let playoutToken = null;
       let cnt = 0;
       for (let pageIndex in clip_per_page) {
         for (let item of clip_per_page[pageIndex]["clips"]) {
@@ -205,17 +206,40 @@ const App = () => {
           if (objectId in dic) {
             item["url"] = dic[objectId];
           } else {
-            const playoutOptions = await client.PlayoutOptions({
+            // without setting offering, sony will use fairplay, too slow
+            // an ugly way , but it works well
+            if (offering == null) {
+              const offerings = await client.AvailableOfferings({
+                objectId,
+              });
+              if ("default_clear" in offerings) {
+                offering = "default_clear";
+              } else {
+                offering = "default";
+              }
+            }
+            const args = {
               objectId,
               protocols: ["hls"],
+              offering: offering,
               drms: ["clear", "aes-128", "fairplay"],
-            });
+            };
+            if (playoutToken != null) {
+              args["authorizationToken"] = playoutToken;
+            }
+            const playoutOptions = await client.PlayoutOptions(args);
             const playoutMethods = playoutOptions["hls"].playoutMethods;
             const playoutInfo =
               playoutMethods.clear ||
               playoutMethods["aes-128"] ||
               playoutMethods.fairplay;
             const videoUrl = playoutInfo.playoutUrl;
+            // get the token
+            if (playoutToken != null) {
+              const token_start = videoUrl.indexOf("authorization") + 14;
+              const token_end = videoUrl.indexOf("&resolve=true");
+              playoutToken = videoUrl.slice(token_start, token_end);
+            }
             dic[objectId] = videoUrl;
             item["url"] = videoUrl;
           }
