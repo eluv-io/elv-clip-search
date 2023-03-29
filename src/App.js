@@ -5,7 +5,6 @@ import axios from "axios";
 import InputBox from "./components/InputBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
-import logo from "./static/images/Eluvio Favicon full.png";
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -151,10 +150,10 @@ const App = () => {
         terms: search,
         select: "...,text,/public/asset_metadata/title",
         start: 0,
-        limit: 80,
+        limit: 200,
         clips_include_source_tags: false,
         clips: true,
-        sort: "f_start_time@asc",
+        sort: "f_display_title_as_string@asc,f_start_time@asc",
       },
     });
 
@@ -266,8 +265,7 @@ const App = () => {
   return (
     <div className="container">
       <div style={title}>
-        <img src={logo} alt="logo" style={{ height: "90%", margin: 30 }} />
-        <h1 className="mt-3">Eluvio Automatic Clip Generation</h1>
+        <h1 className="mt-3">Eluvio Clip Search</h1>
       </div>
       <div className="row mt-3">
         <InputBox
