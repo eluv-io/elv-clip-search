@@ -198,7 +198,6 @@ const App = () => {
       currentPage.current = 1;
       const dic = {};
       let offering = null;
-      let playoutToken = null;
       let cnt = 0;
       for (let pageIndex in clip_per_page) {
         for (let item of clip_per_page[pageIndex]["clips"]) {
@@ -218,28 +217,19 @@ const App = () => {
                 offering = "default";
               }
             }
-            const args = {
+
+            const playoutOptions = await client.PlayoutOptions({
               objectId,
               protocols: ["hls"],
               offering: offering,
               drms: ["clear", "aes-128", "fairplay"],
-            };
-            if (playoutToken != null) {
-              args["authorizationToken"] = playoutToken;
-            }
-            const playoutOptions = await client.PlayoutOptions(args);
+            });
             const playoutMethods = playoutOptions["hls"].playoutMethods;
             const playoutInfo =
               playoutMethods.clear ||
               playoutMethods["aes-128"] ||
               playoutMethods.fairplay;
             const videoUrl = playoutInfo.playoutUrl;
-            // get the token
-            if (playoutToken != null) {
-              const token_start = videoUrl.indexOf("authorization") + 14;
-              const token_end = videoUrl.indexOf("&resolve=true");
-              playoutToken = videoUrl.slice(token_start, token_end);
-            }
             dic[objectId] = videoUrl;
             item["url"] = videoUrl;
           }
