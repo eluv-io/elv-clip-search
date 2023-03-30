@@ -76,6 +76,8 @@ const SingleSearchBox = (props) => {
   const options = [
     "all",
     "f_logo",
+    "f_object",
+    "f_segment",
     "f_speech_to_text",
     "f_celebrity",
     "f_display_title",
