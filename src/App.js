@@ -114,15 +114,6 @@ const App = () => {
     setTotalContent(0);
   };
 
-  const setErrorStatus = () => {
-    setHavePlayoutUrl(false);
-    setLoadingPlayoutUrl(false);
-    setHaveSearchRes(false);
-    setErr(true);
-    setLoadedContent(0);
-    setTotalContent(0);
-  };
-
   const getClient = () => {
     if (client.current == null) {
       const _client = new FrameClient({
@@ -187,10 +178,12 @@ const App = () => {
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
     } catch (err) {
+      setLoadingSearchRes(false);
+      setHaveSearchRes(false);
       setErrMsg(
         "Curl search url timeout err, search node retrieving index, please try again later"
       );
-      setErrorStatus();
+      setErr(true);
       return null;
     }
 
@@ -246,15 +239,17 @@ const App = () => {
       return clip_per_page[1]["clips"];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
+      setLoadingPlayoutUrl(false);
+      setHavePlayoutUrl(false);
       setErrMsg("loading playout url error");
-      setErrorStatus();
+      setErr(true);
       return null;
     }
   };
   const getRes = async () => {
     if (search === "" || objId === "") {
       console.log("err");
-      setErrorStatus();
+      setErr(true);
       setErrMsg("Need to give reasonable search obj Id and search condition");
     } else {
       setLoadingSearchRes(true);
