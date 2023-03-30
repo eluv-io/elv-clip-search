@@ -13,7 +13,7 @@ const SearchBox = (props) => {
   const makeString = (terms) => {
     const res = [];
     for (let item of terms) {
-      if (item.field == "all") {
+      if (item.field === "all") {
         res.push(`("${item.text}")`);
       } else {
         res.push(`(${item.field}:"${item.text}")`);

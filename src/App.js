@@ -94,7 +94,7 @@ const App = () => {
   const [haveSearchRes, setHaveSearchRes] = useState(false);
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
-  const [timeoutErr, setTimeoutErr] = useState(false);
+  const [err, setErr] = useState(false);
   const [loadedContent, setLoadedContent] = useState(0);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
@@ -109,7 +109,7 @@ const App = () => {
     setLoadingPlayoutUrl(false);
     setHaveSearchRes(false);
     setLoadingSearchRes(false);
-    setTimeoutErr(false);
+    setErr(false);
     setLoadedContent(0);
     setTotalContent(0);
   };
@@ -118,7 +118,7 @@ const App = () => {
     setHavePlayoutUrl(false);
     setLoadingPlayoutUrl(false);
     setHaveSearchRes(false);
-    setTimeoutErr(true);
+    setErr(true);
     setLoadedContent(0);
     setTotalContent(0);
   };
@@ -136,30 +136,32 @@ const App = () => {
   };
   const getSearchUrl = async () => {
     const client = getClient();
-    const libId = await client.ContentObjectLibraryId({
-      objectId: objId,
-    });
-
-    // const url = `https://host-76-74-29-35.contentfabric.io/qlibs/${libId}/q/${objId}/rep/search?terms=(${search})&authorization=${token}&select=...,text,/public/asset_metadata/title&stats=f_celebrity_as_string,f_segment_as_string,f_object_as_string,f_display_title_as_string&start=0&limit=80&clips&clips_include_source_tags=false&sort=f_start_time@asc`;
-    const url = await client.Rep({
-      libraryId: libId,
-      objectId: objId,
-      rep: "search",
-      service: "search",
-      makeAccessRequest: true,
-      queryParams: {
-        terms: search,
-        select: "...,text,/public/asset_metadata/title",
-        start: 0,
-        limit: 200,
-        clips_include_source_tags: false,
-        clips: true,
-        sort: "f_display_title_as_string@asc,f_start_time@asc",
-      },
-    });
-
-    setUrl(url);
-    return { url, client };
+    try {
+      const libId = await client.ContentObjectLibraryId({
+        objectId: objId,
+      });
+      const url = await client.Rep({
+        libraryId: libId,
+        objectId: objId,
+        rep: "search",
+        service: "search",
+        makeAccessRequest: true,
+        queryParams: {
+          terms: search,
+          select: "...,text,/public/asset_metadata/title",
+          start: 0,
+          limit: 200,
+          clips_include_source_tags: false,
+          clips: true,
+          sort: "f_display_title_as_string@asc,f_start_time@asc",
+        },
+      });
+      setUrl(url);
+      return { url, client };
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   };
 
   const jumpToPage = async (pageIndex) => {
@@ -249,19 +251,26 @@ const App = () => {
       return null;
     }
   };
-  const getRes = () => {
-    setLoadingSearchRes(true);
-    getSearchUrl().then(({ url, client }) => {
-      curl(url, client)
-        .then((res) => {
-          if (res != null) {
-            setResopnse(res);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    });
+  const getRes = async () => {
+    if (search === "" || objId === "") {
+      console.log("err");
+      setErrorStatus();
+      setErrMsg("Need to give reasonable search obj Id and search condition");
+    } else {
+      setLoadingSearchRes(true);
+      const res = await getSearchUrl();
+      if (res != null) {
+        const { url, client } = res;
+        const searchRes = await curl(url, client);
+        if (res != null) {
+          setResopnse(searchRes);
+        }
+      } else {
+        console.log(" url err");
+        setErrorStatus();
+        setErrMsg("creating search URL err, check the search index Id again");
+      }
+    }
   };
   return (
     <div className="container">
@@ -379,7 +388,7 @@ const App = () => {
             );
           })}
         </div>
-      ) : timeoutErr ? (
+      ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
         </div>
