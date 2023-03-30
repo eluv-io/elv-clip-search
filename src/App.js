@@ -150,7 +150,7 @@ const App = () => {
           terms: search,
           select: "...,text,/public/asset_metadata/title",
           start: 0,
-          limit: 200,
+          limit: 80,
           clips_include_source_tags: false,
           clips: true,
           sort: "f_display_title_as_string@asc,f_start_time@asc",
