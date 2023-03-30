@@ -5,8 +5,33 @@ const body = {
   alignItems: "center",
   justifyContent: "space-between",
 };
+const left = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "10%",
+  height: "100%",
+};
+const right = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "5%",
+  height: "100%",
+};
+const middle = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "80%",
+  height: "100%",
+};
+
 const box = {
-  width: "70%",
+  width: "100%",
   height: "90%",
   paddingLeft: 20,
   borderRadius: 5,
@@ -14,26 +39,37 @@ const box = {
   borderColor: "grey",
   borderStyle: "ridge",
 };
+const button = {
+  width: "100%",
+  border: "None",
+  borderRadius: 10,
+  padding: 5,
+  backgroundColor: "#dbe4ed",
+};
 const InputBox = (props) => {
   const [value, setValue] = useState("");
   return (
     <div style={body}>
-      <div style={{ width: "10%" }}>{props.text}</div>
-      <input
-        required="required"
-        type="text"
-        style={box}
-        id="ObjId"
-        onChange={(event) => setValue(event.target.value)}
-      />
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={() => props.handleSubmitClick(value)}
-        disabled={props.disabled}
-      >
-        Submit
-      </button>
+      <div style={left}>{props.text}</div>
+      <div style={middle}>
+        <input
+          required="required"
+          type="text"
+          style={box}
+          id="ObjId"
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </div>
+      <div style={right}>
+        <button
+          type="button"
+          style={button}
+          onClick={() => props.handleSubmitClick(value)}
+          disabled={props.disabled}
+        >
+          ✔️
+        </button>
+      </div>
     </div>
   );
 };

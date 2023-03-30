@@ -7,85 +7,57 @@ const container = {
   justifyContent: "space-between",
   width: "100%",
 };
-const body = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  width: "100%",
-};
-
-const controlButton = {
-  width: "25%",
-  border: "None",
-  borderRadius: 10,
-  padding: 5,
-};
 
 const SearchBox = (props) => {
-  const [terms, setTerms] = useState([{ field: "all", text: "" }]);
-
+  const [terms, setTerms] = useState([]);
+  const makeString = (terms) => {
+    const res = [];
+    for (let item of terms) {
+      if (item.field == "all") {
+        res.push(`("${item.text}")`);
+      } else {
+        res.push(`(${item.field}:"${item.text}")`);
+      }
+    }
+    const resStr = `(${res.join("AND")})`;
+    return resStr;
+  };
   return (
     <div style={container}>
+      <SingleSearchBox
+        text="Add New Term"
+        disabled={props.disabled}
+        addHandler={(newElement) => {
+          const newTerms = terms.concat(newElement);
+          setTerms(newTerms);
+          const res = makeString(newTerms);
+          props.handleSubmitClick(res);
+        }}
+        statusHandler={props.statusHandler}
+      ></SingleSearchBox>
       {terms.map((element, index) => {
         return (
           <SingleSearchBox
-            text="Search term"
-            searchTextValue={element.text}
-            searchFieldValue={element.field}
-            handleClearClick={() => {
-              if (terms.length > 1) {
-                console.log(index);
+            index={index}
+            display={true}
+            searchText={element.text}
+            searchField={element.field}
+            statusHandler={props.statusHandler}
+            disabled={props.disabled}
+            key={index}
+            removeHandler={() => {
+              if (terms.length >= 1) {
                 const firstHalf = terms.slice(0, index);
                 const secondHalf = terms.slice(index + 1, terms.length);
-                console.log(firstHalf);
-                console.log(secondHalf);
-                const newRes = firstHalf.concat(secondHalf);
-                console.log(newRes);
-                setTerms(newRes);
+                const newTerms = firstHalf.concat(secondHalf);
+                setTerms(newTerms);
+                const res = makeString(newTerms);
+                props.handleSubmitClick(res);
               }
-            }}
-            searchTextHandler={(val) => {
-              terms[index].text = val;
-              console.log(terms);
-              setTerms(terms);
-            }}
-            searchFieldHandler={(val) => {
-              terms[index].field = val;
-              console.log(terms);
-              setTerms(terms);
             }}
           ></SingleSearchBox>
         );
       })}
-      <div style={{ ...body, justifyContent: "space-around", marginTop: 10 }}>
-        <button
-          type="button"
-          style={{ ...controlButton, backgroundColor: "#e2edf6" }}
-          onClick={() => {
-            setTerms(terms.concat([{ field: "all", text: "" }]));
-          }}
-          disabled={props.disabled}
-        >
-          Add another term
-        </button>
-        <button
-          type="button"
-          style={{ ...controlButton, backgroundColor: "#f4e5e6" }}
-          onClick={() => setTerms([{ field: "all", text: "" }])}
-          disabled={props.disabled}
-        >
-          Clear all search term
-        </button>
-        <button
-          type="button"
-          style={{ ...controlButton, backgroundColor: "#e0eae0" }}
-          onClick={() => {}}
-          disabled={props.disabled}
-        >
-          Submit all search term
-        </button>
-      </div>
     </div>
   );
 };

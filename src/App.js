@@ -281,29 +281,16 @@ const App = () => {
         />
       </div>
       <div className="row mt-3">
-        <InputBox
-          text="Search term"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={(txt) => {
-            resetLoadStatus();
-            // setSearch(encodeURI(txt.trim()));
-            setSearch(txt.trim());
-            pages.current = {};
-            currentPage.current = 1;
-          }}
-        />
-      </div>
-      <div className="row mt-3">
         <SearchBox
           text="Search term"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
             resetLoadStatus();
-            // setSearch(encodeURI(txt.trim()));
             setSearch(txt.trim());
             pages.current = {};
             currentPage.current = 1;
           }}
+          statusHandler={resetLoadStatus}
         />
       </div>
 
