@@ -130,10 +130,12 @@ const SingleSearchBox = (props) => {
       type="button"
       style={{ ...button, backgroundColor: "#dbe4ed" }}
       onClick={() => {
-        props.addHandler({ field: field, text: text });
-        props.statusHandler();
-        setField("all");
-        setText("");
+        if (text !== "") {
+          props.addHandler({ field: field, text: text });
+          props.statusHandler();
+          setField("all");
+          setText("");
+        }
       }}
       disabled={props.disabled}
     >
