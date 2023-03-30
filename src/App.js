@@ -243,7 +243,11 @@ const App = () => {
       pages.current = clip_per_page;
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(true);
-      return clip_per_page[1]["clips"];
+      if (1 in clip_per_page) {
+        return clip_per_page[1]["clips"];
+      } else {
+        return [];
+      }
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoadingPlayoutUrl(false);

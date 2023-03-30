@@ -144,10 +144,10 @@ const SingleSearchBox = (props) => {
       onClick={() => {
         if (text !== "") {
           props.addHandler({ field: field, text: text });
-          props.statusHandler();
           setField("all");
           setText("");
         }
+        props.statusHandler();
       }}
       disabled={props.disabled}
     >
