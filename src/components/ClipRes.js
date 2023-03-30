@@ -99,6 +99,10 @@ const ClipRes = (props) => {
           height="auto"
           autoPlay={false}
           controls={true}
+          hlsConfig={{
+            capLevelToPlayerSize: true,
+            maxBufferLength: 1,
+          }}
         ></ReactHlsPlayer>
       </div>
     </div>
