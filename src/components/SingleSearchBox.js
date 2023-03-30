@@ -36,9 +36,14 @@ const box = {
   borderStyle: "ridge",
 };
 const boxInfo = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
   paddingLeft: 20,
-  width: "75%",
+  width: "80%",
   height: "90%",
+  borderRadius: 5,
+  backgroundColor: "whitesmoke",
 };
 
 const selecter = {
@@ -51,9 +56,14 @@ const selecter = {
 };
 
 const selecterInfo = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
   width: "15%",
   height: "90%",
   paddingLeft: 5,
+  borderRadius: 5,
+  backgroundColor: "whitesmoke",
 };
 
 const right = {
