@@ -73,6 +73,13 @@ const curlResTextArea = {
   borderRadius: 20,
 };
 
+const paginationContainer = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
 const hint = {
   width: "100%",
   display: "flex",
@@ -327,7 +334,7 @@ const App = () => {
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
           <div style={curlRes}>
-            <div style={{ flex: 1 }}>returned content</div>
+            <div style={{ flex: 1 }}>contents on this page</div>
             <textarea
               style={curlResTextArea}
               value={JSON.stringify(response, null, 4)}
@@ -338,31 +345,48 @@ const App = () => {
       )}
 
       {/* paginaiton bar */}
-      {haveSearchRes ? (
-        <ReactPaginate
-          breakLabel="..."
-          nextLabel=">"
-          onPageChange={(data) => {
-            const pageIndex = data.selected + 1;
-            jumpToPage(pageIndex).then((res) => {
-              if (res != null) {
-                setResopnse(res);
-              }
-            });
-          }}
-          pageRangeDisplayed={3}
-          pageCount={numPages.current}
-          previousLabel="<"
-          renderOnZeroPageCount={null}
-          containerClassName="pagination justify-content-center"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          activeClassName="active"
-        />
+      {haveSearchRes && havePlayoutUrl ? (
+        <div style={paginationContainer}>
+          <div
+            style={{
+              backgroundColor: "whitesmoke",
+              width: "15%",
+              padding: 10,
+              marginBottom: 10,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignContent: "center",
+              borderRadius: 10,
+            }}
+          >
+            total results {totalContent}
+          </div>
+          <ReactPaginate
+            breakLabel="..."
+            nextLabel=">"
+            onPageChange={(data) => {
+              const pageIndex = data.selected + 1;
+              jumpToPage(pageIndex).then((res) => {
+                if (res != null) {
+                  setResopnse(res);
+                }
+              });
+            }}
+            pageRangeDisplayed={3}
+            pageCount={numPages.current}
+            previousLabel="<"
+            renderOnZeroPageCount={null}
+            containerClassName="pagination justify-content-center"
+            pageClassName="page-item"
+            pageLinkClassName="page-link"
+            previousClassName="page-item"
+            previousLinkClassName="page-link"
+            nextClassName="page-item"
+            nextLinkClassName="page-link"
+            activeClassName="active"
+          />
+        </div>
       ) : null}
 
       {/* loading status or video player */}
