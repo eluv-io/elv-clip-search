@@ -266,8 +266,8 @@ const App = () => {
           setResopnse(searchRes);
         }
       } else {
-        console.log(" url err");
-        setErrorStatus();
+        setLoadingSearchRes(false);
+        setErr(true);
         setErrMsg("creating search URL err, check the search index Id again");
       }
     }
