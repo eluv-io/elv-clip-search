@@ -68,7 +68,7 @@ const right = {
 const button = {
   width: "100%",
   border: "None",
-  borderRadius: 10,
+  borderRadius: 5,
   padding: 5,
 };
 
