@@ -48,7 +48,7 @@ const SearchBox = (props) => {
             searchField={element.field}
             statusHandler={props.statusHandler}
             disabled={props.disabled}
-            key={index}
+            key={index.toString()}
             removeHandler={() => {
               if (terms.length >= 1) {
                 const firstHalf = terms.slice(0, index);
