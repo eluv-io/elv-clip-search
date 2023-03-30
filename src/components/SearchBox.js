@@ -19,8 +19,12 @@ const SearchBox = (props) => {
         res.push(`(${item.field}:"${item.text}")`);
       }
     }
-    const resStr = `(${res.join("AND")})`;
-    return resStr;
+    if (res.length > 0) {
+      const resStr = `(${res.join("AND")})`;
+      return resStr;
+    } else {
+      return "";
+    }
   };
   return (
     <div style={container}>
