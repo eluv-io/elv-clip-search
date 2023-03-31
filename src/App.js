@@ -228,46 +228,55 @@ const App = () => {
     }
   };
 
-  const curl = async (url, client) => {
+  const parseSearchRes = (data) => {
     const clips_per_content = {};
+    let firstContent = "";
+    for (let i = 0; i < data.length; i++) {
+      // get currernt item
+      const item = data[i];
+      // if not in clips_per_content: need to add them in
+      if (!(item["id"] in clips_per_content)) {
+        clips_per_content[item["id"]] = { processed: false, clips: [item] };
+        contentsInfo.current[item["id"]] =
+          item.meta.public.asset_metadata.title.split(",")[0];
+        // set the first content to be current content
+        if (firstContent === "") {
+          firstContent = item["id"];
+          setCurrentContent(item["id"]);
+        }
+      } else {
+        // if already in the dic, just push it in
+        clips_per_content[item["id"]].clips.push(item);
+      }
+    }
+    for (let id in clips_per_content) {
+      // pagitation the clips under this contents
+      const clips = clips_per_content[id].clips;
+      const clips_per_page = {};
+      const num_pages = Math.ceil(clips.length / CLIPS_PER_PAGE);
+      numPages.current = num_pages;
+      for (let i = 1; i <= num_pages; i++) {
+        clips_per_page[i] = [];
+      }
+      for (let i = 0; i < clips.length; i++) {
+        const pageIndex = Math.floor(i / CLIPS_PER_PAGE) + 1;
+        clips_per_page[pageIndex].push(clips[i]);
+      }
+      clips_per_content[id].clips = clips_per_page;
+    }
+    return { clips_per_content, firstContent };
+  };
+
+  const curl = async (url) => {
+    let clips_per_content = {};
     let firstContent = "";
     // load and parse the res from curling search url
     try {
       const res = await axios.get(url, { timeout: 10000 });
       setTotalContent(res["data"]["contents"].length);
-      for (let i = 0; i < res["data"]["contents"].length; i++) {
-        // get currernt item
-        const item = res["data"]["contents"][i];
-        // if not in clips_per_content: need to add them in
-        if (!(item["id"] in clips_per_content)) {
-          clips_per_content[item["id"]] = { processed: false, clips: [item] };
-          contentsInfo.current[item["id"]] =
-            item.meta.public.asset_metadata.title.split(",")[0];
-          // set the first content to be current content
-          if (firstContent === "") {
-            firstContent = item["id"];
-            setCurrentContent(item["id"]);
-          }
-        } else {
-          // if already in the dic, just push it in
-          clips_per_content[item["id"]].clips.push(item);
-        }
-      }
-      for (let id in clips_per_content) {
-        // pagitation the clips under this contents
-        const clips = clips_per_content[id].clips;
-        const clips_per_page = {};
-        const num_pages = Math.ceil(clips.length / CLIPS_PER_PAGE);
-        numPages.current = num_pages;
-        for (let i = 1; i <= num_pages; i++) {
-          clips_per_page[i] = [];
-        }
-        for (let i = 0; i < clips.length; i++) {
-          const pageIndex = Math.floor(i / CLIPS_PER_PAGE) + 1;
-          clips_per_page[pageIndex].push(clips[i]);
-        }
-        clips_per_content[id].clips = clips_per_page;
-      }
+      const parseRes = parseSearchRes(res["data"]["contents"]);
+      firstContent = parseRes["firstContent"];
+      clips_per_content = parseRes["clips_per_content"];
       contents.current = clips_per_content;
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
@@ -281,60 +290,8 @@ const App = () => {
       return null;
     }
 
-    try {
-      // loading playout url for each clip res
-      setLoadingPlayoutUrl(true);
-      if (firstContent === "") {
-        numPages.current = 0;
-        setLoadingPlayoutUrl(false);
-        setHavePlayoutUrl(true);
-        return [];
-      }
-      currentPage.current = 1;
-      // get the possible offerings
-      let offering = null;
-      const offerings = await client.AvailableOfferings({
-        objectId: firstContent,
-      });
-      if ("default_clear" in offerings) {
-        offering = "default_clear";
-      } else {
-        offering = "default";
-      }
-      // given the offering, load the playout url for this content
-      const playoutOptions = await client.PlayoutOptions({
-        objectId: firstContent,
-        protocols: ["hls"],
-        offering: offering,
-        drms: ["clear", "aes-128", "fairplay"],
-      });
-      const playoutMethods = playoutOptions["hls"].playoutMethods;
-      const playoutInfo =
-        playoutMethods.clear ||
-        playoutMethods["aes-128"] ||
-        playoutMethods.fairplay;
-      const videoUrl = playoutInfo.playoutUrl;
-      for (let pageIndex in clips_per_content[firstContent].clips) {
-        for (let item of clips_per_content[firstContent].clips[pageIndex]) {
-          item.url = videoUrl;
-        }
-      }
-      clips_per_content[firstContent].processed = true;
-      numPages.current = Object.keys(
-        clips_per_content[firstContent].clips
-      ).length;
-      contents.current = clips_per_content;
-      setLoadingPlayoutUrl(false);
-      setHavePlayoutUrl(true);
-      return clips_per_content[firstContent].clips[1];
-    } catch (err) {
-      console.log(`Error message : ${err.message} - `, err.code);
-      setLoadingPlayoutUrl(false);
-      setHavePlayoutUrl(false);
-      setErrMsg("loading playout url error");
-      setErr(true);
-      return null;
-    }
+    const res = await jumpToContent(firstContent);
+    return res;
   };
   const getRes = async () => {
     if (search === "" || objId === "") {
@@ -345,8 +302,8 @@ const App = () => {
       setLoadingSearchRes(true);
       const res = await getSearchUrl();
       if (res != null) {
-        const { url, client } = res;
-        const searchRes = await curl(url, client);
+        const { url } = res;
+        const searchRes = await curl(url);
         if (res != null) {
           setResopnse(searchRes);
         }
