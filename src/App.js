@@ -90,6 +90,7 @@ const hint = {
 };
 
 const App = () => {
+  const CLIPS_PER_PAGE = 3;
   // basic info
   const [search, setSearch] = useState("");
   const [objId, setObjId] = useState("");
@@ -102,7 +103,6 @@ const App = () => {
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
   const [err, setErr] = useState(false);
-  const [loadedContent, setLoadedContent] = useState(0);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
   // processed info
@@ -119,7 +119,6 @@ const App = () => {
     setHaveSearchRes(false);
     setLoadingSearchRes(false);
     setErr(false);
-    setLoadedContent(0);
     setTotalContent(0);
   };
 
@@ -167,7 +166,7 @@ const App = () => {
 
   const jumpToPage = (pageIndex) => {
     currentPage.current = pageIndex;
-    return contents[currentContent][pageIndex];
+    return contents.current[currentContent].clips[pageIndex];
   };
 
   const jumpToContent = async (objectId) => {
@@ -178,6 +177,9 @@ const App = () => {
       const clips_per_content = contents.current;
       if (clips_per_content[objectId].processed) {
         // if it is processed, just return that
+        numPages.current = Object.keys(
+          clips_per_content[objectId].clips
+        ).length;
         setLoadingPlayoutUrl(false);
         setHavePlayoutUrl(true);
         return clips_per_content[objectId].clips[1];
@@ -212,6 +214,7 @@ const App = () => {
       }
       clips_per_content[objectId].processed = true;
       contents.current = clips_per_content;
+      numPages.current = Object.keys(clips_per_content[objectId].clips).length;
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(true);
       return clips_per_content[objectId].clips[1];
@@ -250,18 +253,17 @@ const App = () => {
           clips_per_content[item["id"]].clips.push(item);
         }
       }
-      console.log(clips_per_content);
       for (let id in clips_per_content) {
         // pagitation the clips under this contents
         const clips = clips_per_content[id].clips;
         const clips_per_page = {};
-        const num_pages = Math.ceil(clips.length / 5);
+        const num_pages = Math.ceil(clips.length / CLIPS_PER_PAGE);
         numPages.current = num_pages;
         for (let i = 1; i <= num_pages; i++) {
           clips_per_page[i] = [];
         }
         for (let i = 0; i < clips.length; i++) {
-          const pageIndex = Math.floor(i / 5) + 1;
+          const pageIndex = Math.floor(i / CLIPS_PER_PAGE) + 1;
           clips_per_page[pageIndex].push(clips[i]);
         }
         clips_per_content[id].clips = clips_per_page;
@@ -283,6 +285,7 @@ const App = () => {
       // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
       if (firstContent === "") {
+        numPages.current = 0;
         setLoadingPlayoutUrl(false);
         setHavePlayoutUrl(true);
         return [];
@@ -317,6 +320,9 @@ const App = () => {
         }
       }
       clips_per_content[firstContent].processed = true;
+      numPages.current = Object.keys(
+        clips_per_content[firstContent].clips
+      ).length;
       contents.current = clips_per_content;
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(true);
@@ -566,6 +572,7 @@ const App = () => {
                   activeClassName="active"
                 />
               ) : null}
+
               {response.map((clip) => {
                 return (
                   <ClipRes
