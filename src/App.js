@@ -432,7 +432,7 @@ const App = () => {
               flexDirection: "row",
               justifyContent: "center",
               alignContent: "center",
-              borderRadius: 10,
+              borderRadius: 5,
             }}
           >
             total results {totalContent}
@@ -449,9 +449,13 @@ const App = () => {
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            // flexDirection: "row",
+            // alignItems: "flex-start",
+            // justifyContent: "space-between",
+
             width: "100%",
           }}
         >
@@ -461,10 +465,11 @@ const App = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: "25%",
+              // width: "25%",
+              marginBottom: 30,
             }}
           >
-            {Object.keys(contents.current).map((k) => {
+            {/* {Object.keys(contents.current).map((k) => {
               return (
                 <div
                   style={{
@@ -490,7 +495,25 @@ const App = () => {
                   </button>
                 </div>
               );
-            })}
+            })} */}
+            <select
+              style={{
+                backgroundColor: "whitesmoke",
+                border: "none",
+                padding: 10,
+                borderRadius: 5,
+              }}
+              onChange={(event) => {
+                setCurrentContent(event.target.value);
+                jumpToContent(event.target.value).then((res) => {
+                  setResopnse(res);
+                });
+              }}
+            >
+              {Object.keys(contents.current).map((key) => {
+                return <option value={key}>{contentsInfo.current[key]}</option>;
+              })}
+            </select>
           </div>
           {loadingPlayoutUrl ? (
             <div
@@ -499,11 +522,13 @@ const App = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "75%",
-                backgroundColor: "lightgrey",
+                width: "20%",
+                backgroundColor: "whitesmoke",
+                padding: 10,
+                borderRadius: 5,
               }}
             >
-              <p>loading playout res, progress</p>
+              loading playout res for current res
             </div>
           ) : havePlayoutUrl ? (
             <div
@@ -512,8 +537,7 @@ const App = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "75%",
-                backgroundColor: "lightgrey",
+                width: "100%",
                 paddingTop: 10,
                 paddingBottom: 10,
                 marginBottom: 10,

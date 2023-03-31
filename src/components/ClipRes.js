@@ -8,7 +8,7 @@ const body = {
   alignItems: "center",
   marginTop: 10,
   borderRadius: 10,
-  width: "95%",
+  width: "100%",
 };
 
 const info = {
@@ -73,7 +73,7 @@ const ClipRes = (props) => {
         {/* <div style={shortInfo}>
           <div>title: </div>
           <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
-        </div>
+        </div> */}
         <div style={shortInfo}>
           <div>library id: </div>
           <div>{props.clipInfo.qlib_id}</div>
@@ -81,7 +81,7 @@ const ClipRes = (props) => {
         <div style={shortInfo}>
           <div>content id: </div>
           <div>{props.clipInfo.id}</div>
-        </div> */}
+        </div>
         <div style={shortInfo}>
           <div>start_time: </div>
           <div>{props.clipInfo.start}</div>
