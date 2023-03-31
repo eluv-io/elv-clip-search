@@ -106,11 +106,12 @@ const App = () => {
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
   // processed info
-  const pages = useRef({});
   const contents = useRef({});
+  const contentsInfo = useRef({});
   const numPages = useRef(0);
   const currentPage = useRef(1);
   const client = useRef(null);
+  const [currentContent, setCurrentContent] = useState("");
 
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
@@ -164,36 +165,108 @@ const App = () => {
     }
   };
 
-  const jumpToPage = async (pageIndex) => {
+  const jumpToPage = (pageIndex) => {
     currentPage.current = pageIndex;
-    return pages.current[pageIndex]["clips"];
+    return contents[currentContent][pageIndex];
+  };
+
+  const jumpToContent = async (objectId) => {
+    try {
+      // loading playout url for each clip res
+      setLoadingPlayoutUrl(true);
+      currentPage.current = 1;
+      const clips_per_content = contents.current;
+      if (clips_per_content[objectId].processed) {
+        // if it is processed, just return that
+        setLoadingPlayoutUrl(false);
+        setHavePlayoutUrl(true);
+        return clips_per_content[objectId].clips[1];
+      }
+      // get the possible offerings
+      let offering = null;
+      const offerings = await client.current.AvailableOfferings({
+        objectId,
+      });
+      if ("default_clear" in offerings) {
+        offering = "default_clear";
+      } else {
+        offering = "default";
+      }
+      // given the offering, load the playout url for this content
+      const playoutOptions = await client.current.PlayoutOptions({
+        objectId,
+        protocols: ["hls"],
+        offering: offering,
+        drms: ["clear", "aes-128", "fairplay"],
+      });
+      const playoutMethods = playoutOptions["hls"].playoutMethods;
+      const playoutInfo =
+        playoutMethods.clear ||
+        playoutMethods["aes-128"] ||
+        playoutMethods.fairplay;
+      const videoUrl = playoutInfo.playoutUrl;
+      for (let pageIndex in clips_per_content[objectId].clips) {
+        for (let item of clips_per_content[objectId].clips[pageIndex]) {
+          item.url = videoUrl;
+        }
+      }
+      clips_per_content[objectId].processed = true;
+      contents.current = clips_per_content;
+      setLoadingPlayoutUrl(false);
+      setHavePlayoutUrl(true);
+      return clips_per_content[objectId].clips[1];
+    } catch (err) {
+      console.log(`Error message : ${err.message} - `, err.code);
+      setLoadingPlayoutUrl(false);
+      setHavePlayoutUrl(false);
+      setErrMsg("loading playout url error");
+      setErr(true);
+      return null;
+    }
   };
 
   const curl = async (url, client) => {
-    const clip_per_page = {};
-    const clip_per_content = {};
-
+    const clips_per_content = {};
+    let firstContent = "";
     // load and parse the res from curling search url
     try {
       const res = await axios.get(url, { timeout: 10000 });
-      const num_pages = Math.ceil(res["data"]["contents"].length / 5);
       setTotalContent(res["data"]["contents"].length);
-      numPages.current = num_pages;
-      for (let i = 1; i <= num_pages; i++) {
-        clip_per_page[i] = { processed: false, clips: [] };
-      }
       for (let i = 0; i < res["data"]["contents"].length; i++) {
-        const pageIndex = Math.floor(i / 5) + 1;
-        clip_per_page[pageIndex]["clips"].push(res["data"]["contents"][i]);
-
+        // get currernt item
         const item = res["data"]["contents"][i];
-        if (!(item["id"] in clip_per_content)) {
-          clip_per_content[item["id"]] = [item];
+        // if not in clips_per_content: need to add them in
+        if (!(item["id"] in clips_per_content)) {
+          clips_per_content[item["id"]] = { processed: false, clips: [item] };
+          contentsInfo.current[item["id"]] =
+            item.meta.public.asset_metadata.title.split(",")[0];
+          // set the first content to be current content
+          if (firstContent === "") {
+            firstContent = item["id"];
+            setCurrentContent(item["id"]);
+          }
         } else {
-          clip_per_content[item["id"]].push(item);
+          // if already in the dic, just push it in
+          clips_per_content[item["id"]].clips.push(item);
         }
       }
-      contents.current = clip_per_content;
+      console.log(clips_per_content);
+      for (let id in clips_per_content) {
+        // pagitation the clips under this contents
+        const clips = clips_per_content[id].clips;
+        const clips_per_page = {};
+        const num_pages = Math.ceil(clips.length / 5);
+        numPages.current = num_pages;
+        for (let i = 1; i <= num_pages; i++) {
+          clips_per_page[i] = [];
+        }
+        for (let i = 0; i < clips.length; i++) {
+          const pageIndex = Math.floor(i / 5) + 1;
+          clips_per_page[pageIndex].push(clips[i]);
+        }
+        clips_per_content[id].clips = clips_per_page;
+      }
+      contents.current = clips_per_content;
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
     } catch (err) {
@@ -209,57 +282,45 @@ const App = () => {
     try {
       // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
-      currentPage.current = 1;
-      const dic = {};
-      let offering = null;
-      let cnt = 0;
-      for (let pageIndex in clip_per_page) {
-        for (let item of clip_per_page[pageIndex]["clips"]) {
-          const objectId = item["id"];
-          if (objectId in dic) {
-            item["url"] = dic[objectId];
-          } else {
-            // without setting offering, sony will use fairplay, too slow
-            // an ugly way , but it works well
-            if (offering == null) {
-              const offerings = await client.AvailableOfferings({
-                objectId,
-              });
-              if ("default_clear" in offerings) {
-                offering = "default_clear";
-              } else {
-                offering = "default";
-              }
-            }
-
-            const playoutOptions = await client.PlayoutOptions({
-              objectId,
-              protocols: ["hls"],
-              offering: offering,
-              drms: ["clear", "aes-128", "fairplay"],
-            });
-            const playoutMethods = playoutOptions["hls"].playoutMethods;
-            const playoutInfo =
-              playoutMethods.clear ||
-              playoutMethods["aes-128"] ||
-              playoutMethods.fairplay;
-            const videoUrl = playoutInfo.playoutUrl;
-            dic[objectId] = videoUrl;
-            item["url"] = videoUrl;
-          }
-          cnt += 1;
-          setLoadedContent(cnt);
-        }
-        clip_per_page[pageIndex]["processed"] = true;
-      }
-      pages.current = clip_per_page;
-      setLoadingPlayoutUrl(false);
-      setHavePlayoutUrl(true);
-      if (1 in clip_per_page) {
-        return clip_per_page[1]["clips"];
-      } else {
+      if (firstContent === "") {
+        setLoadingPlayoutUrl(false);
+        setHavePlayoutUrl(true);
         return [];
       }
+      currentPage.current = 1;
+      // get the possible offerings
+      let offering = null;
+      const offerings = await client.AvailableOfferings({
+        objectId: firstContent,
+      });
+      if ("default_clear" in offerings) {
+        offering = "default_clear";
+      } else {
+        offering = "default";
+      }
+      // given the offering, load the playout url for this content
+      const playoutOptions = await client.PlayoutOptions({
+        objectId: firstContent,
+        protocols: ["hls"],
+        offering: offering,
+        drms: ["clear", "aes-128", "fairplay"],
+      });
+      const playoutMethods = playoutOptions["hls"].playoutMethods;
+      const playoutInfo =
+        playoutMethods.clear ||
+        playoutMethods["aes-128"] ||
+        playoutMethods.fairplay;
+      const videoUrl = playoutInfo.playoutUrl;
+      for (let pageIndex in clips_per_content[firstContent].clips) {
+        for (let item of clips_per_content[firstContent].clips[pageIndex]) {
+          item.url = videoUrl;
+        }
+      }
+      clips_per_content[firstContent].processed = true;
+      contents.current = clips_per_content;
+      setLoadingPlayoutUrl(false);
+      setHavePlayoutUrl(true);
+      return clips_per_content[firstContent].clips[1];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoadingPlayoutUrl(false);
@@ -302,7 +363,6 @@ const App = () => {
           handleSubmitClick={(txt) => {
             resetLoadStatus();
             setObjId(txt);
-            pages.current = {};
             currentPage.current = 1;
           }}
         />
@@ -314,7 +374,6 @@ const App = () => {
           handleSubmitClick={(txt) => {
             resetLoadStatus();
             setSearch(txt.trim());
-            pages.current = {};
             currentPage.current = 1;
           }}
           statusHandler={resetLoadStatus}
@@ -378,82 +437,121 @@ const App = () => {
           >
             total results {totalContent}
           </div>
-          <ReactPaginate
-            breakLabel="..."
-            nextLabel=">"
-            onPageChange={(data) => {
-              const pageIndex = data.selected + 1;
-              jumpToPage(pageIndex).then((res) => {
-                if (res != null) {
-                  setResopnse(res);
-                }
-              });
-            }}
-            pageRangeDisplayed={3}
-            pageCount={numPages.current}
-            previousLabel="<"
-            renderOnZeroPageCount={null}
-            containerClassName="pagination justify-content-center"
-            pageClassName="page-item"
-            pageLinkClassName="page-link"
-            previousClassName="page-item"
-            previousLinkClassName="page-link"
-            nextClassName="page-item"
-            nextLinkClassName="page-link"
-            activeClassName="active"
-          />
         </div>
       ) : null}
 
       {/* loading status or video player */}
-      {loadingSearchRes || loadingPlayoutUrl ? (
+      {loadingSearchRes ? (
         <div style={hint}>
-          <p>
-            loading res, progress {loadedContent} / {totalContent}
-          </p>
+          <p>loading res, progress</p>
         </div>
-      ) : havePlayoutUrl && response.length > 0 ? (
-        <div>
-          {response.map((clip) => {
-            return (
-              <div
-                sytle={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+      ) : haveSearchRes ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "25%",
+            }}
+          >
+            {Object.keys(contents.current).map((k) => {
+              return (
                 <div
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "10%",
+                    width: "100%",
+                    marginBottom: 10,
                   }}
                 >
-                  {Object.keys(contents.current).map((k) => {
-                    return <div>{k}</div>;
-                  })}
+                  <button
+                    style={{
+                      width: "100%",
+                      border: "none",
+                      backgroundColor:
+                        currentContent === k ? "lightgrey" : "whitesmoke",
+                    }}
+                    onClick={() => {
+                      setCurrentContent(k);
+                      jumpToContent(k).then((res) => {
+                        setResopnse(res);
+                      });
+                    }}
+                  >
+                    {k} {contentsInfo.current[k]}
+                  </button>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "80%",
+              );
+            })}
+          </div>
+          {loadingPlayoutUrl ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "75%",
+                backgroundColor: "lightgrey",
+              }}
+            >
+              <p>loading playout res, progress</p>
+            </div>
+          ) : havePlayoutUrl ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "75%",
+                backgroundColor: "lightgrey",
+                paddingTop: 10,
+                paddingBottom: 10,
+                marginBottom: 10,
+              }}
+            >
+              {numPages.current > 1 ? (
+                <ReactPaginate
+                  breakLabel="..."
+                  nextLabel=">"
+                  onPageChange={(data) => {
+                    const pageIndex = data.selected + 1;
+                    const res = jumpToPage(pageIndex);
+                    setResopnse(res);
                   }}
-                >
+                  pageRangeDisplayed={3}
+                  pageCount={numPages.current}
+                  previousLabel="<"
+                  renderOnZeroPageCount={null}
+                  containerClassName="pagination justify-content-center"
+                  pageClassName="page-item"
+                  pageLinkClassName="page-link"
+                  previousClassName="page-item"
+                  previousLinkClassName="page-link"
+                  nextClassName="page-item"
+                  nextLinkClassName="page-link"
+                  activeClassName="active"
+                />
+              ) : null}
+              {response.map((clip) => {
+                return (
                   <ClipRes
                     clipInfo={clip}
                     key={clip.id + clip.start_time}
                   ></ClipRes>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : err ? (
         <div style={hint}>
