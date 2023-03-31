@@ -107,6 +107,7 @@ const App = () => {
   const [errMsg, setErrMsg] = useState("");
   // processed info
   const pages = useRef({});
+  const contents = useRef({});
   const numPages = useRef(0);
   const currentPage = useRef(1);
   const client = useRef(null);
@@ -170,6 +171,8 @@ const App = () => {
 
   const curl = async (url, client) => {
     const clip_per_page = {};
+    const clip_per_content = {};
+
     // load and parse the res from curling search url
     try {
       const res = await axios.get(url, { timeout: 10000 });
@@ -182,7 +185,15 @@ const App = () => {
       for (let i = 0; i < res["data"]["contents"].length; i++) {
         const pageIndex = Math.floor(i / 5) + 1;
         clip_per_page[pageIndex]["clips"].push(res["data"]["contents"][i]);
+
+        const item = res["data"]["contents"][i];
+        if (!(item["id"] in clip_per_content)) {
+          clip_per_content[item["id"]] = [item];
+        } else {
+          clip_per_content[item["id"]].push(item);
+        }
       }
+      contents.current = clip_per_content;
       setLoadingSearchRes(false);
       setHaveSearchRes(true);
     } catch (err) {
@@ -405,10 +416,42 @@ const App = () => {
         <div>
           {response.map((clip) => {
             return (
-              <ClipRes
-                clipInfo={clip}
-                key={clip.id + clip.start_time}
-              ></ClipRes>
+              <div
+                sytle={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "10%",
+                  }}
+                >
+                  {Object.keys(contents.current).map((k) => {
+                    return <div>{k}</div>;
+                  })}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "80%",
+                  }}
+                >
+                  <ClipRes
+                    clipInfo={clip}
+                    key={clip.id + clip.start_time}
+                  ></ClipRes>
+                </div>
+              </div>
             );
           })}
         </div>
