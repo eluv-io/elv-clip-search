@@ -2,19 +2,20 @@ import React from "react";
 import ReactHlsPlayer from "react-hls-player";
 const body = {
   display: "flex",
-  flexDirection: "row",
+  flexDirection: "column",
   backgroundColor: "whitesmoke",
+  borderWidth: 2,
   alignItems: "center",
   marginTop: 10,
   borderRadius: 10,
-  height: 400,
+  width: "100%",
 };
 
 const info = {
   display: " flex",
   flexDirection: "column",
-  width: "50%",
-  height: "90%",
+  width: "100%",
+  height: "20%",
   margin: "2%",
   alignItems: "center",
   justifyContent: "center",
@@ -40,10 +41,10 @@ const longInfo = {
 };
 
 const videoPlayer = {
-  width: "50%",
-  height: "98%",
+  width: "90%",
+  height: "70%",
+  marginTop: "2%",
   flexDirection: "colomn",
-  marginRight: "3%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -55,11 +56,24 @@ const ClipRes = (props) => {
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   return (
     <div style={body}>
+      <div style={videoPlayer}>
+        <ReactHlsPlayer
+          src={url}
+          width="100%"
+          height="auto"
+          autoPlay={false}
+          controls={true}
+          hlsConfig={{
+            capLevelToPlayerSize: true,
+            maxBufferLength: 1,
+          }}
+        ></ReactHlsPlayer>
+      </div>
       <div style={info}>
-        <div style={shortInfo}>
+        {/* <div style={shortInfo}>
           <div>title: </div>
           <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
-        </div>
+        </div> */}
         <div style={shortInfo}>
           <div>library id: </div>
           <div>{props.clipInfo.qlib_id}</div>
@@ -91,19 +105,6 @@ const ClipRes = (props) => {
             readOnly
           ></textarea>
         </div>
-      </div>
-      <div style={videoPlayer}>
-        <ReactHlsPlayer
-          src={url}
-          width="100%"
-          height="auto"
-          autoPlay={false}
-          controls={true}
-          hlsConfig={{
-            capLevelToPlayerSize: true,
-            maxBufferLength: 1,
-          }}
-        ></ReactHlsPlayer>
       </div>
     </div>
   );
