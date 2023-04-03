@@ -158,7 +158,7 @@ const App = () => {
   const [search, setSearch] = useState("");
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
-  const [response, setResopnse] = useState([]);
+  const [response, setResponse] = useState([]);
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -368,7 +368,7 @@ const App = () => {
         const { url } = res;
         const searchRes = await curl(url);
         if (res != null) {
-          setResopnse(searchRes);
+          setResponse(searchRes);
         }
       } else {
         setLoadingSearchRes(false);
@@ -457,7 +457,7 @@ const App = () => {
               onChange={(event) => {
                 setCurrentContent(event.target.value);
                 jumpToContent(event.target.value).then((res) => {
-                  setResopnse(res);
+                  setResponse(res);
                 });
               }}
             >
@@ -478,7 +478,7 @@ const App = () => {
                   onPageChange={(data) => {
                     const pageIndex = data.selected + 1;
                     const res = jumpToPage(pageIndex);
-                    setResopnse(res);
+                    setResponse(res);
                   }}
                   pageRangeDisplayed={3}
                   pageCount={numPages.current}

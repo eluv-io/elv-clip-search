@@ -122,7 +122,7 @@ const SingleSearchBox = (props) => {
       style={selecter}
     >
       {options.map((key) => {
-        return <option value={key}>{key}</option>;
+        return <option key={`option-${key}`} value={key}>{key}</option>;
       })}
     </select>
   );
