@@ -42,6 +42,15 @@ const inputInfo = {
   justifyContent: "center",
 };
 
+const button = {
+  width: "10%",
+  border: "None",
+  borderRadius: 5,
+  padding: 5,
+  color: "white",
+  backgroundColor: "#3b87eb",
+};
+
 const curlResContainer = {
   backgroundColor: "whitesmoke",
   borderRadius: 10,
@@ -70,14 +79,7 @@ const curlResTextArea = {
   padding: 10,
   marginBottom: 20,
   borderStyle: "None",
-  borderRadius: 20,
-};
-
-const paginationContainer = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
+  borderRadius: 10,
 };
 
 const hint = {
@@ -358,7 +360,7 @@ const App = () => {
           </div>
           <button
             type="button"
-            className="btn btn-primary"
+            style={button}
             onClick={getRes}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
@@ -382,27 +384,6 @@ const App = () => {
         </div>
       )}
 
-      {/* paginaiton bar */}
-      {haveSearchRes && havePlayoutUrl ? (
-        <div style={paginationContainer}>
-          <div
-            style={{
-              backgroundColor: "whitesmoke",
-              width: "15%",
-              padding: 10,
-              marginBottom: 10,
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignContent: "center",
-              borderRadius: 5,
-            }}
-          >
-            total results {totalContent}
-          </div>
-        </div>
-      ) : null}
-
       {/* loading status or video player */}
       {loadingSearchRes ? (
         <div style={hint}>
@@ -415,56 +396,40 @@ const App = () => {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            // flexDirection: "row",
-            // alignItems: "flex-start",
-            // justifyContent: "space-between",
-
             width: "100%",
           }}
         >
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
               alignItems: "center",
-              justifyContent: "center",
-              // width: "25%",
-              marginBottom: 30,
+              justifyContent: "space-between",
+              width: "100%",
             }}
           >
-            {/* {Object.keys(contents.current).map((k) => {
-              return (
-                <div
-                  style={{
-                    width: "100%",
-                    marginBottom: 10,
-                  }}
-                >
-                  <button
-                    style={{
-                      width: "100%",
-                      border: "none",
-                      backgroundColor:
-                        currentContent === k ? "lightgrey" : "whitesmoke",
-                    }}
-                    onClick={() => {
-                      setCurrentContent(k);
-                      jumpToContent(k).then((res) => {
-                        setResopnse(res);
-                      });
-                    }}
-                  >
-                    {k} {contentsInfo.current[k]}
-                  </button>
-                </div>
-              );
-            })} */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignContent: "center",
+                backgroundColor: "whitesmoke",
+                width: "20%",
+                padding: 10,
+                borderRadius: 10,
+              }}
+            >
+              total results {totalContent}
+            </div>
+
             <select
               style={{
                 backgroundColor: "whitesmoke",
+                width: "50%",
                 border: "none",
                 padding: 10,
-                borderRadius: 5,
+                borderRadius: 10,
               }}
               onChange={(event) => {
                 setCurrentContent(event.target.value);
@@ -478,6 +443,7 @@ const App = () => {
               })}
             </select>
           </div>
+
           {loadingPlayoutUrl ? (
             <div
               style={{
@@ -488,7 +454,7 @@ const App = () => {
                 width: "20%",
                 backgroundColor: "whitesmoke",
                 padding: 10,
-                borderRadius: 5,
+                borderRadius: 10,
               }}
             >
               loading playout res for current res
@@ -504,6 +470,9 @@ const App = () => {
                 paddingTop: 10,
                 paddingBottom: 10,
                 marginBottom: 10,
+                marginTop: 20,
+                backgroundColor: "whitesmoke",
+                borderRadius: 10,
               }}
             >
               {numPages.current > 1 ? (

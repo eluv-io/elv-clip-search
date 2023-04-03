@@ -80,6 +80,7 @@ const button = {
   border: "None",
   borderRadius: 5,
   padding: 5,
+  color: "white",
 };
 
 const SingleSearchBox = (props) => {
@@ -128,19 +129,19 @@ const SingleSearchBox = (props) => {
   const control = props.display ? (
     <button
       type="button"
-      style={{ ...button, backgroundColor: "#f4e4e5" }}
+      style={{ ...button, backgroundColor: "#d34848" }}
       onClick={() => {
         props.removeHandler();
         props.statusHandler();
       }}
       disabled={props.disabled}
     >
-      ✖️
+      Del
     </button>
   ) : (
     <button
       type="button"
-      style={{ ...button, backgroundColor: "#dbe4ed" }}
+      style={{ ...button, backgroundColor: "#3b87eb" }}
       onClick={() => {
         if (text !== "") {
           props.addHandler({ field: field, text: text });
@@ -151,7 +152,7 @@ const SingleSearchBox = (props) => {
       }}
       disabled={props.disabled}
     >
-      ✔️
+      Add
     </button>
   );
   return (

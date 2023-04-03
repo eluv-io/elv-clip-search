@@ -44,7 +44,8 @@ const button = {
   border: "None",
   borderRadius: 5,
   padding: 5,
-  backgroundColor: "#dbe4ed",
+  backgroundColor: "#3b87eb",
+  color: "white",
 };
 const InputBox = (props) => {
   const [value, setValue] = useState("");
@@ -67,7 +68,7 @@ const InputBox = (props) => {
           onClick={() => props.handleSubmitClick(value)}
           disabled={props.disabled}
         >
-          ✔️
+          Add
         </button>
       </div>
     </div>

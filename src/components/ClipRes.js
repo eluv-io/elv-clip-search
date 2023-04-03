@@ -5,10 +5,13 @@ const body = {
   flexDirection: "column",
   backgroundColor: "whitesmoke",
   borderWidth: 2,
+  borderColor: "grey",
+  border: "solid",
   alignItems: "center",
   marginTop: 10,
+  marginBottom: 10,
   borderRadius: 10,
-  width: "100%",
+  width: "96%",
 };
 
 const info = {
