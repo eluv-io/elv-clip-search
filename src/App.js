@@ -91,6 +91,66 @@ const hint = {
   marginTop: 40,
 };
 
+const clipResContainer = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+};
+
+const clipResInfoContainer = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "100%",
+};
+
+const clipResTotal = {
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "center",
+  alignContent: "center",
+  backgroundColor: "whitesmoke",
+  width: "20%",
+  padding: 10,
+  borderRadius: 10,
+};
+
+const clipResTitleSelector = {
+  backgroundColor: "whitesmoke",
+  width: "50%",
+  border: "none",
+  padding: 10,
+  borderRadius: 10,
+};
+
+const clipResShowContainer = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  paddingTop: 10,
+  paddingBottom: 10,
+  marginBottom: 10,
+  marginTop: 20,
+  backgroundColor: "whitesmoke",
+  borderRadius: 10,
+};
+
+const loadingUrlContainer = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "20%",
+  backgroundColor: "whitesmoke",
+  padding: 10,
+  borderRadius: 10,
+};
+
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   // basic info
@@ -390,47 +450,12 @@ const App = () => {
           <p>loading res, progress</p>
         </div>
       ) : haveSearchRes ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                alignContent: "center",
-                backgroundColor: "whitesmoke",
-                width: "20%",
-                padding: 10,
-                borderRadius: 10,
-              }}
-            >
-              total results {totalContent}
-            </div>
+        <div style={clipResContainer}>
+          <div style={clipResInfoContainer}>
+            <div style={clipResTotal}>total results {totalContent}</div>
 
             <select
-              style={{
-                backgroundColor: "whitesmoke",
-                width: "50%",
-                border: "none",
-                padding: 10,
-                borderRadius: 10,
-              }}
+              style={clipResTitleSelector}
               onChange={(event) => {
                 setCurrentContent(event.target.value);
                 jumpToContent(event.target.value).then((res) => {
@@ -445,36 +470,9 @@ const App = () => {
           </div>
 
           {loadingPlayoutUrl ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "20%",
-                backgroundColor: "whitesmoke",
-                padding: 10,
-                borderRadius: 10,
-              }}
-            >
-              loading playout res for current res
-            </div>
+            <div style={loadingUrlContainer}>loading playout URL</div>
           ) : havePlayoutUrl ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
-                paddingTop: 10,
-                paddingBottom: 10,
-                marginBottom: 10,
-                marginTop: 20,
-                backgroundColor: "whitesmoke",
-                borderRadius: 10,
-              }}
-            >
+            <div style={clipResShowContainer}>
               {numPages.current > 1 ? (
                 <ReactPaginate
                   breakLabel="..."
