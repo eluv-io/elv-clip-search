@@ -145,8 +145,9 @@ const loadingUrlContainer = {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "center",
-  width: "20%",
+  width: "100%",
   backgroundColor: "whitesmoke",
+  marginTop: 20,
   padding: 10,
   borderRadius: 10,
 };
@@ -211,7 +212,7 @@ const App = () => {
           terms: search,
           select: "...,text,/public/asset_metadata/title",
           start: 0,
-          limit: 80,
+          limit: 160,
           clips_include_source_tags: false,
           clips: true,
           // sort: "f_display_title_as_string@asc,f_start_time@asc",
@@ -446,14 +447,11 @@ const App = () => {
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>
-          <p>loading res, progress</p>
-        </div>
+        <div style={hint}>loading res</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
           <div style={clipResInfoContainer}>
             <div style={clipResTotal}>total results {totalContent}</div>
-
             <select
               style={clipResTitleSelector}
               onChange={(event) => {
