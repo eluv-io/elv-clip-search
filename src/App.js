@@ -238,6 +238,7 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
       const clips_per_content = contents.current;
+      setResponse(clips_per_content[objectId].clips[1]);
       if (clips_per_content[objectId].processed) {
         // if it is processed, just return that
         numPages.current = Object.keys(
@@ -387,6 +388,7 @@ const App = () => {
           text="Search object"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
+            setUrl("");
             resetLoadStatus();
             setObjId(txt);
             currentPage.current = 1;
@@ -407,7 +409,7 @@ const App = () => {
       </div>
 
       {/* show the text info for both input and the search output */}
-      {!haveSearchRes ? (
+      {!(haveSearchRes || loadingSearchRes) ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
@@ -434,14 +436,16 @@ const App = () => {
             <div style={{ flex: 1 }}>Search url</div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
-          <div style={curlRes}>
-            <div style={{ flex: 1 }}>contents on this page</div>
-            <textarea
-              style={curlResTextArea}
-              value={JSON.stringify(response, null, 4)}
-              readOnly
-            ></textarea>
-          </div>
+          {haveSearchRes ? (
+            <div style={curlRes}>
+              <div style={{ flex: 1 }}>contents on this page</div>
+              <textarea
+                style={curlResTextArea}
+                value={JSON.stringify(response, null, 4)}
+                readOnly
+              ></textarea>
+            </div>
+          ) : null}
         </div>
       )}
 
