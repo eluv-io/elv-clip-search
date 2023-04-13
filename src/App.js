@@ -336,7 +336,7 @@ const App = () => {
     let firstContent = "";
     // load and parse the res from curling search url
     try {
-      const res = await axios.get(url, { timeout: 120000 });
+      const res = await axios.get(url, { timeout: 600000 });
       setTotalContent(res["data"]["contents"].length);
       const parseRes = parseSearchRes(res["data"]["contents"]);
       firstContent = parseRes["firstContent"];
