@@ -238,6 +238,7 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
       const clips_per_content = contents.current;
+      setResponse(clips_per_content[objectId].clips[1]);
       if (clips_per_content[objectId].processed) {
         // if it is processed, just return that
         numPages.current = Object.keys(
@@ -352,7 +353,7 @@ const App = () => {
       setErr(true);
       return null;
     }
-
+    setResponse(clips_per_content[firstContent].clips[1]);
     const res = await jumpToContent(firstContent);
     return res;
   };
@@ -387,6 +388,7 @@ const App = () => {
           text="Search object"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
+            setUrl("");
             resetLoadStatus();
             setObjId(txt);
             currentPage.current = 1;
@@ -407,7 +409,7 @@ const App = () => {
       </div>
 
       {/* show the text info for both input and the search output */}
-      {!haveSearchRes ? (
+      {!(haveSearchRes || loadingSearchRes) ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
@@ -428,7 +430,7 @@ const App = () => {
             Let's go
           </button>
         </div>
-      ) : (
+      ) : haveSearchRes ? (
         <div style={curlResContainer}>
           <div style={curlRes}>
             <div style={{ flex: 1 }}>Search url</div>
@@ -443,7 +445,7 @@ const App = () => {
             ></textarea>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
