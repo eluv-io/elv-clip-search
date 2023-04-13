@@ -353,7 +353,7 @@ const App = () => {
       setErr(true);
       return null;
     }
-
+    setResponse(clips_per_content[firstContent].clips[1]);
     const res = await jumpToContent(firstContent);
     return res;
   };
@@ -430,24 +430,22 @@ const App = () => {
             Let's go
           </button>
         </div>
-      ) : (
+      ) : haveSearchRes ? (
         <div style={curlResContainer}>
           <div style={curlRes}>
             <div style={{ flex: 1 }}>Search url</div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
-          {haveSearchRes ? (
-            <div style={curlRes}>
-              <div style={{ flex: 1 }}>contents on this page</div>
-              <textarea
-                style={curlResTextArea}
-                value={JSON.stringify(response, null, 4)}
-                readOnly
-              ></textarea>
-            </div>
-          ) : null}
+          <div style={curlRes}>
+            <div style={{ flex: 1 }}>contents on this page</div>
+            <textarea
+              style={curlResTextArea}
+              value={JSON.stringify(response, null, 4)}
+              readOnly
+            ></textarea>
+          </div>
         </div>
-      )}
+      ) : null}
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
