@@ -83,6 +83,15 @@ const button = {
   color: "white",
 };
 
+const button_bold = {
+  width: "100%",
+  border: "None",
+  borderRadius: 5,
+  padding: 5,
+  color: "white",
+  fontWeight: "bold",
+};
+
 const SingleSearchBox = (props) => {
   const options = [
     "all",
@@ -129,14 +138,14 @@ const SingleSearchBox = (props) => {
   const control = props.display ? (
     <button
       type="button"
-      style={{ ...button, backgroundColor: "#d34848" }}
+      style={{ ...button_bold, backgroundColor: "#d34848" }}
       onClick={() => {
         props.removeHandler();
         props.statusHandler();
       }}
       disabled={props.disabled}
     >
-      Del
+      X
     </button>
   ) : (
     <button
@@ -152,18 +161,20 @@ const SingleSearchBox = (props) => {
       }}
       disabled={props.disabled}
     >
-      Add
+      ADD
     </button>
   );
   return (
     <div style={body}>
       <div style={left}>
-        {props.display ? `added Terms ${props.index}` : props.text}
+        {props.display ? `Keyword ${props.index+1}` : props.text}
       </div>
       <div style={middle}>
         {textBox}
+        {props.display ? ` Field ` : ''}
         {fieldBox}
       </div>
+      
       <div style={right}>{control}</div>
     </div>
   );
