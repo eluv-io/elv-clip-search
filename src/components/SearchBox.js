@@ -29,7 +29,7 @@ const SearchBox = (props) => {
   return (
     <div style={container}>
       <SingleSearchBox
-        text="Add New Term"
+        text="Add Keywords"
         disabled={props.disabled}
         addHandler={(newElement) => {
           const newTerms = terms.concat(newElement);

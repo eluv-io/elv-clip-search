@@ -285,7 +285,7 @@ const App = () => {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoadingPlayoutUrl(false);
       setHavePlayoutUrl(false);
-      setErrMsg("loading playout url error");
+      setErrMsg("Playout URL error");
       setErr(true);
       return null;
     }
@@ -347,7 +347,7 @@ const App = () => {
       setLoadingSearchRes(false);
       setHaveSearchRes(false);
       setErrMsg(
-        "Curl search url timeout err, search node retrieving index, please try again later"
+        "Search timeout, please try again later"
       );
       setErr(true);
       return null;
@@ -360,7 +360,7 @@ const App = () => {
     if (search === "" || objId === "") {
       console.log("err");
       setErr(true);
-      setErrMsg("Need to give reasonable search obj Id and search condition");
+      setErrMsg("Invalid search index or missing search phrase");
     } else {
       setLoadingSearchRes(true);
       const res = await getSearchUrl();
@@ -373,18 +373,18 @@ const App = () => {
       } else {
         setLoadingSearchRes(false);
         setErr(true);
-        setErrMsg("creating search URL err, check the search index Id again");
+        setErrMsg("Fail to make search query, please verify the search index content iq");
       }
     }
   };
   return (
     <div className="container">
       <div style={title}>
-        <h1 className="mt-3">Eluvio Clip Search</h1>
+        <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
       <div className="row mt-3">
         <InputBox
-          text="Search object"
+          text="Search Index"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
             resetLoadStatus();
@@ -411,7 +411,7 @@ const App = () => {
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Objext Index:</div>
+              <div style={{ flex: 1 }}>Search Index:</div>
               <div style={{ flex: 3 }}>{objId}</div>
             </div>
             <div style={inputInfo}>
@@ -447,7 +447,7 @@ const App = () => {
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>loading res</div>
+        <div style={hint}>Search tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
           <div style={clipResInfoContainer}>
@@ -468,7 +468,7 @@ const App = () => {
           </div>
 
           {loadingPlayoutUrl ? (
-            <div style={loadingUrlContainer}>loading playout URL</div>
+            <div style={loadingUrlContainer}>Loading playout URL</div>
           ) : havePlayoutUrl ? (
             <div style={clipResShowContainer}>
               {numPages.current > 1 ? (
