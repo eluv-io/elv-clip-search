@@ -347,15 +347,18 @@ const App = () => {
     } catch (err) {
       setLoadingSearchRes(false);
       setHaveSearchRes(false);
-      setErrMsg(
-        "Search timeout, please try again later"
-      );
+      setErrMsg("Search timeout, please try again later");
       setErr(true);
       return null;
     }
-    setResponse(clips_per_content[firstContent].clips[1]);
-    const res = await jumpToContent(firstContent);
-    return res;
+    if (firstContent !== "") {
+      setResponse(clips_per_content[firstContent].clips[1]);
+      const res = await jumpToContent(firstContent);
+      return res;
+    } else {
+      setResponse([]);
+      return [];
+    }
   };
   const getRes = async () => {
     if (search === "" || objId === "") {
@@ -364,6 +367,7 @@ const App = () => {
       setErrMsg("Invalid search index or missing search phrase");
     } else {
       setLoadingSearchRes(true);
+      setResponse([]);
       const res = await getSearchUrl();
       if (res != null) {
         const { url } = res;
@@ -374,7 +378,9 @@ const App = () => {
       } else {
         setLoadingSearchRes(false);
         setErr(true);
-        setErrMsg("Fail to make search query, please verify the search index content iq");
+        setErrMsg(
+          "Fail to make search query, please verify the search index content iq"
+        );
       }
     }
   };
