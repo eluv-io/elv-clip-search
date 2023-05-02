@@ -168,7 +168,9 @@ const App = () => {
   const [err, setErr] = useState(false);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
+
   // processed info
+  const searchVersion = useRef("v1");
   const contents = useRef({});
   const contentsInfo = useRef({});
   const numPages = useRef(0);
@@ -185,42 +187,80 @@ const App = () => {
     setTotalContent(0);
   };
 
-  const getClient = () => {
+  const getClient = async () => {
     if (client.current == null) {
       const _client = new FrameClient({
         target: window.parent,
       });
       client.current = _client;
+      window.client = _client;
       return _client;
     } else {
+      window.client = client.current;
       return client.current;
     }
   };
   const getSearchUrl = async () => {
-    const client = getClient();
+    const client = await getClient();
     try {
       const libId = await client.ContentObjectLibraryId({
         objectId: objId,
       });
-      const url = await client.Rep({
+      const searchObjMeta = await client.ContentObjectMetadata({
         libraryId: libId,
         objectId: objId,
-        rep: "search",
-        service: "search",
-        makeAccessRequest: true,
-        queryParams: {
-          terms: search,
-          select: "...,text,/public/asset_metadata/title",
-          start: 0,
-          limit: 160,
-          clips_include_source_tags: false,
-          clips: true,
-          // sort: "f_display_title_as_string@asc,f_start_time@asc",
-          sort: "f_start_time@asc",
-        },
+        metadataSubtree: "indexer",
       });
-      setUrl(url);
-      return { url, client };
+      if ("part" in searchObjMeta) {
+        // searchV1
+        searchVersion.current = "v1";
+        const url = await client.Rep({
+          libraryId: libId,
+          objectId: objId,
+          rep: "search",
+          service: "search",
+          makeAccessRequest: true,
+          queryParams: {
+            terms: search,
+            select: "...,text,/public/asset_metadata/title",
+            start: 0,
+            limit: 160,
+            clips_include_source_tags: false,
+            clips: true,
+            // sort: "f_display_title_as_string@asc,f_start_time@asc",
+            sort: "f_start_time@asc",
+          },
+        });
+        setUrl(url);
+        return { url, client };
+      } else {
+        // search v2
+        searchVersion.current = "v2";
+        const url = await client.Rep({
+          libraryId: libId,
+          objectId: objId,
+          rep: "search",
+          service: "search",
+          makeAccessRequest: true,
+          queryParams: {
+            terms: search,
+            select: "/public/asset_metadata/title",
+            start: 0,
+            limit: 160,
+            max_total: 160,
+            display_fields: "display_title,f_start_time,f_end_time",
+            sort: "f_display_title_as_string@asc,f_start_time@asc",
+          },
+        });
+        const cfgUrl = await client.ConfigUrl();
+        const cfg = await axios.get(cfgUrl);
+        const searchV2Node = cfg.data.network.services.search_v2[0];
+        const s1 = url.indexOf("contentfabric");
+        const s2 = searchV2Node.indexOf("contentfabric");
+        const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
+        setUrl(newUrl);
+        return { url: newUrl, client };
+      }
     } catch (err) {
       console.log(err);
       return null;
@@ -292,12 +332,25 @@ const App = () => {
     }
   };
 
+  const toTimeString = (totalMiliSeconds) => {
+    const totalMs = totalMiliSeconds * 1000;
+    const result = new Date(totalMs).toISOString().slice(11, 19);
+
+    return result;
+  };
+
   const parseSearchRes = (data) => {
     const clips_per_content = {};
     let firstContent = "";
     for (let i = 0; i < data.length; i++) {
       // get currernt item
       const item = data[i];
+      if (searchVersion.current === "v2") {
+        item["start_time"] = item.f_start_time[0];
+        item["end_time"] = item.f_end_time[0];
+        item["start"] = toTimeString(item.f_start_time[0]);
+        item["end"] = toTimeString(item.f_end_time[0]);
+      }
       // if not in clips_per_content: need to add them in
       if (!(item["id"] in clips_per_content)) {
         clips_per_content[item["id"]] = { processed: false, clips: [item] };
@@ -336,9 +389,10 @@ const App = () => {
     let firstContent = "";
     // load and parse the res from curling search url
     try {
-      const res = await axios.get(url, { timeout: 600000 });
-      setTotalContent(res["data"]["contents"].length);
-      const parseRes = parseSearchRes(res["data"]["contents"]);
+      const res = await axios.get(url);
+      const key = searchVersion.current === "v1" ? "contents" : "results";
+      setTotalContent(res["data"][key].length);
+      const parseRes = parseSearchRes(res["data"][key]);
       firstContent = parseRes["firstContent"];
       clips_per_content = parseRes["clips_per_content"];
       contents.current = clips_per_content;
