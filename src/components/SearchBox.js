@@ -10,6 +10,7 @@ const container = {
 
 const SearchBox = (props) => {
   const [terms, setTerms] = useState([]);
+  // TODO change for fuzzy search
   const makeString = (terms) => {
     const res = [];
     for (let item of terms) {

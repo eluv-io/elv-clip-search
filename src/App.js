@@ -6,6 +6,7 @@ import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
+import FuzzySearchBox from "./components/FuzzySearch";
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -156,6 +157,8 @@ const App = () => {
   const CLIPS_PER_PAGE = 3;
   // basic info
   const [search, setSearch] = useState("");
+  const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
+  const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
@@ -248,7 +251,7 @@ const App = () => {
             start: 0,
             limit: 160,
             max_total: 160,
-            display_fields: "display_title,f_start_time,f_end_time",
+            display_fields: "f_start_time,f_end_time",
             sort: "f_display_title_as_string@asc,f_start_time@asc",
           },
         });
@@ -333,7 +336,7 @@ const App = () => {
   };
 
   const toTimeString = (totalMiliSeconds) => {
-    const totalMs = totalMiliSeconds * 1000;
+    const totalMs = totalMiliSeconds;
     const result = new Date(totalMs).toISOString().slice(11, 19);
 
     return result;
@@ -443,6 +446,7 @@ const App = () => {
       <div style={title}>
         <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
+
       <div className="row mt-3">
         <InputBox
           text="Search Index"
@@ -455,13 +459,48 @@ const App = () => {
           }}
         />
       </div>
+
       <div className="row mt-3">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          Exact Match
+        </div>
         <SearchBox
           text="Search term"
           disabled={loadingSearchRes || loadingPlayoutUrl}
           handleSubmitClick={(txt) => {
             resetLoadStatus();
             setSearch(txt.trim());
+            currentPage.current = 1;
+          }}
+          statusHandler={resetLoadStatus}
+        />
+      </div>
+
+      <div className="row mt-3">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          Fuzzy Match
+        </div>
+        <FuzzySearchBox
+          text="Search Phrase"
+          disabled={loadingSearchRes || loadingPlayoutUrl}
+          handleSubmitClick={({ text, fields }) => {
+            resetLoadStatus();
+            setFuzzySearchPhrase(text.trim());
+            setFuzzySearchField(fields);
             currentPage.current = 1;
           }}
           statusHandler={resetLoadStatus}
@@ -479,6 +518,14 @@ const App = () => {
             <div style={inputInfo}>
               <div style={{ flex: 1 }}>Search Phrase:</div>
               <div style={{ flex: 3 }}>{search}</div>
+            </div>
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>Fuzzy Search Phrase:</div>
+              <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+            </div>
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>Fuzzy Search Fields:</div>
+              <div style={{ flex: 3 }}>{fuzzySearchField}</div>
             </div>
           </div>
           <button

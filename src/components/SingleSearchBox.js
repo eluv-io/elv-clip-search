@@ -31,6 +31,8 @@ const box = {
   height: "90%",
   paddingLeft: 20,
   borderRadius: 5,
+  paddingTop: 5,
+  paddingBottom: 5,
   borderWidth: 1,
   borderColor: "grey",
   borderStyle: "ridge",
@@ -40,8 +42,10 @@ const boxInfo = {
   flexDirection: "row",
   alignItems: "center",
   paddingLeft: 20,
+  paddingTop: 5,
+  paddingBottom: 5,
   width: "80%",
-  height: "90%",
+  height: "100%",
   borderRadius: 5,
   backgroundColor: "whitesmoke",
 };
@@ -51,6 +55,8 @@ const selecter = {
   height: "90%",
   borderRadius: 5,
   borderWidth: 1,
+  paddingTop: 5,
+  paddingBottom: 5,
   borderColor: "grey",
   borderStyle: "ridge",
 };
@@ -61,6 +67,8 @@ const selecterInfo = {
   alignItems: "center",
   width: "15%",
   height: "90%",
+  paddingTop: 5,
+  paddingBottom: 5,
   paddingLeft: 5,
   borderRadius: 5,
   backgroundColor: "whitesmoke",
@@ -131,7 +139,11 @@ const SingleSearchBox = (props) => {
       style={selecter}
     >
       {options.map((key) => {
-        return <option key={`option-${key}`} value={key}>{key}</option>;
+        return (
+          <option key={`option-${key}`} value={key}>
+            {key}
+          </option>
+        );
       })}
     </select>
   );
@@ -167,14 +179,14 @@ const SingleSearchBox = (props) => {
   return (
     <div style={body}>
       <div style={left}>
-        {props.display ? `Keyword ${props.index+1}` : props.text}
+        {props.display ? `Keyword ${props.index + 1}` : props.text}
       </div>
       <div style={middle}>
         {textBox}
-        {props.display ? ` Field ` : ''}
+        {props.display ? ` Field ` : ""}
         {fieldBox}
       </div>
-      
+
       <div style={right}>{control}</div>
     </div>
   );

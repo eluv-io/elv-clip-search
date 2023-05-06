@@ -34,6 +34,8 @@ const box = {
   width: "100%",
   height: "90%",
   paddingLeft: 20,
+  paddingTop: 5,
+  paddingBottom: 5,
   borderRadius: 5,
   borderWidth: 1,
   borderColor: "grey",
