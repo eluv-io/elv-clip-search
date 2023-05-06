@@ -16,7 +16,8 @@ const title = {
 };
 
 const inputCheckContainer = {
-  margin: 10,
+  marginTop: 10,
+  marginBottom: 10,
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
