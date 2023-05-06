@@ -175,6 +175,7 @@ const App = () => {
 
   // processed info
   const searchVersion = useRef("v1");
+  const [showFuzzy, setShowFuzzy] = useState(false);
   const contents = useRef({});
   const contentsInfo = useRef({});
   const numPages = useRef(0);
@@ -191,7 +192,7 @@ const App = () => {
     setTotalContent(0);
   };
 
-  const getClient = async () => {
+  const getClient = () => {
     if (client.current == null) {
       const _client = new FrameClient({
         target: window.parent,
@@ -205,7 +206,7 @@ const App = () => {
     }
   };
   const getSearchUrl = async () => {
-    const client = await getClient();
+    const client = getClient();
     try {
       const libId = await client.ContentObjectLibraryId({
         objectId: objId,
@@ -452,11 +453,25 @@ const App = () => {
         <InputBox
           text="Search Index"
           disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={(txt) => {
+          handleSubmitClick={async (txt) => {
             setUrl("");
             resetLoadStatus();
             setObjId(txt);
             currentPage.current = 1;
+            const client = getClient();
+            const libId = await client.ContentObjectLibraryId({
+              objectId: txt,
+            });
+            const searchObjMeta = await client.ContentObjectMetadata({
+              libraryId: libId,
+              objectId: txt,
+              metadataSubtree: "indexer",
+            });
+            if (!("part" in searchObjMeta)) {
+              setShowFuzzy(true);
+            } else {
+              setShowFuzzy(false);
+            }
           }}
         />
       </div>
@@ -495,17 +510,19 @@ const App = () => {
         >
           Fuzzy Match
         </div>
-        <FuzzySearchBox
-          text="Search Phrase"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={({ text, fields }) => {
-            resetLoadStatus();
-            setFuzzySearchPhrase(text.trim());
-            setFuzzySearchField(fields);
-            currentPage.current = 1;
-          }}
-          statusHandler={resetLoadStatus}
-        />
+        {showFuzzy ? (
+          <FuzzySearchBox
+            text="Search Phrase"
+            disabled={loadingSearchRes || loadingPlayoutUrl}
+            handleSubmitClick={({ text, fields }) => {
+              resetLoadStatus();
+              setFuzzySearchPhrase(text.trim());
+              setFuzzySearchField(fields);
+              currentPage.current = 1;
+            }}
+            statusHandler={resetLoadStatus}
+          />
+        ) : null}
       </div>
 
       {/* show the text info for both input and the search output */}
@@ -520,14 +537,18 @@ const App = () => {
               <div style={{ flex: 1 }}>Search Phrase:</div>
               <div style={{ flex: 3 }}>{search}</div>
             </div>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Fuzzy Search Phrase:</div>
-              <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
-            </div>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Fuzzy Search Fields:</div>
-              <div style={{ flex: 3 }}>{fuzzySearchField}</div>
-            </div>
+            {showFuzzy ? (
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Fuzzy Search Phrase:</div>
+                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+              </div>
+            ) : null}
+            {showFuzzy ? (
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Fuzzy Search Fields:</div>
+                <div style={{ flex: 3 }}>{fuzzySearchField.join(" AND  ")}</div>
+              </div>
+            ) : null}
           </div>
           <button
             type="button"
