@@ -165,7 +165,7 @@ const SingleSearchBox = (props) => {
       style={{ ...button, backgroundColor: "#3b87eb" }}
       onClick={() => {
         if (text !== "") {
-          props.addHandler({ field: field, text: text });
+          props.addHandler({ field: field, text: text.trim() });
           setField("all");
           setText("");
         }

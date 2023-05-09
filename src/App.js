@@ -241,21 +241,25 @@ const App = () => {
       } else {
         // search v2
         searchVersion.current = "v2";
+        const queryParams = {
+          terms: "AND".join([fuzzySearchPhrase, search]),
+          select: "/public/asset_metadata/title",
+          start: 0,
+          limit: 160,
+          max_total: 160,
+          display_fields: "f_start_time,f_end_time",
+          sort: "f_display_title_as_string@asc,f_start_time@asc",
+        };
+        if (fuzzySearchField.length > 0) {
+          queryParams.search_fields = "AND".join(fuzzySearchField);
+        }
         const url = await client.Rep({
           libraryId: libId,
           objectId: objId,
           rep: "search",
           service: "search",
           makeAccessRequest: true,
-          queryParams: {
-            terms: search,
-            select: "/public/asset_metadata/title",
-            start: 0,
-            limit: 160,
-            max_total: 160,
-            display_fields: "f_start_time,f_end_time",
-            sort: "f_display_title_as_string@asc,f_start_time@asc",
-          },
+          queryParams: queryParams,
         });
         const cfgUrl = await client.ConfigUrl();
         const cfg = await axios.get(cfgUrl);
@@ -420,7 +424,7 @@ const App = () => {
     }
   };
   const getRes = async () => {
-    if (search === "" || objId === "") {
+    if ((search === "" && fuzzySearchPhrase === "") || objId === "") {
       console.log("err");
       setErr(true);
       setErrMsg("Invalid search index or missing search phrase");

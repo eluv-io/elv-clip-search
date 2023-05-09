@@ -21,7 +21,7 @@ const SearchBox = (props) => {
       }
     }
     if (res.length > 0) {
-      const resStr = `(${res.join("AND")})`;
+      const resStr = `${res.join("AND")}`;
       return resStr;
     } else {
       return "";
