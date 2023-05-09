@@ -226,7 +226,7 @@ const App = () => {
           service: "search",
           makeAccessRequest: true,
           queryParams: {
-            terms: search,
+            terms: `(${search})`,
             select: "...,text,/public/asset_metadata/title",
             start: 0,
             limit: 160,
@@ -242,7 +242,10 @@ const App = () => {
         // search v2
         searchVersion.current = "v2";
         const queryParams = {
-          terms: "AND".join([fuzzySearchPhrase, search]),
+          terms:
+            fuzzySearchPhrase === ""
+              ? `(${search})`
+              : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
           select: "/public/asset_metadata/title",
           start: 0,
           limit: 160,
@@ -251,7 +254,7 @@ const App = () => {
           sort: "f_display_title_as_string@asc,f_start_time@asc",
         };
         if (fuzzySearchField.length > 0) {
-          queryParams.search_fields = "AND".join(fuzzySearchField);
+          queryParams.search_fields = fuzzySearchField.join(",");
         }
         const url = await client.Rep({
           libraryId: libId,
@@ -268,6 +271,7 @@ const App = () => {
         const s2 = searchV2Node.indexOf("contentfabric");
         const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
         setUrl(newUrl);
+        console.log(newUrl);
         return { url: newUrl, client };
       }
     } catch (err) {
@@ -503,18 +507,18 @@ const App = () => {
         />
       </div>
 
-      <div className="row mt-3">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          Fuzzy Match
-        </div>
-        {showFuzzy ? (
+      {showFuzzy ? (
+        <div className="row mt-3">
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            Fuzzy Match
+          </div>
           <FuzzySearchBox
             text="Search Phrase"
             disabled={loadingSearchRes || loadingPlayoutUrl}
@@ -526,8 +530,8 @@ const App = () => {
             }}
             statusHandler={resetLoadStatus}
           />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {/* show the text info for both input and the search output */}
       {!(haveSearchRes || loadingSearchRes) ? (
@@ -550,7 +554,7 @@ const App = () => {
             {showFuzzy ? (
               <div style={inputInfo}>
                 <div style={{ flex: 1 }}>Fuzzy Search Fields:</div>
-                <div style={{ flex: 3 }}>{fuzzySearchField.join(" AND  ")}</div>
+                <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
               </div>
             ) : null}
           </div>

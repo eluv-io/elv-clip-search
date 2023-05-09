@@ -159,8 +159,11 @@ const FuzzySearchBox = (props) => {
           if (isChecked_title) {
             fields.push("f_display_title");
           }
-          props.handleSubmitClick({ fields: fields, text: text });
+          props.handleSubmitClick({ fields: fields, text: `(${text})` });
+        } else {
+          props.handleSubmitClick({ fields: [], text: "" });
         }
+
         props.statusHandler();
       }}
       disabled={props.disabled}
