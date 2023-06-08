@@ -155,10 +155,10 @@ const loadingUrlContainer = {
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   // basic info
-  const [search, setSearch] = useState("");
-  const [objId, setObjId] = useState("");
+  const [search, setSearch] = useState("");  //query
+  const [objId, setObjId] = useState(""); //search index id (iq...)
   const [url, setUrl] = useState("");
-  const [response, setResponse] = useState([]);
+  const [response, setResponse] = useState([]);  //the content on the current page
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -166,11 +166,11 @@ const App = () => {
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
   const [err, setErr] = useState(false);
-  const [totalContent, setTotalContent] = useState(0);
+  const [totalContent, setTotalContent] = useState(0); //how many clips we get back
   const [errMsg, setErrMsg] = useState("");
   // processed info
-  const contents = useRef({});
-  const contentsInfo = useRef({});
+  const contents = useRef({}); //the result of curling the url
+  const contentsInfo = useRef({}); //a dictionary that maps the id of the clip to the name of the clip
   const numPages = useRef(0);
   const currentPage = useRef(1);
   const client = useRef(null);
@@ -196,9 +196,18 @@ const App = () => {
       return client.current;
     }
   };
+
   const getSearchUrl = async () => {
     const client = getClient();
     try {
+      await client.ContentObjectLibraryId({
+        objectId: objId,
+      });
+    } catch (err) {
+      console.log(err);
+      return 0;
+    }
+    try {  
       const libId = await client.ContentObjectLibraryId({
         objectId: objId,
       });
@@ -215,7 +224,6 @@ const App = () => {
           limit: 160,
           clips_include_source_tags: false,
           clips: true,
-          // sort: "f_display_title_as_string@asc,f_start_time@asc",
           sort: "f_start_time@asc",
         },
       });
@@ -223,7 +231,7 @@ const App = () => {
       return { url, client };
     } catch (err) {
       console.log(err);
-      return null;
+      return 1;
     }
   };
 
@@ -237,6 +245,8 @@ const App = () => {
       // loading playout url for each clip res
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
+
+      // clips_per_content: {objectId: [[clip0, clip1, clip2], [clip3, clip4, clip5], [...] ... ]}
       const clips_per_content = contents.current;
       setResponse(clips_per_content[objectId].clips[1]);
       if (clips_per_content[objectId].processed) {
@@ -333,7 +343,7 @@ const App = () => {
 
   const curl = async (url) => {
     let clips_per_content = {};
-    let firstContent = "";
+    let firstContent = "";  //the id of the first movie to display
     // load and parse the res from curling search url
     try {
       const res = await axios.get(url, { timeout: 600000 });
@@ -360,27 +370,37 @@ const App = () => {
       return [];
     }
   };
+
   const getRes = async () => {
-    if (search === "" || objId === "") {
+    if (objId === "") {
       console.log("err");
       setErr(true);
-      setErrMsg("Invalid search index or missing search phrase");
+      setErrMsg("Missing search index");
+    } else if (search === "") {
+      console.log("err");
+      setErr(true);
+      setErrMsg("Missing search phrase");
     } else {
       setLoadingSearchRes(true);
       setResponse([]);
       const res = await getSearchUrl();
-      if (res != null) {
+      console.log(res)
+      if (res !== 0 && res !== 1) {
         const { url } = res;
         const searchRes = await curl(url);
-        if (res != null) {
+        if (searchRes != null) {  
           setResponse(searchRes);
         }
       } else {
         setLoadingSearchRes(false);
         setErr(true);
-        setErrMsg(
-          "Fail to make search query, please verify the search index content iq"
-        );
+        if (res === 0) {
+          setErrMsg(
+            "Fail to make search query, please verify the search index content iq"
+          );
+        } else {
+          setErrMsg("ACCESS DENIED. You're not our client.");
+        }
       }
     }
   };
@@ -455,7 +475,7 @@ const App = () => {
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>Search tags and generating clips</div>
+        <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
           <div style={clipResInfoContainer}>
