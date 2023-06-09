@@ -7,6 +7,7 @@ import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
 import FuzzySearchBox from "./components/FuzzySearch";
+
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -205,12 +206,19 @@ const App = () => {
       return client.current;
     }
   };
+
   const getSearchUrl = async () => {
     const client = getClient();
+    let libId;
     try {
-      const libId = await client.ContentObjectLibraryId({
+      libId = await client.ContentObjectLibraryId({
         objectId: objId,
       });
+    } catch (err) {
+      console.log(err);
+      return 0;
+    }
+    try {
       const searchObjMeta = await client.ContentObjectMetadata({
         libraryId: libId,
         objectId: objId,
@@ -276,7 +284,7 @@ const App = () => {
       }
     } catch (err) {
       console.log(err);
-      return null;
+      return 1;
     }
   };
 
@@ -428,15 +436,19 @@ const App = () => {
     }
   };
   const getRes = async () => {
-    if ((search === "" && fuzzySearchPhrase === "") || objId === "") {
+    if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
-      setErrMsg("Invalid search index or missing search phrase");
+      setErrMsg("Missing keywords");
+    } else if (objId === "") {
+      console.log("err");
+      setErr(true);
+      setErrMsg("Missing search index");
     } else {
       setLoadingSearchRes(true);
       setResponse([]);
       const res = await getSearchUrl();
-      if (res != null) {
+      if (res !== 1 && res !== 0) {
         const { url } = res;
         const searchRes = await curl(url);
         if (res != null) {
@@ -445,9 +457,14 @@ const App = () => {
       } else {
         setLoadingSearchRes(false);
         setErr(true);
-        setErrMsg(
-          "Fail to make search query, please verify the search index content iq"
-        );
+        if (res === 1) {
+          setErrMsg("ACCESS DENIED");
+        } else {
+          setErrMsg(
+            "Fail to make search query, please verify the search index content iq"
+          );
+        }
+        
       }
     }
   };
@@ -586,7 +603,7 @@ const App = () => {
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>Search tags and generating clips</div>
+        <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
           <div style={clipResInfoContainer}>
