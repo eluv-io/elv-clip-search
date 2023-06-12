@@ -172,6 +172,8 @@ const App = () => {
   const [err, setErr] = useState(false);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
+  const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
+  const [haveSearchVersion, setHaveSearchVersion] = useState(false);
 
   // processed info
   const searchVersion = useRef("v1");
@@ -452,112 +454,162 @@ const App = () => {
       }
     }
   };
+
+  const searchIndexInputBlock = (
+    <InputBox
+      text="Search Index"
+      disabled={loadingSearchRes || loadingPlayoutUrl}
+      handleSubmitClick={async (txt) => {
+        setUrl("");
+        resetLoadStatus();
+        setObjId(txt);
+        setHaveSearchVersion(false);
+        setLoadingSearchVersion(true);
+        setSearch("");
+        setFuzzySearchField([]);
+        setFuzzySearchPhrase("");
+        try {
+          currentPage.current = 1;
+          const client = getClient();
+          const libId = await client.ContentObjectLibraryId({
+            objectId: txt,
+          });
+          const searchObjMeta = await client.ContentObjectMetadata({
+            libraryId: libId,
+            objectId: txt,
+            metadataSubtree: "indexer",
+          });
+          if (!("part" in searchObjMeta)) {
+            setShowFuzzy(true);
+            searchVersion.current = "v2";
+          } else {
+            setShowFuzzy(false);
+            searchVersion.current = "v1";
+          }
+          setLoadingSearchVersion(false);
+          setHaveSearchVersion(true);
+        } catch (err) {
+          setHaveSearchVersion(false);
+          setLoadingSearchVersion(false);
+          setErr(true);
+          setErrMsg(
+            "Permisson Err, check you account and the input index please"
+          );
+        }
+      }}
+    />
+  );
   return (
     <div className="container">
       <div style={title}>
         <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
 
-      <div className="row mt-3">
-        <InputBox
-          text="Search Index"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={async (txt) => {
-            setUrl("");
-            resetLoadStatus();
-            setObjId(txt);
-            currentPage.current = 1;
-            const client = getClient();
-            const libId = await client.ContentObjectLibraryId({
-              objectId: txt,
-            });
-            const searchObjMeta = await client.ContentObjectMetadata({
-              libraryId: libId,
-              objectId: txt,
-              metadataSubtree: "indexer",
-            });
-            if (!("part" in searchObjMeta)) {
-              setShowFuzzy(true);
-            } else {
-              setShowFuzzy(false);
-            }
-          }}
-        />
-      </div>
+      <div className="row mt-3">{searchIndexInputBlock}</div>
 
-      <div className="row mt-3">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          Exact Match
-        </div>
-        <SearchBox
-          text="Search term"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={(txt) => {
-            resetLoadStatus();
-            setSearch(txt.trim());
-            currentPage.current = 1;
-          }}
-          statusHandler={resetLoadStatus}
-        />
-      </div>
-
-      {showFuzzy ? (
-        <div className="row mt-3">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            Fuzzy Match
+      {haveSearchVersion ? (
+        searchVersion.current === "v1" ? (
+          <div className="row mt-3">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              Search
+            </div>
+            <SearchBox
+              text="Search term"
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+              handleSubmitClick={(txt) => {
+                resetLoadStatus();
+                setSearch(txt.trim());
+                currentPage.current = 1;
+              }}
+              statusHandler={resetLoadStatus}
+            />
           </div>
-          <FuzzySearchBox
-            text="Search Phrase"
-            disabled={loadingSearchRes || loadingPlayoutUrl}
-            handleSubmitClick={({ text, fields }) => {
-              resetLoadStatus();
-              setFuzzySearchPhrase(text.trim());
-              setFuzzySearchField(fields);
-              currentPage.current = 1;
-            }}
-            statusHandler={resetLoadStatus}
-          />
-        </div>
+        ) : (
+          <div>
+            <div className="row mt-3">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                Search (BM 25)
+              </div>
+              <FuzzySearchBox
+                text="Search Phrase"
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+                handleSubmitClick={({ text, fields }) => {
+                  resetLoadStatus();
+                  setFuzzySearchPhrase(text.trim());
+                  setFuzzySearchField(fields);
+                  currentPage.current = 1;
+                }}
+                statusHandler={resetLoadStatus}
+              />
+            </div>
+            <div className="row mt-3">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                More Filter
+              </div>
+              <SearchBox
+                text="Search term"
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+                handleSubmitClick={(txt) => {
+                  resetLoadStatus();
+                  setSearch(txt.trim());
+                  currentPage.current = 1;
+                }}
+                statusHandler={resetLoadStatus}
+              />
+            </div>
+          </div>
+        )
+      ) : loadingSearchVersion ? (
+        <div style={hint}> Checking Search index Version</div>
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) ? (
+      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
               <div style={{ flex: 1 }}>Search Index:</div>
               <div style={{ flex: 3 }}>{objId}</div>
             </div>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Phrase:</div>
-              <div style={{ flex: 3 }}>{search}</div>
-            </div>
             {showFuzzy ? (
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Fuzzy Search Phrase:</div>
+                <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
                 <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
               </div>
             ) : null}
             {showFuzzy ? (
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Fuzzy Search Fields:</div>
+                <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
                 <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
               </div>
             ) : null}
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>
+                {showFuzzy ? "More Filter:" : "Search Phrase"}
+              </div>
+              <div style={{ flex: 3 }}>{search}</div>
+            </div>
           </div>
           <button
             type="button"
