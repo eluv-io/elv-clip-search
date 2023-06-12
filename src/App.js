@@ -245,13 +245,19 @@ const App = () => {
           terms:
             fuzzySearchPhrase === ""
               ? `(${search})`
+              : search === ""
+              ? `(${fuzzySearchPhrase})`
               : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
+          // TODO move the title from select to display
           select: "/public/asset_metadata/title",
           start: 0,
           limit: 160,
           max_total: 160,
           display_fields: "f_start_time,f_end_time",
           sort: "f_display_title_as_string@asc,f_start_time@asc",
+          clips: true,
+          // TODO2
+          // scored: true,
         };
         if (fuzzySearchField.length > 0) {
           queryParams.search_fields = fuzzySearchField.join(",");
@@ -352,18 +358,14 @@ const App = () => {
     return result;
   };
 
+  // TODO sortby the score in each movie
+  // TODO sort the movie by its max score
   const parseSearchRes = (data) => {
     const clips_per_content = {};
     let firstContent = "";
     for (let i = 0; i < data.length; i++) {
       // get currernt item
       const item = data[i];
-      if (searchVersion.current === "v2") {
-        item["start_time"] = item.f_start_time[0];
-        item["end_time"] = item.f_end_time[0];
-        item["start"] = toTimeString(item.f_start_time[0]);
-        item["end"] = toTimeString(item.f_end_time[0]);
-      }
       // if not in clips_per_content: need to add them in
       if (!(item["id"] in clips_per_content)) {
         clips_per_content[item["id"]] = { processed: false, clips: [item] };
@@ -403,9 +405,8 @@ const App = () => {
     // load and parse the res from curling search url
     try {
       const res = await axios.get(url);
-      const key = searchVersion.current === "v1" ? "contents" : "results";
-      setTotalContent(res["data"][key].length);
-      const parseRes = parseSearchRes(res["data"][key]);
+      setTotalContent(res["data"]["contents"].length);
+      const parseRes = parseSearchRes(res["data"]["contents"]);
       firstContent = parseRes["firstContent"];
       clips_per_content = parseRes["clips_per_content"];
       contents.current = clips_per_content;
