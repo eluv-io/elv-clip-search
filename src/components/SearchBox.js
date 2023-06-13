@@ -32,6 +32,7 @@ const SearchBox = (props) => {
       <SingleSearchBox
         text="Add Keywords"
         disabled={props.disabled}
+        filteredSearchFields={props.filteredSearchFields}
         addHandler={(newElement) => {
           const newTerms = terms.concat(newElement);
           setTerms(newTerms);
@@ -44,6 +45,7 @@ const SearchBox = (props) => {
         return (
           <SingleSearchBox
             index={index}
+            filteredSearchFields={props.filteredSearchFields}
             display={true}
             searchText={element.text}
             searchField={element.field}
