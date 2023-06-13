@@ -156,6 +156,15 @@ const loadingUrlContainer = {
 
 const App = () => {
   const CLIPS_PER_PAGE = 3;
+  const ALL_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+    "segment",
+    "speech_to_text",
+  ];
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
@@ -184,6 +193,7 @@ const App = () => {
   const currentPage = useRef(1);
   const client = useRef(null);
   const [currentContent, setCurrentContent] = useState("");
+  const filteredSearchFields = useRef([]);
 
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
@@ -353,12 +363,12 @@ const App = () => {
     }
   };
 
-  const toTimeString = (totalMiliSeconds) => {
-    const totalMs = totalMiliSeconds;
-    const result = new Date(totalMs).toISOString().slice(11, 19);
+  // const toTimeString = (totalMiliSeconds) => {
+  //   const totalMs = totalMiliSeconds;
+  //   const result = new Date(totalMs).toISOString().slice(11, 19);
 
-    return result;
-  };
+  //   return result;
+  // };
 
   // TODO sortby the score in each movie
   // TODO sort the movie by its max score
@@ -486,6 +496,15 @@ const App = () => {
             setShowFuzzy(false);
             searchVersion.current = "v1";
           }
+          filteredSearchFields.current = Object.keys(
+            searchObjMeta.config.indexer.arguments.fields
+          )
+            .filter((n) => {
+              return ALL_SEARCH_FIELDS.includes(n);
+            })
+            .map((n) => {
+              return `f_${n}`;
+            });
           setLoadingSearchVersion(false);
           setHaveSearchVersion(true);
         } catch (err) {
@@ -523,6 +542,7 @@ const App = () => {
             <SearchBox
               text="Search term"
               disabled={loadingSearchRes || loadingPlayoutUrl}
+              filteredSearchFields={filteredSearchFields.current}
               handleSubmitClick={(txt) => {
                 resetLoadStatus();
                 setSearch(txt.trim());
@@ -569,6 +589,7 @@ const App = () => {
               </div>
               <SearchBox
                 text="Search term"
+                filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
                 handleSubmitClick={(txt) => {
                   resetLoadStatus();
