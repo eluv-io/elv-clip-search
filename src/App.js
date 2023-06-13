@@ -567,6 +567,7 @@ const App = () => {
               <FuzzySearchBox
                 text="Search Phrase"
                 disabled={loadingSearchRes || loadingPlayoutUrl}
+                filteredSearchFields={filteredSearchFields.current}
                 handleSubmitClick={({ text, fields }) => {
                   resetLoadStatus();
                   setFuzzySearchPhrase(text.trim());
@@ -585,7 +586,7 @@ const App = () => {
                   alignItems: "center",
                 }}
               >
-                More Filter
+                More Filters
               </div>
               <SearchBox
                 text="Search term"
@@ -627,7 +628,7 @@ const App = () => {
             ) : null}
             <div style={inputInfo}>
               <div style={{ flex: 1 }}>
-                {showFuzzy ? "More Filter:" : "Search Phrase"}
+                {showFuzzy ? "More Filters:" : "Search Phrase"}
               </div>
               <div style={{ flex: 3 }}>{search}</div>
             </div>
