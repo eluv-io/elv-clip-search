@@ -371,8 +371,6 @@ const App = () => {
   //   return result;
   // };
 
-  // TODO sortby the score in each movie
-  // TODO sort the movie by its max score
   const parseSearchRes = (data) => {
     const clips_per_content = {};
     let firstContent = "";
@@ -564,6 +562,7 @@ const App = () => {
               text="Search term"
               disabled={loadingSearchRes || loadingPlayoutUrl}
               filteredSearchFields={filteredSearchFields.current}
+              searchVersion="1.0"
               handleSubmitClick={(txt) => {
                 resetLoadStatus();
                 setSearch(txt.trim());
@@ -613,6 +612,7 @@ const App = () => {
                 text="Search term"
                 filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
+                searchVersion="2.0"
                 handleSubmitClick={(txt) => {
                   resetLoadStatus();
                   setSearch(txt.trim());

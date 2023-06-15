@@ -10,12 +10,18 @@ const container = {
 
 const SearchBox = (props) => {
   const [terms, setTerms] = useState([]);
-  // TODO change for fuzzy search
   const makeString = (terms) => {
     const res = [];
     for (let item of terms) {
       if (item.field === "all") {
-        res.push(`("${item.text}")`);
+        if (props.searchVersion === "2.0") {
+          const allTerms = props.filteredSearchFields.map((field) => {
+            return `(${field}:"${item.text}")`;
+          });
+          res.push(`(${allTerms.join(" OR ")})`);
+        } else {
+          res.push(`("${item.text}")`);
+        }
       } else {
         res.push(`(${item.field}:"${item.text}")`);
       }
