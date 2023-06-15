@@ -101,7 +101,7 @@ const FuzzySearchBox = (props) => {
     <div style={selecter}>
       {options.map((item, index) => {
         return (
-          <div style={checker}>
+          <div style={checker} key={item}>
             <input
               style={{ marginRight: 5 }}
               type="checkbox"

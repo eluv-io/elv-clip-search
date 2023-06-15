@@ -231,14 +231,9 @@ const App = () => {
       return 0;
     }
     try {
-      const searchObjMeta = await client.ContentObjectMetadata({
-        libraryId: libId,
-        objectId: objId,
-        metadataSubtree: "indexer",
-      });
-      if ("part" in searchObjMeta) {
+      if (searchVersion.current === "v1") {
+        console.log("doing V1 search");
         // searchV1
-        searchVersion.current = "v1";
         const url = await client.Rep({
           libraryId: libId,
           objectId: objId,
@@ -260,7 +255,7 @@ const App = () => {
         return { url, client };
       } else {
         // search v2
-        searchVersion.current = "v2";
+        console.log("doing V2 search");
         const queryParams = {
           terms:
             fuzzySearchPhrase === ""
@@ -477,7 +472,6 @@ const App = () => {
             "Fail to make search query, please verify the search index content iq"
           );
         }
-        
       }
     }
   };
@@ -506,7 +500,7 @@ const App = () => {
             objectId: txt,
             metadataSubtree: "indexer",
           });
-          if (!("part" in searchObjMeta)) {
+          if (searchObjMeta["version"] === "2.0") {
             setShowFuzzy(true);
             searchVersion.current = "v2";
           } else {
@@ -692,8 +686,12 @@ const App = () => {
                 });
               }}
             >
-              {Object.keys(contents.current).map((key) => {
-                return <option value={key}>{contentsInfo.current[key]}</option>;
+              {Object.keys(contents.current).map((k) => {
+                return (
+                  <option value={k} key={k}>
+                    {contentsInfo.current[k]}
+                  </option>
+                );
               })}
             </select>
           </div>
