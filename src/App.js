@@ -247,7 +247,6 @@ const App = () => {
             limit: 160,
             clips_include_source_tags: false,
             clips: true,
-            // sort: "f_display_title_as_string@asc,f_start_time@asc",
             sort: "f_start_time@asc",
           },
         });
@@ -269,10 +268,9 @@ const App = () => {
           limit: 160,
           max_total: 160,
           display_fields: "f_start_time,f_end_time",
-          sort: "f_display_title_as_string@asc,f_start_time@asc",
+          // sort: "f_display_title_as_string@asc,f_start_time@asc",
           clips: true,
-          // TODO2
-          // scored: true,
+          scored: true,
         };
         if (fuzzySearchField.length > 0) {
           queryParams.search_fields = fuzzySearchField.join(",");
