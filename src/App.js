@@ -445,7 +445,7 @@ const App = () => {
     if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
-      setErrMsg("Missing keywords");
+      setErrMsg("Missing search phrases or filters");
     } else if (objId === "") {
       console.log("err");
       setErr(true);
@@ -487,42 +487,54 @@ const App = () => {
         setSearch("");
         setFuzzySearchField([]);
         setFuzzySearchPhrase("");
+
+        currentPage.current = 1;
+        let libId = "";
+        const client = getClient();
+
         try {
-          currentPage.current = 1;
-          const client = getClient();
-          const libId = await client.ContentObjectLibraryId({
+          libId = await client.ContentObjectLibraryId({
             objectId: txt,
           });
-          const searchObjMeta = await client.ContentObjectMetadata({
-            libraryId: libId,
-            objectId: txt,
-            metadataSubtree: "indexer",
-          });
-          if (searchObjMeta["version"] === "2.0") {
-            setShowFuzzy(true);
-            searchVersion.current = "v2";
-          } else {
-            setShowFuzzy(false);
-            searchVersion.current = "v1";
-          }
-          filteredSearchFields.current = Object.keys(
-            searchObjMeta.config.indexer.arguments.fields
-          )
-            .filter((n) => {
-              return ALL_SEARCH_FIELDS.includes(n);
-            })
-            .map((n) => {
-              return `f_${n}`;
-            });
-          setLoadingSearchVersion(false);
-          setHaveSearchVersion(true);
         } catch (err) {
           setHaveSearchVersion(false);
           setLoadingSearchVersion(false);
           setErr(true);
-          setErrMsg(
-            "Permisson Err, check you account and the input index please"
-          );
+          setErrMsg("Invalid search index Id");
+        }
+        if (libId !== "") {
+          try {
+            const searchObjMeta = await client.ContentObjectMetadata({
+              libraryId: libId,
+              objectId: txt,
+              metadataSubtree: "indexer",
+            });
+            if (searchObjMeta["version"] === "2.0") {
+              setShowFuzzy(true);
+              searchVersion.current = "v2";
+            } else {
+              setShowFuzzy(false);
+              searchVersion.current = "v1";
+            }
+            filteredSearchFields.current = Object.keys(
+              searchObjMeta.config.indexer.arguments.fields
+            )
+              .filter((n) => {
+                return ALL_SEARCH_FIELDS.includes(n);
+              })
+              .map((n) => {
+                return `f_${n}`;
+              });
+            setLoadingSearchVersion(false);
+            setHaveSearchVersion(true);
+          } catch (err) {
+            setHaveSearchVersion(false);
+            setLoadingSearchVersion(false);
+            setErr(true);
+            setErrMsg(
+              "Permisson Err, check you account and the input index please"
+            );
+          }
         }
       }}
     />
