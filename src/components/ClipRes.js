@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import ReactHlsPlayer from "react-hls-player";
 const body = {
   display: "flex",
@@ -53,7 +53,50 @@ const videoPlayer = {
   justifyContent: "center",
 };
 
+const buttonInfo = {
+  display: "flex",
+  flexDirection: "row"
+}
+
+const feedback = {
+  display: "flex",
+  flexDirection: "column"
+}
+
+
 const ClipRes = (props) => {
+
+  const [like, setLike] = useState(false);
+  const [dislike, setdisLike] = useState(false);
+
+  const resetButton = () => {
+    setLike(false);
+    setdisLike(false);
+    document.getElementById("likebutton").style.backgroundColor="";
+    document.getElementById("dislikebutton").style.backgroundColor="";
+  }
+  const thumbsDownClicked = () => {
+    console.log('Thumbs down clicked');
+    resetButton();
+    if (dislike === false) {
+      setdisLike(true);
+      document.getElementById("dislikebutton").style.backgroundColor="#911";
+    }
+  }
+  
+  const thumbsUpClicked = () => {
+    console.log('Thumbs up clicked');
+    resetButton();
+    if (like === false) {
+      setLike(true);
+      document.getElementById("likebutton").style.backgroundColor="#34568B";
+    }
+  }
+
+  const changeRating = (num) => {
+    
+  }
+
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${
     props.clipInfo.start_time / 1000
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
@@ -108,6 +151,93 @@ const ClipRes = (props) => {
             readOnly
           ></textarea>
         </div>
+        <div style={feedback}>
+          {/* <div>rate me</div> */}
+          <br></br>
+
+          {/* thums up and down */}
+          <div style={buttonInfo}>
+            <button id='likebutton' onClick={thumbsUpClicked}>👍</button>
+            <button id='dislikebutton' onClick={thumbsDownClicked}>👎</button>
+          </div>
+
+          <p></p>
+          {/* rating system */}
+          <div class="rating" style={{display: "flex", flexDirection: "row"}}>
+            <div class="star1" style={{display: "flex", flexDirection: "column"}}>
+              <input type="radio" id="star5" name="rating" value="5"></input>
+              <label for="star1">1</label>
+            </div>
+            <div class="star2" style={{display: "flex", flexDirection: "column"}}>
+              <input type="radio" id="star4" name="rating" value="4"></input>
+              <label for="star2">2</label>
+            </div>
+            <div class="star3" style={{display: "flex", flexDirection: "column"}}>
+              <input type="radio" id="star3" name="rating" value="3"></input>
+              <label for="star3">3</label>
+            </div>
+            <div class="star4" style={{display: "flex", flexDirection: "column"}}>
+              <input type="radio" id="star2" name="rating" value="2"></input>
+              <label for="star4">4</label>
+            </div>
+            <div class="star5" style={{display: "flex", flexDirection: "column"}}>
+              <input type="radio" id="star1" name="rating" value="1"></input>
+              <label for="star5">5</label>
+            </div>
+          </div>
+
+          {/* <div class="rating">
+              <i class="rating__star far fa-star"></i>
+              <i class="rating__star far fa-star"></i>
+              <i class="rating__star far fa-star"></i>
+              <i class="rating__star far fa-star"></i>
+              <i class="rating__star far fa-star"></i>
+
+              <script>
+                const ratingStars = [...document.getElementsByClassName("rating__star")];
+
+                function executeRating(stars) {
+                  const starClassActive = "rating__star fas fa-star";
+                  const starClassInactive = "rating__star far fa-star";
+                  const starsLength = stars.length;
+                  let i;
+                  stars.map((star) => {
+                    star.onclick = () => {
+                      i = stars.indexOf(star);
+
+                      if (star.className===starClassInactive) {
+                        for (i; i >= 0; --i) stars[i].className = starClassActive;
+                      } else {
+                        for (i; i < starsLength; ++i) stars[i].className = starClassInactive;
+                      }
+                    }
+                  })
+                }
+                executeRating(ratingStars);
+              </script>
+          </div> */}
+
+
+        </div>
+      </div>
+
+      <div>
+        {like ? (
+          <div id='liketxt' style={{display: 'flex'}}>Thanks for your feedback</div>
+        ) : dislike ? (
+          <div style = {{flexDirection: "column"}}>
+            {/* <div id='disliketxt' style={{display: 'flex'}}>We value your feedback:</div> */}
+            <select id="choices">
+              <option value="1">Movie scene matched to speech text</option>
+              <option value="2">Speech text matched to movie scene</option>
+              <option value="3">Object misrecognition</option>
+              <option value="4">Typos recognized as actual words</option>
+            </select>
+            <div style = {{flexDirection: "column"}}>
+              <textarea id="freeform" name="freeform" rows="4" cols="30">Other reasons...</textarea>
+            </div>
+          </div>
+        ): null}
       </div>
     </div>
   );
