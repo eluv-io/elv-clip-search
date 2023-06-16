@@ -243,6 +243,32 @@ const App = () => {
     }
   };
 
+  const getPlayoutUrl = async ({ client, objectId }) => {
+    let offering = null;
+    const offerings = await client.AvailableOfferings({
+      objectId,
+    });
+    if ("default_clear" in offerings) {
+      offering = "default_clear";
+    } else {
+      offering = "default";
+    }
+    // given the offering, load the playout url for this content
+    const playoutOptions = await client.PlayoutOptions({
+      objectId,
+      protocols: ["hls"],
+      offering: offering,
+      drms: ["clear", "aes-128", "fairplay"],
+    });
+    const playoutMethods = playoutOptions["hls"].playoutMethods;
+    const playoutInfo =
+      playoutMethods.clear ||
+      playoutMethods["aes-128"] ||
+      playoutMethods.fairplay;
+    const videoUrl = playoutInfo.playoutUrl;
+    return videoUrl;
+  };
+
   const getSearchUrl = async () => {
     const client = getClient();
     let libId;
@@ -345,28 +371,10 @@ const App = () => {
         return clips_per_content[objectId].clips[1];
       }
       // get the possible offerings
-      let offering = null;
-      const offerings = await client.current.AvailableOfferings({
+      const videoUrl = await getPlayoutUrl({
+        client: client.current,
         objectId,
       });
-      if ("default_clear" in offerings) {
-        offering = "default_clear";
-      } else {
-        offering = "default";
-      }
-      // given the offering, load the playout url for this content
-      const playoutOptions = await client.current.PlayoutOptions({
-        objectId,
-        protocols: ["hls"],
-        offering: offering,
-        drms: ["clear", "aes-128", "fairplay"],
-      });
-      const playoutMethods = playoutOptions["hls"].playoutMethods;
-      const playoutInfo =
-        playoutMethods.clear ||
-        playoutMethods["aes-128"] ||
-        playoutMethods.fairplay;
-      const videoUrl = playoutInfo.playoutUrl;
       for (let pageIndex in clips_per_content[objectId].clips) {
         for (let item of clips_per_content[objectId].clips[pageIndex]) {
           item.url = videoUrl;
@@ -734,35 +742,14 @@ const App = () => {
                   const dic = {};
                   for (let i = 0; i < topk.current.length; i++) {
                     if (!topk.current[i].processed) {
-                      let offering = null;
                       const objectId = topk.current[i].id;
                       if (objectId in dic) {
                         topk.current[i].url = dic[objectId];
                       } else {
-                        const offerings =
-                          await client.current.AvailableOfferings({
-                            objectId,
-                          });
-                        if ("default_clear" in offerings) {
-                          offering = "default_clear";
-                        } else {
-                          offering = "default";
-                        }
-                        // given the offering, load the playout url for this content
-                        const playoutOptions =
-                          await client.current.PlayoutOptions({
-                            objectId,
-                            protocols: ["hls"],
-                            offering: offering,
-                            drms: ["clear", "aes-128", "fairplay"],
-                          });
-                        const playoutMethods =
-                          playoutOptions["hls"].playoutMethods;
-                        const playoutInfo =
-                          playoutMethods.clear ||
-                          playoutMethods["aes-128"] ||
-                          playoutMethods.fairplay;
-                        const videoUrl = playoutInfo.playoutUrl;
+                        const videoUrl = await getPlayoutUrl({
+                          client: client.current,
+                          objectId,
+                        });
                         dic[objectId] = videoUrl;
                         topk.current[i].url = videoUrl;
                       }
