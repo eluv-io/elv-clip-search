@@ -768,7 +768,11 @@ const App = () => {
                   ...clipResShowMethodButton,
                   ...(showTopk && { border: "none" }),
                 }}
-                onClick={() => setShowTopk(false)}
+                onClick={async () => {
+                  setShowTopk(false);
+                  const res = await jumpToContent(currentContent);
+                  setResponse(res);
+                }}
               >
                 Show All {totalContent} results
               </button>
@@ -791,11 +795,11 @@ const App = () => {
                   ...clipResTitleSelector,
                   width: searchVersion.current === "v2" ? "90%" : "50%",
                 }}
-                onChange={(event) => {
+                value={currentContent}
+                onChange={async (event) => {
                   setCurrentContent(event.target.value);
-                  jumpToContent(event.target.value).then((res) => {
-                    setResponse(res);
-                  });
+                  const res = await jumpToContent(event.target.value);
+                  setResponse(res);
                 }}
               >
                 {Object.keys(contents.current).map((k) => {
