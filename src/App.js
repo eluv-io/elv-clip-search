@@ -195,7 +195,6 @@ const App = () => {
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
   const topk = useRef([]);
-  const [loadingTopk, setLoadingTopk] = useState(false);
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -726,10 +725,12 @@ const App = () => {
               <button
                 style={{
                   ...clipResShowMethodButton,
-                  ...(!(showTopk || loadingTopk) && { border: "none" }),
+                  ...(!showTopk && { border: "none" }),
                 }}
                 onClick={async () => {
-                  setLoadingTopk(true);
+                  setLoadingPlayoutUrl(true);
+                  setHavePlayoutUrl(false);
+                  setShowTopk(true);
                   const dic = {};
                   for (let i = 0; i < topk.current.length; i++) {
                     if (!topk.current[i].processed) {
@@ -768,8 +769,9 @@ const App = () => {
                       topk.current[i].processed = true;
                     }
                   }
-                  setLoadingTopk(false);
-                  setShowTopk(true);
+                  setLoadingPlayoutUrl(false);
+                  setHavePlayoutUrl(true);
+                  setResponse(topk.current);
                 }}
               >
                 Show Top{TOPK}
@@ -777,7 +779,7 @@ const App = () => {
               <button
                 style={{
                   ...clipResShowMethodButton,
-                  ...((showTopk || loadingTopk) && { border: "none" }),
+                  ...(showTopk && { border: "none" }),
                 }}
                 onClick={() => setShowTopk(false)}
               >
@@ -820,11 +822,11 @@ const App = () => {
             </div>
           ) : null}
 
-          {loadingPlayoutUrl || loadingTopk ? (
+          {loadingPlayoutUrl ? (
             <div style={loadingUrlContainer}>Loading playout URL</div>
-          ) : havePlayoutUrl && !showTopk ? (
+          ) : havePlayoutUrl ? (
             <div style={clipResShowContainer}>
-              {numPages.current > 1 ? (
+              {numPages.current > 1 && !showTopk ? (
                 <ReactPaginate
                   breakLabel="..."
                   nextLabel=">"
@@ -849,17 +851,6 @@ const App = () => {
               ) : null}
 
               {response.map((clip) => {
-                return (
-                  <ClipRes
-                    clipInfo={clip}
-                    key={clip.id + clip.start_time}
-                  ></ClipRes>
-                );
-              })}
-            </div>
-          ) : showTopk ? (
-            <div style={clipResShowContainer}>
-              {topk.current.map((clip) => {
                 return (
                   <ClipRes
                     clipInfo={clip}
