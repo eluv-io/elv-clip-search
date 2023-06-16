@@ -255,6 +255,7 @@ const App = () => {
       } else {
         // search v2
         console.log("doing V2 search");
+        const topK = fuzzySearchPhrase === "" ? 160 : 80;
         const queryParams = {
           terms:
             fuzzySearchPhrase === ""
@@ -265,8 +266,8 @@ const App = () => {
           // TODO move the title from select to display
           select: "/public/asset_metadata/title",
           start: 0,
-          limit: 160,
-          max_total: 160,
+          limit: topK,
+          max_total: topK,
           display_fields: "f_start_time,f_end_time",
           // sort: "f_display_title_as_string@asc,f_start_time@asc",
           clips: true,
