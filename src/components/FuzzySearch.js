@@ -20,58 +20,46 @@ const left = {
 
 const middle = {
   display: "flex",
-  flexDirection: "row",
+  flexDirection: "column",
   alignItems: "center",
   justifyContent: "space-between",
   width: "80%",
   height: "100%",
 };
 const box = {
-  width: "80%",
+  width: "100%",
   height: "90%",
   paddingLeft: 20,
   borderRadius: 5,
   paddingTop: 5,
   paddingBottom: 5,
   borderWidth: 1,
-  borderColor: "grey",
-  borderStyle: "ridge",
-};
-const boxInfo = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  paddingLeft: 20,
-  paddingTop: 5,
-  paddingBottom: 5,
-  width: "80%",
-  height: "100%",
-  borderRadius: 5,
-  backgroundColor: "whitesmoke",
-};
-
-const selecter = {
-  width: "15%",
-  height: "90%",
-  borderRadius: 5,
-  borderWidth: 1,
-  paddingTop: 5,
-  paddingBottom: 5,
   borderColor: "grey",
   borderStyle: "ridge",
 };
 
-const selecterInfo = {
+const selecter = {
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  width: "15%",
+  justifyContent: "space-between",
+  width: "100%",
   height: "90%",
+  marginTop: 5,
+  borderRadius: 5,
+  // borderWidth: 1,
   paddingTop: 5,
   paddingBottom: 5,
-  paddingLeft: 5,
-  borderRadius: 5,
-  backgroundColor: "whitesmoke",
+  // borderColor: "grey",
+  // borderStyle: "ridge",
+};
+
+const checker = {
+  width: "13%",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-start",
 };
 
 const right = {
@@ -91,23 +79,13 @@ const button = {
   color: "white",
 };
 
-const button_bold = {
-  width: "100%",
-  border: "None",
-  borderRadius: 5,
-  padding: 5,
-  color: "white",
-  fontWeight: "bold",
-};
-
-const SingleSearchBox = (props) => {
-  const options = ["all", ...props.filteredSearchFields];
+const FuzzySearchBox = (props) => {
   const [text, setText] = useState("");
-  const [field, setField] = useState("all");
-
-  const textBox = props.display ? (
-    <div style={boxInfo}>{props.searchText}</div>
-  ) : (
+  const options = props.filteredSearchFields;
+  const [checkedState, setCheckedState] = useState(
+    new Array(props.filteredSearchFields.length).fill(false)
+  );
+  const textBox = (
     <input
       id="textInputer"
       required="required"
@@ -119,48 +97,42 @@ const SingleSearchBox = (props) => {
       }}
     />
   );
-  const fieldBox = props.display ? (
-    <div style={selecterInfo}>{props.searchField}</div>
-  ) : (
-    <select
-      id="fieldSelecter"
-      onChange={(event) => {
-        setField(event.target.value);
-      }}
-      value={field}
-      style={selecter}
-    >
-      {options.map((key) => {
+  const fieldBox = (
+    <div style={selecter}>
+      {options.map((item, index) => {
         return (
-          <option key={`option-${key}`} value={key}>
-            {key}
-          </option>
+          <div style={checker} key={item}>
+            <input
+              style={{ marginRight: 5 }}
+              type="checkbox"
+              checked={checkedState[index]}
+              onChange={() => {
+                const updatedCheckedState = checkedState.map((status, _index) =>
+                  index === _index ? !status : status
+                );
+                setCheckedState(updatedCheckedState);
+              }}
+            />
+            <span style={{ fontSize: 13 }}>{item.slice(2)}</span>
+          </div>
         );
       })}
-    </select>
+    </div>
   );
-  const control = props.display ? (
-    <button
-      type="button"
-      style={{ ...button_bold, backgroundColor: "#d34848" }}
-      onClick={() => {
-        props.removeHandler();
-        props.statusHandler();
-      }}
-      disabled={props.disabled}
-    >
-      X
-    </button>
-  ) : (
+  const control = (
     <button
       type="button"
       style={{ ...button, backgroundColor: "#3b87eb" }}
       onClick={() => {
         if (text !== "") {
-          props.addHandler({ field: field, text: text.trim() });
-          setField("all");
-          setText("");
+          const fields = options.filter((item, index) => {
+            return checkedState[index];
+          });
+          props.handleSubmitClick({ fields: fields, text: `(${text})` });
+        } else {
+          props.handleSubmitClick({ fields: [], text: "" });
         }
+
         props.statusHandler();
       }}
       disabled={props.disabled}
@@ -170,9 +142,7 @@ const SingleSearchBox = (props) => {
   );
   return (
     <div style={body}>
-      <div style={left}>
-        {props.display ? `Keyword ${props.index + 1}` : props.text}
-      </div>
+      <div style={left}>{props.text}</div>
       <div style={middle}>
         {textBox}
         {props.display ? ` Field ` : ""}
@@ -184,4 +154,4 @@ const SingleSearchBox = (props) => {
   );
 };
 
-export default SingleSearchBox;
+export default FuzzySearchBox;

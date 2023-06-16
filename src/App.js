@@ -6,6 +6,8 @@ import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
+import FuzzySearchBox from "./components/FuzzySearch";
+
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -15,7 +17,8 @@ const title = {
 };
 
 const inputCheckContainer = {
-  margin: 10,
+  marginTop: 10,
+  marginBottom: 10,
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
@@ -154,8 +157,19 @@ const loadingUrlContainer = {
 
 const App = () => {
   const CLIPS_PER_PAGE = 3;
+  const ALL_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+    "segment",
+    "speech_to_text",
+  ];
   // basic info
   const [search, setSearch] = useState("");
+  const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
+  const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
@@ -168,13 +182,19 @@ const App = () => {
   const [err, setErr] = useState(false);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
+  const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
+  const [haveSearchVersion, setHaveSearchVersion] = useState(false);
+
   // processed info
+  const searchVersion = useRef("v1");
+  const [showFuzzy, setShowFuzzy] = useState(false);
   const contents = useRef({});
   const contentsInfo = useRef({});
   const numPages = useRef(0);
   const currentPage = useRef(1);
   const client = useRef(null);
   const [currentContent, setCurrentContent] = useState("");
+  const filteredSearchFields = useRef([]);
 
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
@@ -191,39 +211,92 @@ const App = () => {
         target: window.parent,
       });
       client.current = _client;
+      window.client = _client;
       return _client;
     } else {
+      window.client = client.current;
       return client.current;
     }
   };
+
   const getSearchUrl = async () => {
     const client = getClient();
+    let libId;
     try {
-      const libId = await client.ContentObjectLibraryId({
+      libId = await client.ContentObjectLibraryId({
         objectId: objId,
       });
-      const url = await client.Rep({
-        libraryId: libId,
-        objectId: objId,
-        rep: "search",
-        service: "search",
-        makeAccessRequest: true,
-        queryParams: {
-          terms: search,
-          select: "...,text,/public/asset_metadata/title",
-          start: 0,
-          limit: 160,
-          clips_include_source_tags: false,
-          clips: true,
-          // sort: "f_display_title_as_string@asc,f_start_time@asc",
-          sort: "f_start_time@asc",
-        },
-      });
-      setUrl(url);
-      return { url, client };
     } catch (err) {
       console.log(err);
-      return null;
+      return 0;
+    }
+    try {
+      if (searchVersion.current === "v1") {
+        console.log("doing V1 search");
+        // searchV1
+        const url = await client.Rep({
+          libraryId: libId,
+          objectId: objId,
+          rep: "search",
+          service: "search",
+          makeAccessRequest: true,
+          queryParams: {
+            terms: `(${search})`,
+            select: "...,text,/public/asset_metadata/title",
+            start: 0,
+            limit: 160,
+            clips_include_source_tags: false,
+            clips: true,
+            sort: "f_start_time@asc",
+          },
+        });
+        setUrl(url);
+        return { url, client };
+      } else {
+        // search v2
+        console.log("doing V2 search");
+        const topK = fuzzySearchPhrase === "" ? 160 : 80;
+        const queryParams = {
+          terms:
+            fuzzySearchPhrase === ""
+              ? `(${search})`
+              : search === ""
+              ? `(${fuzzySearchPhrase})`
+              : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
+          // TODO move the title from select to display
+          select: "/public/asset_metadata/title",
+          start: 0,
+          limit: topK,
+          max_total: topK,
+          display_fields: "f_start_time,f_end_time",
+          // sort: "f_display_title_as_string@asc,f_start_time@asc",
+          clips: true,
+          scored: true,
+        };
+        if (fuzzySearchField.length > 0) {
+          queryParams.search_fields = fuzzySearchField.join(",");
+        }
+        const url = await client.Rep({
+          libraryId: libId,
+          objectId: objId,
+          rep: "search",
+          service: "search",
+          makeAccessRequest: true,
+          queryParams: queryParams,
+        });
+        const cfgUrl = await client.ConfigUrl();
+        const cfg = await axios.get(cfgUrl);
+        const searchV2Node = cfg.data.network.services.search_v2[0];
+        const s1 = url.indexOf("contentfabric");
+        const s2 = searchV2Node.indexOf("contentfabric");
+        const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
+        setUrl(newUrl);
+        console.log(newUrl);
+        return { url: newUrl, client };
+      }
+    } catch (err) {
+      console.log(err);
+      return 1;
     }
   };
 
@@ -292,6 +365,13 @@ const App = () => {
     }
   };
 
+  // const toTimeString = (totalMiliSeconds) => {
+  //   const totalMs = totalMiliSeconds;
+  //   const result = new Date(totalMs).toISOString().slice(11, 19);
+
+  //   return result;
+  // };
+
   const parseSearchRes = (data) => {
     const clips_per_content = {};
     let firstContent = "";
@@ -336,7 +416,7 @@ const App = () => {
     let firstContent = "";
     // load and parse the res from curling search url
     try {
-      const res = await axios.get(url, { timeout: 600000 });
+      const res = await axios.get(url);
       setTotalContent(res["data"]["contents"].length);
       const parseRes = parseSearchRes(res["data"]["contents"]);
       firstContent = parseRes["firstContent"];
@@ -361,15 +441,19 @@ const App = () => {
     }
   };
   const getRes = async () => {
-    if (search === "" || objId === "") {
+    if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
-      setErrMsg("Invalid search index or missing search phrase");
+      setErrMsg("Missing search phrases or filters");
+    } else if (objId === "") {
+      console.log("err");
+      setErr(true);
+      setErrMsg("Missing search index");
     } else {
       setLoadingSearchRes(true);
       setResponse([]);
       const res = await getSearchUrl();
-      if (res != null) {
+      if (res !== 1 && res !== 0) {
         const { url } = res;
         const searchRes = await curl(url);
         if (res != null) {
@@ -378,52 +462,196 @@ const App = () => {
       } else {
         setLoadingSearchRes(false);
         setErr(true);
-        setErrMsg(
-          "Fail to make search query, please verify the search index content iq"
-        );
+        if (res === 1) {
+          setErrMsg("ACCESS DENIED");
+        } else {
+          setErrMsg(
+            "Fail to make search query, please verify the search index content iq"
+          );
+        }
       }
     }
   };
+
+  const searchIndexInputBlock = (
+    <InputBox
+      text="Search Index"
+      disabled={loadingSearchRes || loadingPlayoutUrl}
+      handleSubmitClick={async (txt) => {
+        setUrl("");
+        resetLoadStatus();
+        setObjId(txt);
+        setHaveSearchVersion(false);
+        setLoadingSearchVersion(true);
+        setSearch("");
+        setFuzzySearchField([]);
+        setFuzzySearchPhrase("");
+
+        currentPage.current = 1;
+        let libId = "";
+        const client = getClient();
+
+        try {
+          libId = await client.ContentObjectLibraryId({
+            objectId: txt,
+          });
+        } catch (err) {
+          setHaveSearchVersion(false);
+          setLoadingSearchVersion(false);
+          setErr(true);
+          setErrMsg("Invalid search index Id");
+        }
+        if (libId !== "") {
+          try {
+            const searchObjMeta = await client.ContentObjectMetadata({
+              libraryId: libId,
+              objectId: txt,
+              metadataSubtree: "indexer",
+            });
+            if (searchObjMeta["version"] === "2.0") {
+              setShowFuzzy(true);
+              searchVersion.current = "v2";
+            } else {
+              setShowFuzzy(false);
+              searchVersion.current = "v1";
+            }
+            filteredSearchFields.current = Object.keys(
+              searchObjMeta.config.indexer.arguments.fields
+            )
+              .filter((n) => {
+                return ALL_SEARCH_FIELDS.includes(n);
+              })
+              .map((n) => {
+                return `f_${n}`;
+              });
+            setLoadingSearchVersion(false);
+            setHaveSearchVersion(true);
+          } catch (err) {
+            setHaveSearchVersion(false);
+            setLoadingSearchVersion(false);
+            setErr(true);
+            setErrMsg(
+              "Permisson Err, check you account and the input index please"
+            );
+          }
+        }
+      }}
+    />
+  );
   return (
     <div className="container">
       <div style={title}>
         <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
-      <div className="row mt-3">
-        <InputBox
-          text="Search Index"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={(txt) => {
-            setUrl("");
-            resetLoadStatus();
-            setObjId(txt);
-            currentPage.current = 1;
-          }}
-        />
-      </div>
-      <div className="row mt-3">
-        <SearchBox
-          text="Search term"
-          disabled={loadingSearchRes || loadingPlayoutUrl}
-          handleSubmitClick={(txt) => {
-            resetLoadStatus();
-            setSearch(txt.trim());
-            currentPage.current = 1;
-          }}
-          statusHandler={resetLoadStatus}
-        />
-      </div>
+
+      <div className="row mt-3">{searchIndexInputBlock}</div>
+
+      {haveSearchVersion ? (
+        searchVersion.current === "v1" ? (
+          <div className="row mt-3">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              Search
+            </div>
+            <SearchBox
+              text="Search term"
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+              filteredSearchFields={filteredSearchFields.current}
+              searchVersion="1.0"
+              handleSubmitClick={(txt) => {
+                resetLoadStatus();
+                setSearch(txt.trim());
+                currentPage.current = 1;
+              }}
+              statusHandler={resetLoadStatus}
+            />
+          </div>
+        ) : (
+          <div>
+            <div className="row mt-3">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                Search (BM 25)
+              </div>
+              <FuzzySearchBox
+                text="Search Phrase"
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+                filteredSearchFields={filteredSearchFields.current}
+                handleSubmitClick={({ text, fields }) => {
+                  resetLoadStatus();
+                  setFuzzySearchPhrase(text.trim());
+                  setFuzzySearchField(fields);
+                  currentPage.current = 1;
+                }}
+                statusHandler={resetLoadStatus}
+              />
+            </div>
+            <div className="row mt-3">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                More Filters
+              </div>
+              <SearchBox
+                text="Search term"
+                filteredSearchFields={filteredSearchFields.current}
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+                searchVersion="2.0"
+                handleSubmitClick={(txt) => {
+                  resetLoadStatus();
+                  setSearch(txt.trim());
+                  currentPage.current = 1;
+                }}
+                statusHandler={resetLoadStatus}
+              />
+            </div>
+          </div>
+        )
+      ) : loadingSearchVersion ? (
+        <div style={hint}> Checking Search index Version</div>
+      ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) ? (
+      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion ? (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
               <div style={{ flex: 1 }}>Search Index:</div>
               <div style={{ flex: 3 }}>{objId}</div>
             </div>
+            {showFuzzy ? (
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
+                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+              </div>
+            ) : null}
+            {showFuzzy ? (
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
+                <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+              </div>
+            ) : null}
             <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Phrase:</div>
+              <div style={{ flex: 1 }}>
+                {showFuzzy ? "More Filters:" : "Search Phrase"}
+              </div>
               <div style={{ flex: 3 }}>{search}</div>
             </div>
           </div>
@@ -455,7 +683,7 @@ const App = () => {
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>Search tags and generating clips</div>
+        <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
           <div style={clipResInfoContainer}>
@@ -469,8 +697,12 @@ const App = () => {
                 });
               }}
             >
-              {Object.keys(contents.current).map((key) => {
-                return <option value={key}>{contentsInfo.current[key]}</option>;
+              {Object.keys(contents.current).map((k) => {
+                return (
+                  <option value={k} key={k}>
+                    {contentsInfo.current[k]}
+                  </option>
+                );
               })}
             </select>
           </div>
