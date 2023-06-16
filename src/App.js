@@ -177,7 +177,7 @@ const loadingUrlContainer = {
 
 const App = () => {
   const CLIPS_PER_PAGE = 3;
-  const TOPK = 5;
+  const TOPK = 10;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
     "characters",
