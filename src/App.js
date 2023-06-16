@@ -177,7 +177,7 @@ const loadingUrlContainer = {
 
 const App = () => {
   const CLIPS_PER_PAGE = 3;
-  const TOPK = 10;
+  const TOPK = 20;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
     "characters",
@@ -761,7 +761,7 @@ const App = () => {
                   setResponse(topk.current);
                 }}
               >
-                Show Top{TOPK}
+                Show Top {TOPK}
               </button>
               <button
                 style={{
