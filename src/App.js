@@ -110,6 +110,26 @@ const clipResInfoContainer = {
   width: "100%",
 };
 
+const clipResShowMethodContainer = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "90%",
+  marginBottom: 10,
+};
+
+const clipResShowMethodButton = {
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "center",
+  alignContent: "center",
+  backgroundColor: "whitesmoke",
+  width: "30%",
+  padding: 10,
+  borderRadius: 10,
+};
+
 const clipResTotal = {
   display: "flex",
   flexDirection: "row",
@@ -157,6 +177,7 @@ const loadingUrlContainer = {
 
 const App = () => {
   const CLIPS_PER_PAGE = 3;
+  const TOPK = 5;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
     "characters",
@@ -173,6 +194,8 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
+  const topk = useRef([]);
+  const [loadingTopk, setLoadingTopk] = useState(false);
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -184,6 +207,7 @@ const App = () => {
   const [errMsg, setErrMsg] = useState("");
   const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
   const [haveSearchVersion, setHaveSearchVersion] = useState(false);
+  const [showTopk, setShowTopk] = useState(false);
 
   // processed info
   const searchVersion = useRef("v1");
@@ -203,6 +227,7 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
+    setShowTopk(false);
   };
 
   const getClient = () => {
@@ -263,7 +288,6 @@ const App = () => {
               : search === ""
               ? `(${fuzzySearchPhrase})`
               : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
-          // TODO move the title from select to display
           select: "/public/asset_metadata/title",
           start: 0,
           limit: topK,
@@ -374,7 +398,18 @@ const App = () => {
 
   const parseSearchRes = (data) => {
     const clips_per_content = {};
+    const topkRes = [];
     let firstContent = "";
+    for (let i = 0; i < data.length; i++) {
+      if (i >= TOPK) {
+        break;
+      }
+      // get currernt item
+      const item = JSON.parse(JSON.stringify(data[i]));
+      item.processed = false;
+      topkRes.push(item);
+    }
+    topk.current = topkRes;
     for (let i = 0; i < data.length; i++) {
       // get currernt item
       const item = data[i];
@@ -686,30 +721,108 @@ const App = () => {
         <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
-          <div style={clipResInfoContainer}>
-            <div style={clipResTotal}>total results {totalContent}</div>
-            <select
-              style={clipResTitleSelector}
-              onChange={(event) => {
-                setCurrentContent(event.target.value);
-                jumpToContent(event.target.value).then((res) => {
-                  setResponse(res);
-                });
+          {searchVersion.current === "v2" ? (
+            <div style={clipResShowMethodContainer}>
+              <button
+                style={{
+                  ...clipResShowMethodButton,
+                  ...(!(showTopk || loadingTopk) && { border: "none" }),
+                }}
+                onClick={async () => {
+                  setLoadingTopk(true);
+                  const dic = {};
+                  for (let i = 0; i < topk.current.length; i++) {
+                    if (!topk.current[i].processed) {
+                      let offering = null;
+                      const objectId = topk.current[i].id;
+                      if (objectId in dic) {
+                        topk.current[i].url = dic[objectId];
+                      } else {
+                        const offerings =
+                          await client.current.AvailableOfferings({
+                            objectId,
+                          });
+                        if ("default_clear" in offerings) {
+                          offering = "default_clear";
+                        } else {
+                          offering = "default";
+                        }
+                        // given the offering, load the playout url for this content
+                        const playoutOptions =
+                          await client.current.PlayoutOptions({
+                            objectId,
+                            protocols: ["hls"],
+                            offering: offering,
+                            drms: ["clear", "aes-128", "fairplay"],
+                          });
+                        const playoutMethods =
+                          playoutOptions["hls"].playoutMethods;
+                        const playoutInfo =
+                          playoutMethods.clear ||
+                          playoutMethods["aes-128"] ||
+                          playoutMethods.fairplay;
+                        const videoUrl = playoutInfo.playoutUrl;
+                        dic[objectId] = videoUrl;
+                        topk.current[i].url = videoUrl;
+                      }
+                      topk.current[i].processed = true;
+                    }
+                  }
+                  setLoadingTopk(false);
+                  setShowTopk(true);
+                }}
+              >
+                Show Top{TOPK}
+              </button>
+              <button
+                style={{
+                  ...clipResShowMethodButton,
+                  ...((showTopk || loadingTopk) && { border: "none" }),
+                }}
+                onClick={() => setShowTopk(false)}
+              >
+                Show All {totalContent} results
+              </button>
+            </div>
+          ) : null}
+
+          {!showTopk ? (
+            <div
+              style={{
+                ...clipResInfoContainer,
+                justifyContent:
+                  searchVersion.current === "v2" ? "center" : "space-between",
               }}
             >
-              {Object.keys(contents.current).map((k) => {
-                return (
-                  <option value={k} key={k}>
-                    {contentsInfo.current[k]}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+              {searchVersion.current === "v2" ? null : (
+                <div style={clipResTotal}>total results {totalContent}</div>
+              )}
+              <select
+                style={{
+                  ...clipResTitleSelector,
+                  width: searchVersion.current === "v2" ? "90%" : "50%",
+                }}
+                onChange={(event) => {
+                  setCurrentContent(event.target.value);
+                  jumpToContent(event.target.value).then((res) => {
+                    setResponse(res);
+                  });
+                }}
+              >
+                {Object.keys(contents.current).map((k) => {
+                  return (
+                    <option value={k} key={k}>
+                      {contentsInfo.current[k]}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          ) : null}
 
-          {loadingPlayoutUrl ? (
+          {loadingPlayoutUrl || loadingTopk ? (
             <div style={loadingUrlContainer}>Loading playout URL</div>
-          ) : havePlayoutUrl ? (
+          ) : havePlayoutUrl && !showTopk ? (
             <div style={clipResShowContainer}>
               {numPages.current > 1 ? (
                 <ReactPaginate
@@ -736,6 +849,17 @@ const App = () => {
               ) : null}
 
               {response.map((clip) => {
+                return (
+                  <ClipRes
+                    clipInfo={clip}
+                    key={clip.id + clip.start_time}
+                  ></ClipRes>
+                );
+              })}
+            </div>
+          ) : showTopk ? (
+            <div style={clipResShowContainer}>
+              {topk.current.map((clip) => {
                 return (
                   <ClipRes
                     clipInfo={clip}
