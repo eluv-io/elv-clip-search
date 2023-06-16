@@ -171,6 +171,7 @@ const loadingUrlContainer = {
   width: "100%",
   backgroundColor: "whitesmoke",
   marginTop: 20,
+  marginBottom: 40,
   padding: 10,
   borderRadius: 10,
 };
