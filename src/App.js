@@ -195,7 +195,12 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
+
+  // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
+  const topkPages = useRef(1);
+  const [loadingTopkPage, setLoadingTopkPage] = useState(false);
+  const playoutUrlMemo = useRef({});
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -355,6 +360,26 @@ const App = () => {
     return contents.current[currentContent].clips[pageIndex];
   };
 
+  const jumpToPageinTopk = async (pageIndex) => {
+    for (let i = 0; i < topk.current[pageIndex].length; i++) {
+      if (!topk.current[pageIndex][i].processed) {
+        const objectId = topk.current[pageIndex][i].id;
+        if (objectId in playoutUrlMemo.current) {
+          topk.current[i].url = playoutUrlMemo.current[objectId];
+        } else {
+          const videoUrl = await getPlayoutUrl({
+            client: client.current,
+            objectId,
+          });
+          playoutUrlMemo.current[objectId] = videoUrl;
+          topk.current[pageIndex][i].url = videoUrl;
+        }
+        topk.current[pageIndex][i].processed = true;
+      }
+    }
+    return topk.current[pageIndex];
+  };
+
   const jumpToContent = async (objectId) => {
     try {
       // loading playout url for each clip res
@@ -405,8 +430,9 @@ const App = () => {
   // };
 
   const parseSearchRes = (data) => {
-    const clips_per_content = {};
+    // pagination on topk res for search v2 fuzzy method
     const topkRes = [];
+    let topkResPage = [];
     let firstContent = "";
     for (let i = 0; i < data.length; i++) {
       if (i >= TOPK) {
@@ -415,9 +441,20 @@ const App = () => {
       // get currernt item
       const item = JSON.parse(JSON.stringify(data[i]));
       item.processed = false;
-      topkRes.push(item);
+      topkResPage.push(item);
+      if (topkResPage.length === CLIPS_PER_PAGE) {
+        topkRes.push(topkResPage);
+        topkResPage = [];
+      }
+    }
+    if (topkResPage.length > 0) {
+      topkRes.push(topkResPage);
     }
     topk.current = topkRes;
+    topkPages.current = topkRes.length;
+
+    // the normal display method: group by contentId and pagination inside each content
+    const clips_per_content = {};
     for (let i = 0; i < data.length; i++) {
       // get currernt item
       const item = data[i];
@@ -484,6 +521,7 @@ const App = () => {
     }
   };
   const getRes = async () => {
+    playoutUrlMemo.current = {};
     if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
@@ -737,29 +775,13 @@ const App = () => {
                   ...(!showTopk && { border: "none" }),
                 }}
                 onClick={async () => {
-                  setLoadingPlayoutUrl(true);
+                  setLoadingTopkPage(true);
                   setHavePlayoutUrl(false);
                   setShowTopk(true);
-                  const dic = {};
-                  for (let i = 0; i < topk.current.length; i++) {
-                    if (!topk.current[i].processed) {
-                      const objectId = topk.current[i].id;
-                      if (objectId in dic) {
-                        topk.current[i].url = dic[objectId];
-                      } else {
-                        const videoUrl = await getPlayoutUrl({
-                          client: client.current,
-                          objectId,
-                        });
-                        dic[objectId] = videoUrl;
-                        topk.current[i].url = videoUrl;
-                      }
-                      topk.current[i].processed = true;
-                    }
-                  }
-                  setLoadingPlayoutUrl(false);
+                  const res = await jumpToPageinTopk(0);
+                  setLoadingTopkPage(false);
                   setHavePlayoutUrl(true);
-                  setResponse(topk.current);
+                  setResponse(res);
                 }}
               >
                 Show Top {TOPK}
@@ -840,16 +862,44 @@ const App = () => {
                   nextLinkClassName="page-link"
                   activeClassName="active"
                 />
+              ) : showTopk && topkPages.current > 1 ? (
+                <ReactPaginate
+                  breakLabel="..."
+                  nextLabel=">"
+                  onPageChange={async (data) => {
+                    const pageIndex = data.selected;
+                    setLoadingTopkPage(true);
+                    const res = await jumpToPageinTopk(pageIndex);
+                    setLoadingTopkPage(false);
+                    setResponse(res);
+                  }}
+                  pageRangeDisplayed={3}
+                  pageCount={topkPages.current}
+                  previousLabel="<"
+                  renderOnZeroPageCount={null}
+                  containerClassName="pagination justify-content-center"
+                  pageClassName="page-item"
+                  pageLinkClassName="page-link"
+                  previousClassName="page-item"
+                  previousLinkClassName="page-link"
+                  nextClassName="page-item"
+                  nextLinkClassName="page-link"
+                  activeClassName="active"
+                />
               ) : null}
 
-              {response.map((clip) => {
-                return (
-                  <ClipRes
-                    clipInfo={clip}
-                    key={clip.id + clip.start_time}
-                  ></ClipRes>
-                );
-              })}
+              {!loadingTopkPage ? (
+                response.map((clip) => {
+                  return (
+                    <ClipRes
+                      clipInfo={clip}
+                      key={clip.id + clip.start_time}
+                    ></ClipRes>
+                  );
+                })
+              ) : (
+                <div style={loadingUrlContainer}>Loading playout URL</div>
+              )}
             </div>
           ) : null}
         </div>
