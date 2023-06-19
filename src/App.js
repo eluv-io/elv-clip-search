@@ -361,6 +361,7 @@ const App = () => {
   };
 
   const jumpToPageinTopk = async (pageIndex) => {
+    setResponse(topk.current[pageIndex]);
     for (let i = 0; i < topk.current[pageIndex].length; i++) {
       if (!topk.current[pageIndex][i].processed) {
         const objectId = topk.current[pageIndex][i].id;
@@ -767,6 +768,7 @@ const App = () => {
         <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
         <div style={clipResContainer}>
+          {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
           {searchVersion.current === "v2" ? (
             <div style={clipResShowMethodContainer}>
               <button
@@ -800,23 +802,41 @@ const App = () => {
                 Show All {totalContent} results
               </button>
             </div>
-          ) : null}
+          ) : (
+            <div style={clipResInfoContainer}>
+              <div style={clipResTotal}>total results {totalContent}</div>
+              <select
+                style={clipResTitleSelector}
+                value={currentContent}
+                onChange={async (event) => {
+                  setCurrentContent(event.target.value);
+                  const res = await jumpToContent(event.target.value);
+                  setResponse(res);
+                }}
+              >
+                {Object.keys(contents.current).map((k) => {
+                  return (
+                    <option value={k} key={k}>
+                      {contentsInfo.current[k]}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
 
-          {!showTopk ? (
+          {/* need to display the movie selector is search version is V2 and grouping by movir title */}
+          {!showTopk && searchVersion.current === "v2" && (
             <div
               style={{
                 ...clipResInfoContainer,
-                justifyContent:
-                  searchVersion.current === "v2" ? "center" : "space-between",
+                justifyContent: "center",
               }}
             >
-              {searchVersion.current === "v2" ? null : (
-                <div style={clipResTotal}>total results {totalContent}</div>
-              )}
               <select
                 style={{
                   ...clipResTitleSelector,
-                  width: searchVersion.current === "v2" ? "90%" : "50%",
+                  width: "90%",
                 }}
                 value={currentContent}
                 onChange={async (event) => {
@@ -834,74 +854,60 @@ const App = () => {
                 })}
               </select>
             </div>
-          ) : null}
+          )}
 
-          {loadingPlayoutUrl ? (
-            <div style={loadingUrlContainer}>Loading playout URL</div>
-          ) : havePlayoutUrl ? (
-            <div style={clipResShowContainer}>
-              {numPages.current > 1 && !showTopk ? (
-                <ReactPaginate
-                  breakLabel="..."
-                  nextLabel=">"
-                  onPageChange={(data) => {
-                    const pageIndex = data.selected + 1;
-                    const res = jumpToPage(pageIndex);
-                    setResponse(res);
-                  }}
-                  pageRangeDisplayed={3}
-                  pageCount={numPages.current}
-                  previousLabel="<"
-                  renderOnZeroPageCount={null}
-                  containerClassName="pagination justify-content-center"
-                  pageClassName="page-item"
-                  pageLinkClassName="page-link"
-                  previousClassName="page-item"
-                  previousLinkClassName="page-link"
-                  nextClassName="page-item"
-                  nextLinkClassName="page-link"
-                  activeClassName="active"
-                />
-              ) : showTopk && topkPages.current > 1 ? (
-                <ReactPaginate
-                  breakLabel="..."
-                  nextLabel=">"
-                  onPageChange={async (data) => {
-                    const pageIndex = data.selected;
-                    setLoadingTopkPage(true);
-                    const res = await jumpToPageinTopk(pageIndex);
-                    setLoadingTopkPage(false);
-                    setResponse(res);
-                  }}
-                  pageRangeDisplayed={3}
-                  pageCount={topkPages.current}
-                  previousLabel="<"
-                  renderOnZeroPageCount={null}
-                  containerClassName="pagination justify-content-center"
-                  pageClassName="page-item"
-                  pageLinkClassName="page-link"
-                  previousClassName="page-item"
-                  previousLinkClassName="page-link"
-                  nextClassName="page-item"
-                  nextLinkClassName="page-link"
-                  activeClassName="active"
-                />
-              ) : null}
+          <div style={clipResShowContainer}>
+            {/* if have multiplr pages, we need to display the navigation bar */}
+            {((!showTopk && numPages.current > 1) ||
+              (showTopk && topkPages.current > 1)) && (
+              <ReactPaginate
+                breakLabel="..."
+                nextLabel=">"
+                onPageChange={
+                  showTopk
+                    ? async (data) => {
+                        const pageIndex = data.selected;
+                        setLoadingTopkPage(true);
+                        setHavePlayoutUrl(false);
+                        const res = await jumpToPageinTopk(pageIndex);
+                        setLoadingTopkPage(false);
+                        setHavePlayoutUrl(true);
+                        setResponse(res);
+                      }
+                    : (data) => {
+                        const pageIndex = data.selected + 1;
+                        const res = jumpToPage(pageIndex);
+                        setResponse(res);
+                      }
+                }
+                pageRangeDisplayed={3}
+                pageCount={showTopk ? topkPages.current : numPages.current}
+                previousLabel="<"
+                renderOnZeroPageCount={null}
+                containerClassName="pagination justify-content-center"
+                pageClassName="page-item"
+                pageLinkClassName="page-link"
+                previousClassName="page-item"
+                previousLinkClassName="page-link"
+                nextClassName="page-item"
+                nextLinkClassName="page-link"
+                activeClassName="active"
+              />
+            )}
 
-              {!loadingTopkPage ? (
-                response.map((clip) => {
-                  return (
-                    <ClipRes
-                      clipInfo={clip}
-                      key={clip.id + clip.start_time}
-                    ></ClipRes>
-                  );
-                })
-              ) : (
-                <div style={loadingUrlContainer}>Loading playout URL</div>
-              )}
-            </div>
-          ) : null}
+            {havePlayoutUrl ? (
+              response.map((clip) => {
+                return (
+                  <ClipRes
+                    clipInfo={clip}
+                    key={clip.id + clip.start_time}
+                  ></ClipRes>
+                );
+              })
+            ) : loadingPlayoutUrl || loadingTopkPage ? (
+              <div style={loadingUrlContainer}>Loading playout URL</div>
+            ) : null}
+          </div>
         </div>
       ) : err ? (
         <div style={hint}>
