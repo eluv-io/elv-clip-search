@@ -384,6 +384,7 @@ const App = () => {
   const jumpToContent = async (objectId) => {
     try {
       // loading playout url for each clip res
+      setHavePlayoutUrl(false);
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
       const clips_per_content = contents.current;
