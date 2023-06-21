@@ -311,7 +311,6 @@ const App = () => {
       } else {
         // search v2
         console.log("doing V2 search");
-        const topK = fuzzySearchPhrase === "" ? 160 : 80;
         const queryParams = {
           terms:
             fuzzySearchPhrase === ""
@@ -321,8 +320,8 @@ const App = () => {
               : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
           select: "/public/asset_metadata/title",
           start: 0,
-          limit: topK,
-          max_total: topK,
+          limit: 160,
+          max_total: 160,
           display_fields: "f_start_time,f_end_time",
           // sort: "f_display_title_as_string@asc,f_start_time@asc",
           clips: true,
@@ -346,7 +345,7 @@ const App = () => {
         const s2 = searchV2Node.indexOf("contentfabric");
         const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
         setUrl(newUrl);
-        console.log(newUrl);
+        // console.log(newUrl);
         return { url: newUrl, client };
       }
     } catch (err) {
@@ -614,7 +613,7 @@ const App = () => {
             setLoadingSearchVersion(false);
             setErr(true);
             setErrMsg(
-              "Permisson Err, check you account and the input index please"
+              "Permission Error, check you account and the input index please"
             );
           }
         }
@@ -800,7 +799,7 @@ const App = () => {
                   setResponse(res);
                 }}
               >
-                Show All {totalContent} results
+                Show {totalContent} returned results
               </button>
             </div>
           ) : (
