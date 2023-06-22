@@ -1,5 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import ReactHlsPlayer from "react-hls-player";
+import {
+  getFirestore, collection, getDoc, addDoc, doc, updateDoc, query, where, get, getDocs
+} from 'firebase/firestore' ;
+
+
 const body = {
   display: "flex",
   flexDirection: "column",
@@ -63,38 +68,181 @@ const feedback = {
   flexDirection: "column"
 }
 
+const options = [
+  { value: "1", label: "Movie scene matched to speech text" },
+  { value: "2", label: "Speech text matched to movie scene" },
+  { value: "3", label: "Object misrecognition" },
+  { value: "4", label: "Typos recognized as actual words" }
+];
+
 
 const ClipRes = (props) => {
 
   const [like, setLike] = useState(false);
   const [dislike, setdisLike] = useState(false);
+  const [otherreasons, setOtherreasons] = useState("Other reasons...");
+  const db = props.db;
+  const clientadd = props.clientadd;
+  const colRef = collection(db, 'Books'); //TODO change it to Feedback
+    console.log('collection reference:', colRef);
+
+  const q = query(colRef, where("client", "==", clientadd));
 
   const resetButton = () => {
     setLike(false);
     setdisLike(false);
     document.getElementById("likebutton").style.backgroundColor="";
     document.getElementById("dislikebutton").style.backgroundColor="";
+
+    getDocs(q).then((querySnapshot) => {
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((document) => {
+          console.log(document.id);
+          const docRef = doc(colRef, document.id);
+          const updateData = {
+            like_dislike: null,
+            reason: null
+          };
+          updateDoc(docRef, updateData).then(() => {
+            console.log("Client status cleared");
+          })
+        });
+      }
+    })
   }
-  const thumbsDownClicked = () => {
+
+  const thumbsDownClicked = async () => {
     console.log('Thumbs down clicked');
     resetButton();
     if (dislike === false) {
       setdisLike(true);
       document.getElementById("dislikebutton").style.backgroundColor="#911";
+
+      getDocs(q).then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          const newData = {
+            client: clientadd,
+            like_dislike: "Dislike"
+          };
+          addDoc(colRef, newData).then((docRef) => {
+            console.log("New client added with document reference", docRef);
+          })
+        } else {
+          querySnapshot.forEach((document) => {
+            console.log(document.id);
+            const docRef = doc(colRef, document.id);
+            const updateData = {
+              like_dislike: "Dislike"
+            };
+            updateDoc(docRef, updateData).then(() => {
+              console.log("Like/dislike updated successfully");
+            })
+          });
+        }
+      })
     }
   }
   
-  const thumbsUpClicked = () => {
+  const thumbsUpClicked = async () => {
     console.log('Thumbs up clicked');
     resetButton();
     if (like === false) {
       setLike(true);
       document.getElementById("likebutton").style.backgroundColor="#34568B";
+
+      getDocs(q).then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          const newData = {
+            client: clientadd,
+            like_dislike: "Like"
+          };
+          addDoc(colRef, newData).then((docRef) => {
+            console.log("New client added with document reference", docRef);
+          })
+        } else {
+          querySnapshot.forEach((document) => {
+            console.log(document.id);
+            const docRef = doc(colRef, document.id);
+            const updateData = {
+              like_dislike: "Like"
+            };
+            updateDoc(docRef, updateData).then(() => {
+              console.log("Like/dislike updated successfully");
+            })
+          });
+        }
+      })
     }
+  };
+
+  const collectRate = async (event) => {
+    const selectedRating = event.target.value;
+    getDocs(q).then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        const newData = {
+          client: clientadd,
+          rating: selectedRating
+        };
+        addDoc(colRef, newData).then((docRef) => {
+          console.log("New client added with document reference", docRef);
+        })
+      } else {
+        querySnapshot.forEach((document) => {
+          console.log(document.id);
+          const docRef = doc(colRef, document.id);
+          const updateData = {
+            rating: selectedRating
+          };
+          updateDoc(docRef, updateData).then(() => {
+            console.log("Rating updated successfully");
+          })
+        });
+      }
+    })
   }
 
-  const changeRating = (num) => {
-    
+  const collectOption = (event) => {
+    const selectedValue = event.target.value;
+    getDocs(q).then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        const newData = {
+          client: clientadd,
+          reason: selectedValue
+        };
+        addDoc(colRef, newData).then((docRef) => {
+          console.log("New client added with document reference", docRef);
+        })
+      } else {
+        querySnapshot.forEach((document) => {
+          console.log(document.id);
+          const docRef = doc(colRef, document.id);
+          const updateData = {
+            reason: selectedValue
+          };
+          updateDoc(docRef, updateData).then(() => {
+            console.log("Reason updated successfully");
+          })
+        });
+      }
+    })
+  }
+
+  const collectText = () => {
+    const textareaData = document.getElementById('reason_input').value;
+    getDocs(q).then((querySnapshot) => {
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach((document) => {
+          console.log(document.id);
+          const docRef = doc(colRef, document.id);
+          const updateData = {
+            reason: textareaData
+          };
+          updateDoc(docRef, updateData).then(() => {
+            console.log("Reason updated successfully");
+          })
+        });
+      }
+    })
   }
 
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${
@@ -163,60 +311,15 @@ const ClipRes = (props) => {
 
           <p></p>
           {/* rating system */}
-          <div class="rating" style={{display: "flex", flexDirection: "row"}}>
-            <div class="star1" style={{display: "flex", flexDirection: "column"}}>
-              <input type="radio" id="star5" name="rating" value="5"></input>
-              <label for="star1">1</label>
-            </div>
-            <div class="star2" style={{display: "flex", flexDirection: "column"}}>
-              <input type="radio" id="star4" name="rating" value="4"></input>
-              <label for="star2">2</label>
-            </div>
-            <div class="star3" style={{display: "flex", flexDirection: "column"}}>
-              <input type="radio" id="star3" name="rating" value="3"></input>
-              <label for="star3">3</label>
-            </div>
-            <div class="star4" style={{display: "flex", flexDirection: "column"}}>
-              <input type="radio" id="star2" name="rating" value="2"></input>
-              <label for="star4">4</label>
-            </div>
-            <div class="star5" style={{display: "flex", flexDirection: "column"}}>
-              <input type="radio" id="star1" name="rating" value="1"></input>
-              <label for="star5">5</label>
-            </div>
+
+          <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
+            {[1, 2, 3, 4, 5].map((num) => (
+              <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
+                <input type="radio" id={`star${6 - num}`} name="rating" value={num} onChange={collectRate}></input>
+                <label htmlFor={`star${num}`}>{num}</label>
+              </div>
+            ))}
           </div>
-
-          {/* <div class="rating">
-              <i class="rating__star far fa-star"></i>
-              <i class="rating__star far fa-star"></i>
-              <i class="rating__star far fa-star"></i>
-              <i class="rating__star far fa-star"></i>
-              <i class="rating__star far fa-star"></i>
-
-              <script>
-                const ratingStars = [...document.getElementsByClassName("rating__star")];
-
-                function executeRating(stars) {
-                  const starClassActive = "rating__star fas fa-star";
-                  const starClassInactive = "rating__star far fa-star";
-                  const starsLength = stars.length;
-                  let i;
-                  stars.map((star) => {
-                    star.onclick = () => {
-                      i = stars.indexOf(star);
-
-                      if (star.className===starClassInactive) {
-                        for (i; i >= 0; --i) stars[i].className = starClassActive;
-                      } else {
-                        for (i; i < starsLength; ++i) stars[i].className = starClassInactive;
-                      }
-                    }
-                  })
-                }
-                executeRating(ratingStars);
-              </script>
-          </div> */}
-
 
         </div>
       </div>
@@ -227,14 +330,25 @@ const ClipRes = (props) => {
         ) : dislike ? (
           <div style = {{flexDirection: "column"}}>
             {/* <div id='disliketxt' style={{display: 'flex'}}>We value your feedback:</div> */}
-            <select id="choices">
-              <option value="1">Movie scene matched to speech text</option>
+            <select id="choices" onChange={collectOption}>
+              {/* <option value="1">Movie scene matched to speech text</option>
               <option value="2">Speech text matched to movie scene</option>
               <option value="3">Object misrecognition</option>
-              <option value="4">Typos recognized as actual words</option>
+              <option value="4">Typos recognized as actual words</option> */}
+              {options.map((option) => (
+                <option key={option.value} value={option.label}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             <div style = {{flexDirection: "column"}}>
-              <textarea id="freeform" name="freeform" rows="4" cols="30">Other reasons...</textarea>
+              <textarea 
+              id="reason_input"
+              name="freeform"
+              rows="4" cols="30" 
+              value={otherreasons}
+              onChange={(event) => setOtherreasons(event.target.value)}>Other reasons...</textarea>
+              <button onClick={collectText}>Submit</button>
             </div>
           </div>
         ): null}
