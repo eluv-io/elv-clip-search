@@ -67,7 +67,7 @@ const InputBox = (props) => {
         <button
           type="button"
           style={button}
-          onClick={() => props.handleSubmitClick(value)}
+          onClick={() => props.handleSubmitClick(value.trim())}
           disabled={props.disabled}
         >
           ADD

@@ -15,7 +15,14 @@ const SearchBox = (props) => {
     const res = [];
     for (let item of terms) {
       if (item.field === "all") {
-        res.push(`("${item.text}")`);
+        if (props.searchVersion === "2.0") {
+          const allTerms = props.filteredSearchFields.map((field) => {
+            return `(${field}:"${item.text}")`;
+          });
+          res.push(`(${allTerms.join(" OR ")})`);
+        } else {
+          res.push(`("${item.text}")`);
+        }
       } else {
         res.push(`(${item.field}:"${item.text}")`);
       }
@@ -32,6 +39,7 @@ const SearchBox = (props) => {
       <SingleSearchBox
         text="Add Keywords"
         disabled={props.disabled}
+        filteredSearchFields={props.filteredSearchFields}
         addHandler={(newElement) => {
           const newTerms = terms.concat(newElement);
           setTerms(newTerms);
@@ -44,6 +52,7 @@ const SearchBox = (props) => {
         return (
           <SingleSearchBox
             index={index}
+            filteredSearchFields={props.filteredSearchFields}
             display={true}
             searchText={element.text}
             searchField={element.field}

@@ -55,11 +55,11 @@ const selecter = {
 };
 
 const checker = {
-  width: "15%",
+  width: "13%",
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  justifyContent: "center",
+  justifyContent: "flex-start",
 };
 
 const right = {
@@ -81,10 +81,10 @@ const button = {
 
 const FuzzySearchBox = (props) => {
   const [text, setText] = useState("");
-  const [isChecked_stt, setIsChecked_stt] = useState(false);
-  const [isChecked_od, setIsChecked_od] = useState(false);
-  const [isChecked_celeb, setIsChecked_celeb] = useState(false);
-  const [isChecked_title, setIsChecked_title] = useState(false);
+  const options = props.filteredSearchFields;
+  const [checkedState, setCheckedState] = useState(
+    new Array(props.filteredSearchFields.length).fill(true)
+  );
   const textBox = (
     <input
       id="textInputer"
@@ -99,45 +99,24 @@ const FuzzySearchBox = (props) => {
   );
   const fieldBox = (
     <div style={selecter}>
-      <div style={checker}>
-        <input
-          style={{ marginRight: 5 }}
-          type="checkbox"
-          checked={isChecked_stt}
-          onChange={() => setIsChecked_stt((prev) => !prev)}
-        />
-        <span>speech_to_text</span>
-      </div>
-
-      <div style={checker}>
-        <input
-          style={{ marginRight: 5 }}
-          type="checkbox"
-          checked={isChecked_od}
-          onChange={() => setIsChecked_od((prev) => !prev)}
-        />
-        <span>object_detection</span>
-      </div>
-
-      <div style={checker}>
-        <input
-          style={{ marginRight: 5 }}
-          type="checkbox"
-          checked={isChecked_celeb}
-          onChange={() => setIsChecked_celeb((prev) => !prev)}
-        />
-        <span>celebrity</span>
-      </div>
-
-      <div style={checker}>
-        <input
-          style={{ marginRight: 5 }}
-          type="checkbox"
-          checked={isChecked_title}
-          onChange={() => setIsChecked_title((prev) => !prev)}
-        />
-        <span>title</span>
-      </div>
+      {options.map((item, index) => {
+        return (
+          <div style={checker} key={item}>
+            <input
+              style={{ marginRight: 5 }}
+              type="checkbox"
+              checked={checkedState[index]}
+              onChange={() => {
+                const updatedCheckedState = checkedState.map((status, _index) =>
+                  index === _index ? !status : status
+                );
+                setCheckedState(updatedCheckedState);
+              }}
+            />
+            <span style={{ fontSize: 13 }}>{item.slice(2)}</span>
+          </div>
+        );
+      })}
     </div>
   );
   const control = (
@@ -146,19 +125,9 @@ const FuzzySearchBox = (props) => {
       style={{ ...button, backgroundColor: "#3b87eb" }}
       onClick={() => {
         if (text !== "") {
-          const fields = [];
-          if (isChecked_stt) {
-            fields.push("f_speech_to_text");
-          }
-          if (isChecked_od) {
-            fields.push("f_object");
-          }
-          if (isChecked_celeb) {
-            fields.push("f_celebrity");
-          }
-          if (isChecked_title) {
-            fields.push("f_display_title");
-          }
+          const fields = options.filter((item, index) => {
+            return checkedState[index];
+          });
           props.handleSubmitClick({ fields: fields, text: `(${text})` });
         } else {
           props.handleSubmitClick({ fields: [], text: "" });
