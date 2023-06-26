@@ -198,6 +198,7 @@ const App = () => {
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
+  const topkCnt = useRef(0); // because the actual returned results may be less than TOPK
   const topkPages = useRef(1);
   const [loadingTopkPage, setLoadingTopkPage] = useState(false);
   const playoutUrlMemo = useRef({});
@@ -365,7 +366,7 @@ const App = () => {
       if (!topk.current[pageIndex][i].processed) {
         const objectId = topk.current[pageIndex][i].id;
         if (objectId in playoutUrlMemo.current) {
-          topk.current[i].url = playoutUrlMemo.current[objectId];
+          topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
         } else {
           const videoUrl = await getPlayoutUrl({
             client: client.current,
@@ -435,12 +436,14 @@ const App = () => {
     const topkRes = [];
     let topkResPage = [];
     let firstContent = "";
+    let _cnt = 0;
     for (let i = 0; i < data.length; i++) {
       if (i >= TOPK) {
         break;
       }
       // get currernt item
       const item = JSON.parse(JSON.stringify(data[i]));
+      _cnt += 1;
       item.processed = false;
       topkResPage.push(item);
       if (topkResPage.length === CLIPS_PER_PAGE) {
@@ -451,6 +454,7 @@ const App = () => {
     if (topkResPage.length > 0) {
       topkRes.push(topkResPage);
     }
+    topkCnt.current = _cnt;
     topk.current = topkRes;
     topkPages.current = topkRes.length;
 
@@ -786,7 +790,7 @@ const App = () => {
                   setResponse(res);
                 }}
               >
-                Show Top {TOPK}
+                Show Top {topkCnt.current}
               </button>
               <button
                 style={{
