@@ -399,10 +399,16 @@ const App = () => {
         return clips_per_content[objectId].clips[1];
       }
       // get the possible offerings
-      const videoUrl = await getPlayoutUrl({
-        client: client.current,
-        objectId,
-      });
+      let videoUrl = "";
+      if (objectId in playoutUrlMemo.current) {
+        videoUrl = playoutUrlMemo.current[objectId];
+      } else {
+        videoUrl = await getPlayoutUrl({
+          client: client.current,
+          objectId,
+        });
+        playoutUrlMemo.current[objectId] = videoUrl;
+      }
       for (let pageIndex in clips_per_content[objectId].clips) {
         for (let item of clips_per_content[objectId].clips[pageIndex]) {
           item.url = videoUrl;
