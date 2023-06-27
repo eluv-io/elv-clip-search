@@ -2,7 +2,7 @@
 
 ## Developer mode
 
-To host the application on your local machine, user need to install two applications.
+To host the application on your local machine, user should install two applications.
 
 ### [**ElvCore**](https://github.com/eluv-io/elv-core-js)
 
@@ -71,7 +71,8 @@ You will get
 | SONY   | `iq__2DTx9v7gYNFhYa2uNWEtT5qG2Jn3` |                                    | 10 full-length videos customized w/ SONY data |
 | SONY   |                                    | `iq__4Dezn5i6EZs4vFCD4qE8Xc4QbXsf` | 187 full-length videos tagged w/ GIT          |
 
-The rendered UI depends on the version of the search index,
+The rendered UI depends on the version of the search index.
+
 **with v1 index, user will get**
 
 <img width="1000" alt="image" src="docs/images/search%20UI%20v1.png">
@@ -81,7 +82,7 @@ The rendered UI depends on the version of the search index,
   - `Add Keywords` conducts an exact match and is madataory for v1 search index
   - `<keyword>` performs a global search regardless of the field name
   - `f_<searchable_field_name>:=<keyword>` restricts the search to the field `<searchable_field_name>`
-  - multiple keywords are joined by default using `"AND"` by default, i.e., `f_celebrity:= "Daniel Craig" AND f_speech_to_text:= "shaken not stirred"`
+  - multiple keywords are joined by default using `"AND"`, i.e., `f_celebrity:= "Daniel Craig" AND f_speech_to_text:= "shaken not stirred"`
 
 - What are the searchable fields of my Index Object ?
 

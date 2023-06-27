@@ -922,7 +922,7 @@ const App = () => {
           </div>
         ) : (
           <div style={hint}>
-            <p>Nothing returned</p>
+            <p>No clip returned! </p>
           </div>
         )
       ) : err ? (
