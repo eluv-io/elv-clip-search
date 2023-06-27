@@ -777,148 +777,154 @@ const App = () => {
       {loadingSearchRes ? (
         <div style={hint}>Searching tags and generating clips</div>
       ) : haveSearchRes ? (
-        <div style={clipResContainer}>
-          {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
-          {searchVersion.current === "v2" ? (
-            <div style={clipResShowMethodContainer}>
-              <button
-                style={{
-                  ...clipResShowMethodButton,
-                  ...(!showTopk && { border: "none" }),
-                }}
-                onClick={async () => {
-                  setLoadingTopkPage(true);
-                  setHavePlayoutUrl(false);
-                  setShowTopk(true);
-                  const res = await jumpToPageinTopk(0);
-                  setLoadingTopkPage(false);
-                  setHavePlayoutUrl(true);
-                  setResponse(res);
-                }}
-              >
-                Show Top {topkCnt.current}
-              </button>
-              <button
-                style={{
-                  ...clipResShowMethodButton,
-                  ...(showTopk && { border: "none" }),
-                }}
-                onClick={async () => {
-                  setShowTopk(false);
-                  const res = await jumpToContent(currentContent);
-                  setResponse(res);
-                }}
-              >
-                Show {totalContent} returned results
-              </button>
-            </div>
-          ) : (
-            <div style={clipResInfoContainer}>
-              <div style={clipResTotal}>total results {totalContent}</div>
-              <select
-                style={clipResTitleSelector}
-                value={currentContent}
-                onChange={async (event) => {
-                  setCurrentContent(event.target.value);
-                  const res = await jumpToContent(event.target.value);
-                  setResponse(res);
-                }}
-              >
-                {Object.keys(contents.current).map((k) => {
-                  return (
-                    <option value={k} key={k}>
-                      {contentsInfo.current[k]}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          {/* need to display the movie selector is search version is V2 and grouping by movir title */}
-          {!showTopk && searchVersion.current === "v2" && (
-            <div
-              style={{
-                ...clipResInfoContainer,
-                justifyContent: "center",
-              }}
-            >
-              <select
-                style={{
-                  ...clipResTitleSelector,
-                  width: "90%",
-                }}
-                value={currentContent}
-                onChange={async (event) => {
-                  setCurrentContent(event.target.value);
-                  const res = await jumpToContent(event.target.value);
-                  setResponse(res);
-                }}
-              >
-                {Object.keys(contents.current).map((k) => {
-                  return (
-                    <option value={k} key={k}>
-                      {contentsInfo.current[k]}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          <div style={clipResShowContainer}>
-            {/* if have multiplr pages, we need to display the navigation bar */}
-            {((!showTopk && numPages.current > 1) ||
-              (showTopk && topkPages.current > 1)) && (
-              <ReactPaginate
-                breakLabel="..."
-                nextLabel=">"
-                onPageChange={
-                  showTopk
-                    ? async (data) => {
-                        const pageIndex = data.selected;
-                        setLoadingTopkPage(true);
-                        setHavePlayoutUrl(false);
-                        const res = await jumpToPageinTopk(pageIndex);
-                        setLoadingTopkPage(false);
-                        setHavePlayoutUrl(true);
-                        setResponse(res);
-                      }
-                    : (data) => {
-                        const pageIndex = data.selected + 1;
-                        const res = jumpToPage(pageIndex);
-                        setResponse(res);
-                      }
-                }
-                pageRangeDisplayed={3}
-                pageCount={showTopk ? topkPages.current : numPages.current}
-                previousLabel="<"
-                renderOnZeroPageCount={null}
-                containerClassName="pagination justify-content-center"
-                pageClassName="page-item"
-                pageLinkClassName="page-link"
-                previousClassName="page-item"
-                previousLinkClassName="page-link"
-                nextClassName="page-item"
-                nextLinkClassName="page-link"
-                activeClassName="active"
-              />
+        totalContent > 0 ? (
+          <div style={clipResContainer}>
+            {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
+            {searchVersion.current === "v2" ? (
+              <div style={clipResShowMethodContainer}>
+                <button
+                  style={{
+                    ...clipResShowMethodButton,
+                    ...(!showTopk && { border: "none" }),
+                  }}
+                  onClick={async () => {
+                    setLoadingTopkPage(true);
+                    setHavePlayoutUrl(false);
+                    setShowTopk(true);
+                    const res = await jumpToPageinTopk(0);
+                    setLoadingTopkPage(false);
+                    setHavePlayoutUrl(true);
+                    setResponse(res);
+                  }}
+                >
+                  Show Top {topkCnt.current}
+                </button>
+                <button
+                  style={{
+                    ...clipResShowMethodButton,
+                    ...(showTopk && { border: "none" }),
+                  }}
+                  onClick={async () => {
+                    setShowTopk(false);
+                    const res = await jumpToContent(currentContent);
+                    setResponse(res);
+                  }}
+                >
+                  Show {totalContent} returned results
+                </button>
+              </div>
+            ) : (
+              <div style={clipResInfoContainer}>
+                <div style={clipResTotal}>total results {totalContent}</div>
+                <select
+                  style={clipResTitleSelector}
+                  value={currentContent}
+                  onChange={async (event) => {
+                    setCurrentContent(event.target.value);
+                    const res = await jumpToContent(event.target.value);
+                    setResponse(res);
+                  }}
+                >
+                  {Object.keys(contents.current).map((k) => {
+                    return (
+                      <option value={k} key={k}>
+                        {contentsInfo.current[k]}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             )}
 
-            {havePlayoutUrl ? (
-              response.map((clip) => {
-                return (
-                  <ClipRes
-                    clipInfo={clip}
-                    key={clip.id + clip.start_time}
-                  ></ClipRes>
-                );
-              })
-            ) : loadingPlayoutUrl || loadingTopkPage ? (
-              <div style={loadingUrlContainer}>Loading playout URL</div>
-            ) : null}
+            {/* need to display the movie selector is search version is V2 and grouping by movir title */}
+            {!showTopk && searchVersion.current === "v2" && (
+              <div
+                style={{
+                  ...clipResInfoContainer,
+                  justifyContent: "center",
+                }}
+              >
+                <select
+                  style={{
+                    ...clipResTitleSelector,
+                    width: "90%",
+                  }}
+                  value={currentContent}
+                  onChange={async (event) => {
+                    setCurrentContent(event.target.value);
+                    const res = await jumpToContent(event.target.value);
+                    setResponse(res);
+                  }}
+                >
+                  {Object.keys(contents.current).map((k) => {
+                    return (
+                      <option value={k} key={k}>
+                        {contentsInfo.current[k]}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            )}
+
+            <div style={clipResShowContainer}>
+              {/* if have multiplr pages, we need to display the navigation bar */}
+              {((!showTopk && numPages.current > 1) ||
+                (showTopk && topkPages.current > 1)) && (
+                <ReactPaginate
+                  breakLabel="..."
+                  nextLabel=">"
+                  onPageChange={
+                    showTopk
+                      ? async (data) => {
+                          const pageIndex = data.selected;
+                          setLoadingTopkPage(true);
+                          setHavePlayoutUrl(false);
+                          const res = await jumpToPageinTopk(pageIndex);
+                          setLoadingTopkPage(false);
+                          setHavePlayoutUrl(true);
+                          setResponse(res);
+                        }
+                      : (data) => {
+                          const pageIndex = data.selected + 1;
+                          const res = jumpToPage(pageIndex);
+                          setResponse(res);
+                        }
+                  }
+                  pageRangeDisplayed={3}
+                  pageCount={showTopk ? topkPages.current : numPages.current}
+                  previousLabel="<"
+                  renderOnZeroPageCount={null}
+                  containerClassName="pagination justify-content-center"
+                  pageClassName="page-item"
+                  pageLinkClassName="page-link"
+                  previousClassName="page-item"
+                  previousLinkClassName="page-link"
+                  nextClassName="page-item"
+                  nextLinkClassName="page-link"
+                  activeClassName="active"
+                />
+              )}
+
+              {havePlayoutUrl ? (
+                response.map((clip) => {
+                  return (
+                    <ClipRes
+                      clipInfo={clip}
+                      key={clip.id + clip.start_time}
+                    ></ClipRes>
+                  );
+                })
+              ) : loadingPlayoutUrl || loadingTopkPage ? (
+                <div style={loadingUrlContainer}>Loading playout URL</div>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={hint}>
+            <p>No clip returned! </p>
+          </div>
+        )
       ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
