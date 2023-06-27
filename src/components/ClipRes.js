@@ -1,8 +1,7 @@
+import Feedback from "./Feedback";
 import React, { useRef, useState } from "react";
 import ReactHlsPlayer from "react-hls-player";
-import {
-  getFirestore, collection, getDoc, addDoc, doc, updateDoc, query, where, get, getDocs, setDoc, Timestamp
-} from 'firebase/firestore' ;
+import { collection } from 'firebase/firestore' ;
 
 
 const body = {
@@ -63,125 +62,6 @@ const buttonInfo = {
   flexDirection: "row"
 }
 
-const feedback = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center"
-  // justifyContent: "center"
-}
-
-const options = [
-  { value: "1", label: "Movie scene matched to speech text" },
-  { value: "2", label: "Speech text matched to movie scene" },
-  { value: "3", label: "Object misrecognition" },
-  { value: "4", label: "Typos recognized as actual words" },
-  { value: "5", label: "None of the above"}
-];
-
-const Feedback = (props) => {
-  const [submitted, setSubmitted] = useState(false);
-  const [wantinput, setWantinput] = useState(false);
-  const otherreasons = useRef(null);
-  const reason = useRef(null);
-  const rating = useRef(null);
-  const db = props.db;
-  const clientadd = props.clientadd;
-  const colRef = collection(db, 'Books'); //TODO change it to Feedback
-
-  const collectRate = async (event) => {
-    const selectedRating = event.target.value;
-    rating.current = selectedRating;
-  }
-
-  const collectOption = (event) => {
-    const selectedValue = event.target.value;
-    const label = options.find((option) => option.value === selectedValue).label;
-    reason.current = label;
-    if (selectedValue === "5") {
-      setWantinput(true);
-    } else {
-      setWantinput(false);
-    }
-  }
-
-  const collectOtherreason = (event) => {
-    const textareaData = document.getElementById('reason_input').value;
-    otherreasons.current = textareaData;
-  }
-
-  const Submit = async () => {
-    const now = Timestamp.now().toDate().toString();
-    console.log(Timestamp.now());
-    console.log(now);
-    const docRef = await doc(colRef, clientadd + "_" + now);
-    setDoc(docRef, {client: clientadd, 
-                    feedback_time: now,
-                    rating: rating.current,
-                    reason: reason.current, 
-                    other_reasons: otherreasons.current}).then(() => {
-      console.log("Feedback collected successfully!");
-    })
-
-
-    const textElement = document.getElementById('reason_input');
-    if (textElement !== null) {
-      textElement.remove();
-    }
-    document.getElementById('choices').remove();
-    
-
-    setSubmitted(true);
-  }
-
-  return (
-    <div style={feedback}>
-      {/* <div>rate me</div> */}
-      <br></br>
-
-      <p></p>
-      {/* rating system */}
-      <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
-        {[1, 2, 3, 4, 5].map((num) => (
-          <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
-            <input type="radio" id={`star${6 - num}`} name="rating" value={num} onChange={collectRate}></input>
-            <label htmlFor={`star${num}`}>{num}</label>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <div style = {{flexDirection: "column"}}>
-          <select id="choices" onChange={collectOption}>
-            {options.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {wantinput ? (
-          <div style = {{flexDirection: "column"}}>
-            <textarea 
-            id="reason_input"
-            name="freeform"
-            rows="4" cols="30" 
-            placeholder="Tell us your experience..."
-            onChange={(event) => collectOtherreason(event.target.value)}></textarea>
-          </div>
-        ): null}
-            
-
-        <button onClick={Submit}>Submit</button>
-        {submitted ? (
-          <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
-        ): null}
-        
-      </div>
-    </div>
-  )
-
-}
 
 const ClipRes = (props) => {
 
@@ -222,16 +102,23 @@ const ClipRes = (props) => {
           <div>content id: </div>
           <div>{props.clipInfo.id}</div>
         </div>
-        <div style={shortInfo}>
+        {/* <div style={shortInfo}>
           <div>start_time: </div>
           <div>{props.clipInfo.start}</div>
         </div>
         <div style={shortInfo}>
           <div>end_time: </div>
           <div>{props.clipInfo.end}</div>
+        </div> */}
+        <div style={shortInfo}>
+          <div>time interval </div>
+          <div>{props.clipInfo.start} - {props.clipInfo.end}</div>
         </div>
         <div style={longInfo}>
-          <div>playout url</div>
+          {/* <div>playout url</div> */}
+          
+          <a href={url} name="playout url" target="_blank">playout url</a>
+          <p></p>
           <textarea
             name="playout url"
             value={url}
