@@ -68,12 +68,10 @@ const Feedback = (props) => {
             if (!querySnapshot.empty) {
                 console.log("size of querySnapshot", querySnapshot.size);
                 const currdocdata = querySnapshot.docs[0].data(); // This is the document
-                // prevClient.current = currdocdata.client;
                 prevRating.current = currdocdata.rating;
                 prevReason.current = currdocdata.reason;
                 prevOtherReason.current = currdocdata.other_reasons;
                 console.log("asdfasdf", currdocdata.reason);
-                // prevFeedbackTime.current = currdocdata.feedback_time;
                 setRating(prevRating.current);
                 setReason(prevReason.current);
             }
@@ -110,7 +108,7 @@ const Feedback = (props) => {
         <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
           {[1, 2, 3, 4, 5].map((num) => (
             <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
-              <input type="radio" id={`star${6 - num}`} name="rating" checked={num === rating} value={num} onChange={collectRate}></input>
+              <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num === rating} value={num} onChange={collectRate}></input>
               <label htmlFor={`star${num}`}>{num}</label>
             </div>
           ))}
@@ -130,7 +128,7 @@ const Feedback = (props) => {
           {wantinput ? (
             <div style = {{flexDirection: "column"}}>
               <textarea 
-              id="reason_input"
+              id="reason_input" 
               name="freeform"
               rows="4" cols="30" 
               placeholder="Tell us your experience..."

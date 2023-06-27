@@ -69,8 +69,21 @@ const ClipRes = (props) => {
   const clientadd = props.clientadd;
   const colRef = collection(db, 'Books'); //TODO change it to Feedback
     console.log('collection reference:', colRef);
+  // const [viewTime, setViewTime] = useState(0);
+  const viewTime = useRef(0);
+  const formattedViewTime = typeof(viewTime) === 'number' ? viewTime.toFixed(2) : '0.00';
 
+  const handleProgress = (event) => {
+    console.log("hiii???");
+    viewTime.current = event.target.currentTime;
+    console.log(viewTime.current);
+    // console.log("formatted view time", formattedViewTime);
+  }
 
+  const handlePause = (event) => {
+    console.log(viewTime.current);
+  }
+  
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${
     props.clipInfo.start_time / 1000
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
@@ -87,6 +100,8 @@ const ClipRes = (props) => {
             capLevelToPlayerSize: true,
             maxBufferLength: 1,
           }}
+          onProgress={handleProgress}
+          onPause={handlePause}
         ></ReactHlsPlayer>
       </div>
       <div style={info}>
@@ -102,20 +117,11 @@ const ClipRes = (props) => {
           <div>content id: </div>
           <div>{props.clipInfo.id}</div>
         </div>
-        {/* <div style={shortInfo}>
-          <div>start_time: </div>
-          <div>{props.clipInfo.start}</div>
-        </div>
-        <div style={shortInfo}>
-          <div>end_time: </div>
-          <div>{props.clipInfo.end}</div>
-        </div> */}
         <div style={shortInfo}>
           <div>time interval </div>
           <div>{props.clipInfo.start} - {props.clipInfo.end}</div>
         </div>
         <div style={longInfo}>
-          {/* <div>playout url</div> */}
           
           <a href={url} name="playout url" target="_blank">playout url</a>
           <p></p>

@@ -8,6 +8,7 @@ import ClipRes from "./components/ClipRes";
 import ReactPaginate from "react-paginate";
 import FuzzySearchBox from "./components/FuzzySearch";
 import {initializeApp} from 'firebase/app';
+import firebaseConfig from './configuration';
 import {
   getFirestore, collection
 } from 'firebase/firestore' ;
@@ -233,29 +234,9 @@ const App = () => {
   const db = useRef(null);
   const clientAdd = useRef(null);
 
-
-  // console.log("Client Info");
-  // // console.log(client.current.walletClient.UserInfo);
-  // console.log(client.current);
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA4J2CKgtar9j_04i4y6NnsO5YqsR2Wnio",
-    authDomain: "harry-c24d2.firebaseapp.com",
-    projectId: "harry-c24d2",
-    storageBucket: "harry-c24d2.appspot.com",
-    messagingSenderId: "689249194788",
-    appId: "1:689249194788:web:546cc4d4dfc50e9c4dd9b1",
-    measurementId: "G-Q6TQGHPG1X" 
-  };
-
   useEffect(() => {
     initializeApp(firebaseConfig);
-  
-    // init services
     db.current = getFirestore();
-    
-    //collection reference
-    const colRef = collection(db.current, 'Books')
   }, []);
 
   const resetLoadStatus = () => {
