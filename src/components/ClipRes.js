@@ -1,7 +1,8 @@
 import Feedback from "./Feedback";
 import React, { useRef, useState } from "react";
-import ReactHlsPlayer from "react-hls-player";
-import { collection } from 'firebase/firestore' ;
+import { collection } from 'firebase/firestore';
+import ReactPlayer from 'react-player';
+
 
 
 const body = {
@@ -71,38 +72,48 @@ const ClipRes = (props) => {
     console.log('collection reference:', colRef);
   // const [viewTime, setViewTime] = useState(0);
   const viewTime = useRef(0);
-  const formattedViewTime = typeof(viewTime) === 'number' ? viewTime.toFixed(2) : '0.00';
+  const startTime = useRef(null);
+  // const formattedViewTime = typeof(viewTime) === 'number' ? viewTime.toFixed(2) : '0.00';
 
-  const handleProgress = (event) => {
-    console.log("hiii???");
-    viewTime.current = event.target.currentTime;
-    console.log(viewTime.current);
+  const handleProgress = (time) => {
+    viewTime.current = time.playedSeconds;
+    // console.log(viewTime.current);
     // console.log("formatted view time", formattedViewTime);
   }
 
-  const handlePause = (event) => {
-    console.log(viewTime.current);
+  const handlePlay = () => {
+    startTime.current = Date.now();
   }
-  
+  const handlePause = () => {
+    if (startTime.current) {
+      const elapsedTime = (Date.now() - startTime.current) / 1000;
+      viewTime.current = viewTime.current + elapsedTime;
+      startTime.current = null;
+    }
+    console.log("total view time", viewTime.current);
+  }
+
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${
     props.clipInfo.start_time / 1000
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   return (
     <div style={body}>
       <div style={videoPlayer}>
-        <ReactHlsPlayer
+        <ReactPlayer
+          url={url}
           src={url}
           width="100%"
           height="auto"
           autoPlay={false}
           controls={true}
-          hlsConfig={{
-            capLevelToPlayerSize: true,
-            maxBufferLength: 1,
+          config={{
+              capLevelToPlayerSize: true,
+              maxBufferLength: 1
           }}
-          onProgress={handleProgress}
+          // onProgress={handleProgress}
+          onPlay={handlePlay}
           onPause={handlePause}
-        ></ReactHlsPlayer>
+        ></ReactPlayer>
       </div>
       <div style={info}>
         <div style={shortInfo}>
