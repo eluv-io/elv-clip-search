@@ -81,7 +81,7 @@ const Feedback = (props) => {
 
     const submit = async () => {
       const now = Timestamp.now().toDate().toString();
-      const docRef = await doc(colRef, clientadd + "_" + now);
+      const docRef = await doc(colRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
       setDoc(docRef, {client: clientadd, 
                       feedback_time: new Date(now),
                       rating: rating,

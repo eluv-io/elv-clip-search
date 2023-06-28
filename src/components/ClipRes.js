@@ -75,11 +75,11 @@ const ClipRes = (props) => {
   const startTime = useRef(null);
   // const formattedViewTime = typeof(viewTime) === 'number' ? viewTime.toFixed(2) : '0.00';
 
-  const handleProgress = (time) => {
-    viewTime.current = time.playedSeconds;
-    // console.log(viewTime.current);
-    // console.log("formatted view time", formattedViewTime);
-  }
+  // const handleProgress = (time) => {
+  //   viewTime.current = time.playedSeconds;
+  //   // console.log(viewTime.current);
+  //   // console.log("formatted view time", formattedViewTime);
+  // }
 
   const handlePlay = () => {
     startTime.current = Date.now();
