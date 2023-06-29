@@ -10,9 +10,8 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import {initializeApp} from 'firebase/app';
 import firebaseConfig from './configuration';
 import {
-  getFirestore, collection
+  getFirestore, collection, addDoc, Timestamp
 } from 'firebase/firestore' ;
-import { UserItemNames } from "@eluvio/elv-client-js/src/walletClient/ClientMethods";
 
 const title = {
   display: "flex",
@@ -201,7 +200,7 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [url, setUrl] = useState("");
   const [response, setResponse] = useState([]);
-
+  const searchTerms = useRef([]);
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
   const topkPages = useRef(1);
@@ -233,6 +232,7 @@ const App = () => {
 
   const db = useRef(null);
   const clientAdd = useRef(null);
+  const searchID = useRef(null);
 
   useEffect(() => {
     initializeApp(firebaseConfig);
@@ -248,6 +248,22 @@ const App = () => {
     setTotalContent(0);
     setShowTopk(false);
   };
+
+  const storeSearchHistory = () => {
+    const colRef = collection(db.current, 'Search_history');
+    const now = Timestamp.now().toDate().toString();
+    addDoc(colRef, {
+      client: clientAdd.current,
+      search_time: now.replace(/\([^()]*\)/g, ''),
+      fuzzySearchPhrase: fuzzySearchPhrase,
+      fuzzySearchFields: fuzzySearchField, 
+      searchKeywords: searchTerms.current,
+      filteredSearchFields: filteredSearchFields.current
+    }).then((docRef) => {
+      console.log("search history updated with docID", docRef.id);
+      searchID.current = docRef.id;
+    })
+  }
 
   const getClient = () => {
     if (client.current == null) {
@@ -672,6 +688,9 @@ const App = () => {
                 setSearch(txt.trim());
                 currentPage.current = 1;
               }}
+              setSearchTerm={(terms) => {
+                searchTerms.current = terms;
+              }}
               statusHandler={resetLoadStatus}
             />
           </div>
@@ -722,6 +741,9 @@ const App = () => {
                   setSearch(txt.trim());
                   currentPage.current = 1;
                 }}
+                setSearchTerm={(terms) => {
+                  searchTerms.current = terms;
+                }}
                 statusHandler={resetLoadStatus}
               />
             </div>
@@ -761,7 +783,11 @@ const App = () => {
           <button
             type="button"
             style={button}
-            onClick={getRes}
+            onClick={async () => {
+              getRes().then(() => {
+                storeSearchHistory();
+              });
+            }}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
             Let's go
@@ -924,6 +950,7 @@ const App = () => {
                     key={clip.id + clip.start_time}
                     db = {db.current}
                     clientadd = {clientAdd.current}
+                    searchID={searchID.current}
                   ></ClipRes>
                 );
               })

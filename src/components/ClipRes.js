@@ -68,8 +68,8 @@ const ClipRes = (props) => {
 
   const db = props.db;
   const clientadd = props.clientadd;
-  const colRef = collection(db, 'Books'); //TODO change it to Feedback
-    console.log('collection reference:', colRef);
+  // const colRef = collection(db, 'Books'); //TODO change it to Feedback
+    // console.log('collection reference:', colRef);
   // const [viewTime, setViewTime] = useState(0);
   const viewTime = useRef(0);
   const startTime = useRef(null);
@@ -154,6 +154,7 @@ const ClipRes = (props) => {
       <Feedback 
         db = {db}
         clientadd = {clientadd}
+        searchID = {props.searchID}
       ></Feedback>
     </div>
   );

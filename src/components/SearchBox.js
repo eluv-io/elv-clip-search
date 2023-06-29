@@ -34,6 +34,8 @@ const SearchBox = (props) => {
       return "";
     }
   };
+
+
   return (
     <div style={container}>
       <SingleSearchBox
@@ -43,6 +45,8 @@ const SearchBox = (props) => {
         addHandler={(newElement) => {
           const newTerms = terms.concat(newElement);
           setTerms(newTerms);
+          console.log("newterms", newTerms);
+          props.setSearchTerm(newTerms);
           const res = makeString(newTerms);
           props.handleSubmitClick(res);
         }}

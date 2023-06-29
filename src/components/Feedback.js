@@ -11,6 +11,7 @@ const feedback = {
   }
   
   const options = [
+    { value: 0, label: "Please choose an option"},
     { value: 1, label: "Movie scene matched to speech text" },
     { value: 2, label: "Speech text matched to movie scene" },
     { value: 3, label: "Object misrecognition" },
@@ -33,7 +34,7 @@ const Feedback = (props) => {
     
     const db = props.db;
     const clientadd = props.clientadd;
-    const colRef = collection(db, 'Books'); //TODO change it to Feedback
+    const colRef = collection(db, 'Feedback'); //TODO change it to Feedback
   
     const collectRate = (event) => {
       const selectedRating = parseInt(event.target.value);
@@ -86,7 +87,8 @@ const Feedback = (props) => {
                       feedback_time: new Date(now),
                       rating: rating,
                       reason: reason, 
-                      other_reasons: otherreasons.current}).then(() => {
+                      other_reasons: otherreasons.current,
+                      searchID: props.searchID}).then(() => {
                         console.log("Feedback collected successfully!");
                     })
 
@@ -106,7 +108,7 @@ const Feedback = (props) => {
         <p></p>
         {/* rating system */}
         <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
-          {[1, 2, 3, 4, 5].map((num) => (
+          {[0, 1, 2, 3, 4, 5].map((num) => (
             <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
               <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num === rating} value={num} onChange={collectRate}></input>
               <label htmlFor={`star${num}`}>{num}</label>
