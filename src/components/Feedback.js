@@ -59,30 +59,31 @@ const Feedback = (props) => {
     }
   
     
-    useEffect (() => {
-        console.log("fetching")
-        const q = query(colRef, where("client", "==", clientadd), 
-                                orderBy("feedback_time"),
-                                limit(1));
+    // useEffect (() => {
+    //     console.log("fetching")
+    //     const q = query(colRef, where("client", "==", clientadd), 
+    //                             orderBy("feedback_time"),
+    //                             limit(1));
 
-        getDocs(q).then((querySnapshot) => {
-            if (!querySnapshot.empty) {
-                console.log("size of querySnapshot", querySnapshot.size);
-                const currdocdata = querySnapshot.docs[0].data(); // This is the document
-                prevRating.current = currdocdata.rating;
-                prevReason.current = currdocdata.reason;
-                prevOtherReason.current = currdocdata.other_reasons;
-                console.log("asdfasdf", currdocdata.reason);
-                setRating(prevRating.current);
-                setReason(prevReason.current);
-            }
-        })
-    }, []);
+    //     getDocs(q).then((querySnapshot) => {
+    //         if (!querySnapshot.empty) {
+    //             console.log("size of querySnapshot", querySnapshot.size);
+    //             const currdocdata = querySnapshot.docs[0].data(); // This is the document
+    //             prevRating.current = currdocdata.rating;
+    //             prevReason.current = currdocdata.reason;
+    //             prevOtherReason.current = currdocdata.other_reasons;
+    //             console.log("asdfasdf", currdocdata.reason);
+    //             setRating(prevRating.current);
+    //             setReason(prevReason.current);
+    //         }
+    //     })
+    // }, []);
 
 
     const submit = async () => {
       const now = Timestamp.now().toDate().toString();
       const docRef = await doc(colRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
+      console.log(props.searchID);
       setDoc(docRef, {client: clientadd, 
                       feedback_time: new Date(now),
                       rating: rating,
