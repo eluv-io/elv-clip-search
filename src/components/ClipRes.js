@@ -1,6 +1,5 @@
 import Feedback from "./Feedback";
 import React, { useRef, useState } from "react";
-import { collection } from 'firebase/firestore';
 import ReactPlayer from 'react-player';
 
 
@@ -66,19 +65,9 @@ const buttonInfo = {
 
 const ClipRes = (props) => {
 
-  // const colRef = collection(db, 'Books'); //TODO change it to Feedback
-    // console.log('collection reference:', colRef);
-  // const [viewTime, setViewTime] = useState(0);
   const viewTime = useRef(0);
   const startTime = useRef(null);
-  // const formattedViewTime = typeof(viewTime) === 'number' ? viewTime.toFixed(2) : '0.00';
-
-  // const handleProgress = (time) => {
-  //   viewTime.current = time.playedSeconds;
-  //   // console.log(viewTime.current);
-  //   // console.log("formatted view time", formattedViewTime);
-  // }
-
+ 
   const handlePlay = () => {
     startTime.current = Date.now();
   }
@@ -153,6 +142,9 @@ const ClipRes = (props) => {
         db = {props.db}
         clientadd = {props.clientadd}
         searchID = {props.searchID}
+        viewTime = {viewTime.current}
+        clipInfo = {props.clipInfo}
+        contents = {props.contents}
       ></Feedback>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import {
-  getFirestore, collection, getDocs, orderBy, doc, query, where, limit, get, setDoc, Timestamp, getDoc
+  getFirestore, collection, getDocs, orderBy, doc, query, where, limit, get, setDoc, Timestamp, getDoc, updateDoc
 } from 'firebase/firestore' ;
 
 
@@ -34,7 +34,9 @@ const Feedback = (props) => {
     
     const db = props.db;
     const clientadd = props.clientadd;
-    const colRef = collection(db, 'Feedback'); //TODO change it to Feedback
+    const clipInfo = props.clipInfo;
+    const feedbackRef = collection(db, 'Feedback'); //TODO change it to Feedback
+    const clipInfoRef = collection(db, 'Clip_info');
   
     const collectRate = (event) => {
       const selectedRating = parseInt(event.target.value);
@@ -81,24 +83,64 @@ const Feedback = (props) => {
 
 
     const submit = async () => {
-      const now = Timestamp.now().toDate().toString();
-      const docRef = await doc(colRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
-      console.log(props.searchID);
-      setDoc(docRef, {client: clientadd, 
-                      feedback_time: new Date(now),
-                      rating: rating,
-                      reason: reason, 
-                      other_reasons: otherreasons.current,
-                      searchID: props.searchID}).then(() => {
-                        console.log("Feedback collected successfully!");
-                    })
 
-      const textElement = document.getElementById('reason_input');
-      if (textElement !== null) {
-        textElement.remove();
-      }
+        //storing the feedback
+        const now = Timestamp.now().toDate().toString();
+        const docRef = await doc(feedbackRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
+        setDoc(docRef, {
+            client: clientadd, 
+            feedback_time: new Date(now),
+            rating: rating,
+            // searchID: props.searchID
+            reason: reason, 
+            other_reasons: otherreasons.current
+            // viewTime: props.viewTime
+        }).then(() => {
+            console.log("Feedback collected successfully!");
+        })
 
-      setSubmitted(true);
+        //storing the clip information
+        const clipStart = clipInfo.start;
+        const clipEnd = clipInfo.end;
+        const clipHash = clipInfo.hash;
+        const clipContentIq = clipInfo.id;
+        const clipRef = await doc(clipInfoRef, clipHash + "_" + clipStart + "-" + clipEnd);
+        console.log(clipContentIq);
+        const clip = await getDoc(clipRef);
+        // const clipRank = props.contents[clipContentIq].clips;
+        const clipRank = clipInfo.rank;
+        console.log("rank", clipRank);
+        // console.log(clipInfo)
+        // const clipsContent = props.contents[clipIq].clips //all the clips that belongs to this content
+        // const clipRank = clipsContent.find((c) => {
+        //     return c.key === clipHash
+        // })
+        // console.log("do i exist", clip.exists())
+
+        if (!clip.exists()) {
+            setDoc(clipRef, {
+                clipHash: clipHash,
+                start_time: clipStart,
+                end_time: clipEnd,
+                rank: [{saerchID: props.searchID, rank: clipRank}],
+            }).then(() => {
+                console.log("corresponding clip stored successfully!");
+            })
+        } else {
+            const tempRank = clip.data().rank;
+            tempRank.push({saerchID: props.searchID, rank: clipRank});
+            updateDoc(clipRef, {
+                rank: tempRank
+            })
+        }
+        
+        
+        const textElement = document.getElementById('reason_input');
+        if (textElement !== null) {
+            textElement.remove();
+        }
+
+        setSubmitted(true);
     }
   
     return (
@@ -140,7 +182,7 @@ const Feedback = (props) => {
             </div>
           ): null}
   
-          <button onClick={submit} style={{alignItems: "center"}}>Submit</button>
+          <button onClick={submit} style={{alignItems: "center", justifyContent: "center"}}>Submit</button>
           {submitted ? (
             <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
           ): null}

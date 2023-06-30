@@ -495,6 +495,7 @@ const App = () => {
     for (let i = 0; i < data.length; i++) {
       // get currernt item
       const item = data[i];
+      item["rank"] = i + 1;
       // if not in clips_per_content: need to add them in
       if (!(item["id"] in clips_per_content)) {
         clips_per_content[item["id"]] = { processed: false, clips: [item] };
@@ -951,6 +952,7 @@ const App = () => {
                     db = {db.current}
                     clientadd = {clientAdd.current}
                     searchID={searchID.current}
+                    contents={contents.current}
                   ></ClipRes>
                 );
               })
