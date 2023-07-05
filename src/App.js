@@ -343,6 +343,7 @@ const App = () => {
           },
         });
         setUrl(url);
+        console.log(url)
         return { url, client };
       } else {
         // search v2
@@ -381,7 +382,7 @@ const App = () => {
         const s2 = searchV2Node.indexOf("contentfabric");
         const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
         setUrl(newUrl);
-        // console.log(newUrl);
+        console.log(newUrl);
         return { url: newUrl, client };
       }
     } catch (err) {
@@ -537,6 +538,8 @@ const App = () => {
     let firstContent = "";
     // load and parse the res from curling search url
     try {
+      console.log("sent req")
+      console.log(url)
       const res = await axios.get(url);
       setTotalContent(res["data"]["contents"].length);
       const parseRes = parseSearchRes(res["data"]["contents"]);

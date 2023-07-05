@@ -116,13 +116,18 @@ const ClipRes = (props) => {
           <div>{props.clipInfo.id}</div>
         </div>
         <div style={shortInfo}>
-          <div>time interval </div>
+          <div>time interval: </div>
           <div>{props.clipInfo.start} - {props.clipInfo.end}</div>
         </div>
-        <div style={longInfo}>
-          
-          <a href={url} name="playout url" target="_blank">playout url</a>
-          <p></p>
+        <div style={shortInfo}>
+          <div>rank: </div>
+          <div>{props.clipInfo.rank}</div>
+        </div>
+
+        <div style={longInfo}>  
+          {/* <a href={url} name="playout url" target="_blank">playout url</a>
+          <p></p> */}
+          <div>playout url</div>
           <textarea
             name="playout url"
             value={url}

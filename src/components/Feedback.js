@@ -7,7 +7,8 @@ import {
 const feedback = {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "center"
   }
   
   const options = [
@@ -25,7 +26,7 @@ const Feedback = (props) => {
     const [wantinput, setWantinput] = useState(false);
     const otherreasons = useRef("");
     const [reason, setReason] = useState("");
-    const [rating, setRating] = useState(0);
+    const [rating, setRating] = useState(-1);
     const prevClient = useRef(null);
     const prevRating = useRef(null);
     const prevReason = useRef(null);
@@ -157,7 +158,7 @@ const Feedback = (props) => {
         <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
           {[0, 1, 2, 3, 4, 5].map((num) => (
             <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
-              <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num === rating} value={num} onChange={collectRate}></input>
+              <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num <= rating} value={num} onChange={collectRate}></input>
               <label htmlFor={`star${num}`}>{num}</label>
             </div>
           ))}
@@ -186,7 +187,8 @@ const Feedback = (props) => {
             </div>
           ): null}
   
-          <button onClick={submit} style={{alignItems: "center", justifyContent: "center"}}>Submit</button>
+          <br></br>
+          <button onClick={submit} style={{display: "flex", alignItems: "center", justifyContent: "center"}}>Submit</button>
           {submitted ? (
             <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
           ): null}
