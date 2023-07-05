@@ -36,7 +36,7 @@ const Feedback = (props) => {
     const db = props.db;
     const clientadd = props.clientadd;
     const clipInfo = props.clipInfo;
-    const feedbackRef = collection(db, 'Feedback'); //TODO change it to Feedback
+    const feedbackRef = collection(db, 'Feedback');
     const clipInfoRef = collection(db, 'Clip_info');
   
     const collectRate = (event) => {
@@ -48,7 +48,7 @@ const Feedback = (props) => {
         const selectedValue = parseInt(event.target.value);
         var label;
         console.log(selectedValue)
-        if (selectedValue != 0) {
+        if (selectedValue !== 0) {
             label = options.find((option) => option.value === selectedValue).label;
         }
         setReason(label);
@@ -188,7 +188,10 @@ const Feedback = (props) => {
           ): null}
   
           <br></br>
-          <button onClick={submit} style={{display: "flex", alignItems: "center", justifyContent: "center"}}>Submit</button>
+          <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+            <button onClick={submit}>Submit</button>
+          </div>
+          
           {submitted ? (
             <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
           ): null}

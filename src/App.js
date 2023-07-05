@@ -10,8 +10,9 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import {initializeApp} from 'firebase/app';
 import firebaseConfig from './configuration';
 import {
-  getFirestore, collection, addDoc, Timestamp
+  getFirestore, collection, addDoc, Timestamp, getDoc, setDoc, doc
 } from 'firebase/firestore' ;
+import { getCLS } from "web-vitals";
 
 // import title from "./AppStyle"
 
@@ -237,9 +238,23 @@ const App = () => {
   const clientAdd = useRef(null);
   const searchID = useRef(null);
 
+  //initialize the DB and store the useradd
   useEffect(() => {
     initializeApp(firebaseConfig);
     db.current = getFirestore();
+    // getClient();
+    // const userRef = collection(db.current, 'User');
+    // console.log(userRef);
+    // console.log(clientAdd.current);
+    // const clientRef = doc(userRef);
+    // const thisClient = await getDoc(clientRef);
+    // if (!thisClient.exists()) {
+    //   setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
+    //     console.log("User info saved");
+    //   })
+    // } else {
+    //   console.log("This user already exists")
+    // }
   }, []);
 
   const resetLoadStatus = () => {
