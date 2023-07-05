@@ -5,16 +5,16 @@ import axios from "axios";
 import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
-import ReactPaginate from "react-paginate";
+import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
+
 import {initializeApp} from 'firebase/app';
 import firebaseConfig from './configuration';
 import {
   getFirestore, collection, addDoc, Timestamp, getDoc, setDoc, doc
 } from 'firebase/firestore' ;
-import { getCLS } from "web-vitals";
+import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
-// import title from "./AppStyle"
 
 const title = {
   display: "flex",
@@ -68,7 +68,7 @@ const curlResContainer = {
   marginTop: 20,
   marginBottom: 40,
   padding: 10,
-  height: 600,
+  height: 400,
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
@@ -202,20 +202,27 @@ const App = () => {
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
   const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
+  const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
-  const [response, setResponse] = useState([]);
+  const [response, setResponse] = useState([]); //TODO replace all the "response" as displayingContents
   const searchTerms = useRef([]);
+  const [displayingContents, setDisplayingContents] = useState([]);
+
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
+  const topkCnt = useRef(0); // because the actual returned results may be less than TOPK
   const topkPages = useRef(1);
   const [loadingTopkPage, setLoadingTopkPage] = useState(false);
   const playoutUrlMemo = useRef({});
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
+  const [haveSearchUrl, setHaveSearchUrl] = useState(false);
   const [haveSearchRes, setHaveSearchRes] = useState(false);
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
+
+  // other helpful status
   const [err, setErr] = useState(false);
   const [totalContent, setTotalContent] = useState(0);
   const [errMsg, setErrMsg] = useState("");
@@ -227,7 +234,7 @@ const App = () => {
   const searchVersion = useRef("v1");
   const [showFuzzy, setShowFuzzy] = useState(false);
   const contents = useRef({});
-  const contentsInfo = useRef({});
+  const contentsIdNameMap = useRef({});
   const numPages = useRef(0);
   const currentPage = useRef(1);
   const client = useRef(null);
@@ -260,6 +267,7 @@ const App = () => {
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
     setLoadingPlayoutUrl(false);
+    setHaveSearchUrl(false);
     setHaveSearchRes(false);
     setLoadingSearchRes(false);
     setErr(false);
@@ -300,136 +308,43 @@ const App = () => {
     }
   };
 
-  const getPlayoutUrl = async ({ client, objectId }) => {
-    let offering = null;
-    const offerings = await client.AvailableOfferings({
-      objectId,
-    });
-    if ("default_clear" in offerings) {
-      offering = "default_clear";
-    } else {
-      offering = "default";
-    }
-    // given the offering, load the playout url for this content
-    const playoutOptions = await client.PlayoutOptions({
-      objectId,
-      protocols: ["hls"],
-      offering: offering,
-      drms: ["clear", "aes-128", "fairplay"],
-    });
-    const playoutMethods = playoutOptions["hls"].playoutMethods;
-    const playoutInfo =
-      playoutMethods.clear ||
-      playoutMethods["aes-128"] ||
-      playoutMethods.fairplay;
-    const videoUrl = playoutInfo.playoutUrl;
-    return videoUrl;
-  };
-
-  const getSearchUrl = async () => {
-    const client = getClient();
-    let libId;
-    try {
-      libId = await client.ContentObjectLibraryId({
-        objectId: objId,
-      });
-    } catch (err) {
-      console.log(err);
-      return 0;
-    }
-    try {
-      if (searchVersion.current === "v1") {
-        console.log("doing V1 search");
-        // searchV1
-        const url = await client.Rep({
-          libraryId: libId,
-          objectId: objId,
-          rep: "search",
-          service: "search",
-          makeAccessRequest: true,
-          queryParams: {
-            terms: `(${search})`,
-            select: "...,text,/public/asset_metadata/title",
-            start: 0,
-            limit: 160,
-            clips_include_source_tags: false,
-            clips: true,
-            sort: "f_start_time@asc",
-          },
-        });
-        setUrl(url);
-        console.log(url)
-        return { url, client };
-      } else {
-        // search v2
-        console.log("doing V2 search");
-        const queryParams = {
-          terms:
-            fuzzySearchPhrase === ""
-              ? `(${search})`
-              : search === ""
-              ? `(${fuzzySearchPhrase})`
-              : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
-          select: "/public/asset_metadata/title",
-          start: 0,
-          limit: 160,
-          max_total: 160,
-          display_fields: "f_start_time,f_end_time",
-          // sort: "f_display_title_as_string@asc,f_start_time@asc",
-          clips: true,
-          scored: true,
-        };
-        if (fuzzySearchField.length > 0) {
-          queryParams.search_fields = fuzzySearchField.join(",");
-        }
-        const url = await client.Rep({
-          libraryId: libId,
-          objectId: objId,
-          rep: "search",
-          service: "search",
-          makeAccessRequest: true,
-          queryParams: queryParams,
-        });
-        const cfgUrl = await client.ConfigUrl();
-        const cfg = await axios.get(cfgUrl);
-        const searchV2Node = cfg.data.network.services.search_v2[0];
-        const s1 = url.indexOf("contentfabric");
-        const s2 = searchV2Node.indexOf("contentfabric");
-        const newUrl = searchV2Node.slice(0, s2).concat(url.slice(s1));
-        setUrl(newUrl);
-        console.log(newUrl);
-        return { url: newUrl, client };
-      }
-    } catch (err) {
-      console.log(err);
-      return 1;
-    }
-  };
-
-  const jumpToPage = (pageIndex) => {
+  const jumpToPageInAll = (pageIndex) => {
     currentPage.current = pageIndex;
-    return contents.current[currentContent].clips[pageIndex];
+    setDisplayingContents(contents.current[currentContent].clips[pageIndex]);
   };
 
-  const jumpToPageinTopk = async (pageIndex) => {
-    setResponse(topk.current[pageIndex]);
-    for (let i = 0; i < topk.current[pageIndex].length; i++) {
-      if (!topk.current[pageIndex][i].processed) {
-        const objectId = topk.current[pageIndex][i].id;
-        if (objectId in playoutUrlMemo.current) {
-          topk.current[i].url = playoutUrlMemo.current[objectId];
-        } else {
-          const videoUrl = await getPlayoutUrl({
-            client: client.current,
-            objectId,
-          });
-          playoutUrlMemo.current[objectId] = videoUrl;
-          topk.current[pageIndex][i].url = videoUrl;
+  // TODO not sure if it is a good apporach to wrap the whole process using try catch
+  const jumpToPageInTopk = async (pageIndex) => {
+    setLoadingTopkPage(true);
+    setHavePlayoutUrl(false);
+    try {
+      for (let i = 0; i < topk.current[pageIndex].length; i++) {
+        if (!topk.current[pageIndex][i].processed) {
+          const objectId = topk.current[pageIndex][i].id;
+          if (objectId in playoutUrlMemo.current) {
+            topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
+          } else {
+            const videoUrl = await getPlayoutUrl({
+              client: client.current,
+              objectId,
+            });
+            playoutUrlMemo.current[objectId] = videoUrl;
+            topk.current[pageIndex][i].url = videoUrl;
+          }
+          topk.current[pageIndex][i].processed = true;
         }
-        topk.current[pageIndex][i].processed = true;
       }
+      setLoadingTopkPage(false);
+      setHavePlayoutUrl(true);
+      setDisplayingContents(topk.current[pageIndex]);
+    } catch (err) {
+      console.log(err);
+      setLoadingTopkPage(false);
+      setHavePlayoutUrl(false);
+      setDisplayingContents([]);
+      setErr(true);
+      setErrMsg("loading playout url for contents on this page went wrong");
     }
-    return topk.current[pageIndex];
   };
 
   const jumpToContent = async (objectId) => {
@@ -439,7 +354,6 @@ const App = () => {
       setLoadingPlayoutUrl(true);
       currentPage.current = 1;
       const clips_per_content = contents.current;
-      setResponse(clips_per_content[objectId].clips[1]);
       if (clips_per_content[objectId].processed) {
         // if it is processed, just return that
         numPages.current = Object.keys(
@@ -447,24 +361,35 @@ const App = () => {
         ).length;
         setLoadingPlayoutUrl(false);
         setHavePlayoutUrl(true);
-        return clips_per_content[objectId].clips[1];
-      }
-      // get the possible offerings
-      const videoUrl = await getPlayoutUrl({
-        client: client.current,
-        objectId,
-      });
-      for (let pageIndex in clips_per_content[objectId].clips) {
-        for (let item of clips_per_content[objectId].clips[pageIndex]) {
-          item.url = videoUrl;
+        setDisplayingContents(clips_per_content[objectId].clips[1]);
+        return;
+      } else {
+        // get the possible offerings
+        let videoUrl = "";
+        if (objectId in playoutUrlMemo.current) {
+          videoUrl = playoutUrlMemo.current[objectId];
+        } else {
+          videoUrl = await getPlayoutUrl({
+            client: client.current,
+            objectId,
+          });
+          playoutUrlMemo.current[objectId] = videoUrl;
         }
+        for (let pageIndex in clips_per_content[objectId].clips) {
+          for (let item of clips_per_content[objectId].clips[pageIndex]) {
+            item.url = videoUrl;
+          }
+        }
+        clips_per_content[objectId].processed = true;
+        contents.current = clips_per_content;
+        numPages.current = Object.keys(
+          clips_per_content[objectId].clips
+        ).length;
+        setLoadingPlayoutUrl(false);
+        setHavePlayoutUrl(true);
+        setDisplayingContents(clips_per_content[objectId].clips[1]);
+        return;
       }
-      clips_per_content[objectId].processed = true;
-      contents.current = clips_per_content;
-      numPages.current = Object.keys(clips_per_content[objectId].clips).length;
-      setLoadingPlayoutUrl(false);
-      setHavePlayoutUrl(true);
-      return clips_per_content[objectId].clips[1];
     } catch (err) {
       console.log(`Error message : ${err.message} - `, err.code);
       setLoadingPlayoutUrl(false);
@@ -475,141 +400,102 @@ const App = () => {
     }
   };
 
-  const toTimeString = (totalMiliSeconds) => {
-    const totalMs = totalMiliSeconds;
-    const result = new Date(totalMs).toISOString().slice(11, 19);
-
-    return result;
-  };
-
-  // TODO sortby the score in each movie
-  // TODO sort the movie by its max score
-  const parseSearchRes = (data) => {
-    // pagination on topk res for search v2 fuzzy method
-    const topkRes = [];
-    let topkResPage = [];
-    let firstContent = "";
-    for (let i = 0; i < data.length; i++) {
-      if (i >= TOPK) {
-        break;
-      }
-      // get currernt item
-      const item = JSON.parse(JSON.stringify(data[i]));
-      item["rank"] = i + 1;
-      item.processed = false;
-      topkResPage.push(item);
-      if (topkResPage.length === CLIPS_PER_PAGE) {
-        topkRes.push(topkResPage);
-        topkResPage = [];
-      }
-    }
-    if (topkResPage.length > 0) {
-      topkRes.push(topkResPage);
-    }
-    topk.current = topkRes;
-    topkPages.current = topkRes.length;
-
-    // the normal display method: group by contentId and pagination inside each content
-    const clips_per_content = {};
-    for (let i = 0; i < data.length; i++) {
-      // get currernt item
-      const item = data[i];
-      item["rank"] = i + 1;
-      // if not in clips_per_content: need to add them in
-      if (!(item["id"] in clips_per_content)) {
-        clips_per_content[item["id"]] = { processed: false, clips: [item] };
-        contentsInfo.current[item["id"]] =
-          item.meta.public.asset_metadata.title.split(",")[0];
-        // set the first content to be current content
-        if (firstContent === "") {
-          firstContent = item["id"];
-          setCurrentContent(item["id"]);
-        }
-      } else {
-        // if already in the dic, just push it in
-        clips_per_content[item["id"]].clips.push(item);
-      }
-    }
-    for (let id in clips_per_content) {
-      // pagitation the clips under this contents
-      const clips = clips_per_content[id].clips;
-      const clips_per_page = {};
-      const num_pages = Math.ceil(clips.length / CLIPS_PER_PAGE);
-      numPages.current = num_pages;
-      for (let i = 1; i <= num_pages; i++) {
-        clips_per_page[i] = [];
-      }
-      for (let i = 0; i < clips.length; i++) {
-        const pageIndex = Math.floor(i / CLIPS_PER_PAGE) + 1;
-        clips_per_page[pageIndex].push(clips[i]);
-      }
-      clips_per_content[id].clips = clips_per_page;
-    }
-    return { clips_per_content, firstContent };
-  };
-
-  const curl = async (url) => {
-    let clips_per_content = {};
-    let firstContent = "";
-    // load and parse the res from curling search url
-    try {
-      console.log("sent req")
-      console.log(url)
-      const res = await axios.get(url);
-      setTotalContent(res["data"]["contents"].length);
-      const parseRes = parseSearchRes(res["data"]["contents"]);
-      firstContent = parseRes["firstContent"];
-      clips_per_content = parseRes["clips_per_content"];
-      contents.current = clips_per_content;
-      setLoadingSearchRes(false);
-      setHaveSearchRes(true);
-    } catch (err) {
-      setLoadingSearchRes(false);
-      setHaveSearchRes(false);
-      setErrMsg("Search timeout, please try again later");
-      setErr(true);
-      return null;
-    }
-    if (firstContent !== "") {
-      setResponse(clips_per_content[firstContent].clips[1]);
-      const res = await jumpToContent(firstContent);
-      return res;
-    } else {
-      setResponse([]);
-      return [];
-    }
-  };
-  
   const getRes = async () => {
     playoutUrlMemo.current = {};
+    const _client = getClient();
     if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
       setErrMsg("Missing search phrases or filters");
+      return;
     } else if (objId === "") {
       console.log("err");
       setErr(true);
       setErrMsg("Missing search index");
+      return;
     } else {
+      // reset the status
+      resetLoadStatus();
       setLoadingSearchRes(true);
-      setResponse([]);
-      const res = await getSearchUrl();
-      if (res !== 1 && res !== 0) {
-        const { url } = res;
-        const searchRes = await curl(url);
-        if (res != null) {
-          setResponse(searchRes);
+      setDisplayingContents([]);
+      // try to create the search url
+      const res = await createSearchUrl({
+        client: _client,
+        objectId: objId,
+        libraryId: libId,
+        searchVersion: searchVersion.current,
+        search,
+        fuzzySearchPhrase,
+        fuzzySearchField,
+      });
+      if (res.status === 0) {
+        // we got the search Url
+        setHaveSearchUrl(true);
+        console.log(res.url);
+        setUrl(res.url);
+        let searchRes = {};
+        // try to query
+        try {
+          searchRes = await axios.get(res.url);
+        } catch (err) {
+          console.log(err);
+          setLoadingSearchRes(false);
+          setErr(true);
+          setErrMsg(
+            "Query request already sent, but fail to get results from search engine"
+          );
+          return;
+        }
+        // try to parse
+        let firstContentToDisplay = "";
+        try {
+          const {
+            clips_per_content,
+            firstContent,
+            idNameMap,
+            topkRes,
+            topkCount,
+          } = await parseSearchRes(
+            searchRes["data"]["contents"],
+            TOPK,
+            CLIPS_PER_PAGE
+          );
+          // update the result information for "show topk" display mode
+          topkCnt.current = topkCount;
+          topk.current = topkRes;
+          topkPages.current = topkRes.length;
+          // update the result infomation for "group by content" display mode
+          setTotalContent(searchRes["data"]["contents"].length);
+          contents.current = clips_per_content;
+          contentsIdNameMap.current = idNameMap;
+          setCurrentContent(firstContent);
+          firstContentToDisplay = firstContent;
+          numPages.current =
+            firstContent !== ""
+              ? clips_per_content[firstContent].clips.length
+              : 0;
+          // update the loading status
+          setLoadingSearchRes(false);
+          setHaveSearchRes(true);
+        } catch (err) {
+          console.log(err);
+          setLoadingSearchRes(false);
+          setErr(true);
+          setErrMsg(
+            "Parse the query result err, might because search engine change the result format"
+          );
+          return;
+        }
+        // try to load and show the first contents infomation
+        if (firstContentToDisplay !== "") {
+          // there are err handling things inside this function
+          await jumpToContent(firstContentToDisplay);
         }
       } else {
+        // create search url err
         setLoadingSearchRes(false);
         setErr(true);
-        if (res === 1) {
-          setErrMsg("ACCESS DENIED");
-        } else {
-          setErrMsg(
-            "Fail to make search query, please verify the search index content iq"
-          );
-        }
+        setErrMsg("Fail to create the search query url");
       }
     }
   };
@@ -644,6 +530,7 @@ const App = () => {
         }
         if (libId !== "") {
           try {
+            setLibId(libId);
             const searchObjMeta = await client.ContentObjectMetadata({
               libraryId: libId,
               objectId: txt,
@@ -783,18 +670,18 @@ const App = () => {
               <div style={{ flex: 1 }}>Search Index:</div>
               <div style={{ flex: 3 }}>{objId}</div>
             </div>
-            {showFuzzy ? (
+            {showFuzzy && (
               <div style={inputInfo}>
                 <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
                 <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
               </div>
-            ) : null}
-            {showFuzzy ? (
+            )}
+            {showFuzzy && (
               <div style={inputInfo}>
                 <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
                 <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
               </div>
-            ) : null}
+            )}
             <div style={inputInfo}>
               <div style={{ flex: 1 }}>
                 {showFuzzy ? "More Filters:" : "Search Phrase"}
@@ -815,173 +702,147 @@ const App = () => {
             Let's go
           </button>
         </div>
-      ) : haveSearchRes ? (
+      ) : haveSearchUrl ? (
         <div style={curlResContainer}>
           <div style={curlRes}>
             <div style={{ flex: 1 }}>Search url</div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
-          </div>
-          <div style={curlRes}>
-            <div style={{ flex: 1 }}>contents on this page</div>
-            <textarea
-              style={curlResTextArea}
-              value={JSON.stringify(response, null, 4)}
-              readOnly
-            ></textarea>
           </div>
         </div>
       ) : null}
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
-        <div style={hint}>Searching tags and generating clips</div>
+        haveSearchUrl ? (
+          <div style={hint}>Query sent, waiting for search engine response</div>
+        ) : (
+          <div style={hint}>Creating search url</div>
+        )
       ) : haveSearchRes ? (
-        <div style={clipResContainer}>
-          {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
-          {searchVersion.current === "v2" ? (
-            <div style={clipResShowMethodContainer}>
-              <button
-                style={{
-                  ...clipResShowMethodButton,
-                  ...(!showTopk && { border: "none" }),
-                }}
-                onClick={async () => {
-                  setLoadingTopkPage(true);
-                  setHavePlayoutUrl(false);
-                  setShowTopk(true);
-                  const res = await jumpToPageinTopk(0);
-                  setLoadingTopkPage(false);
-                  setHavePlayoutUrl(true);
-                  setResponse(res);
-                }}
-              >
-                Show Top {TOPK}
-              </button>
-              <button
-                style={{
-                  ...clipResShowMethodButton,
-                  ...(showTopk && { border: "none" }),
-                }}
-                onClick={async () => {
-                  setShowTopk(false);
-                  const res = await jumpToContent(currentContent);
-                  setResponse(res);
-                }}
-              >
-                Show {totalContent} returned results
-              </button>
-            </div>
-          ) : (
-            <div style={clipResInfoContainer}>
-              <div style={clipResTotal}>total results {totalContent}</div>
-              <select
-                style={clipResTitleSelector}
-                value={currentContent}
-                onChange={async (event) => {
-                  setCurrentContent(event.target.value);
-                  const res = await jumpToContent(event.target.value);
-                  setResponse(res);
-                }}
-              >
-                {Object.keys(contents.current).map((k) => {
-                  return (
-                    <option value={k} key={k}>
-                      {contentsInfo.current[k]}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          {/* need to display the movie selector is search version is V2 and grouping by movir title */}
-          {!showTopk && searchVersion.current === "v2" && (
-            <div
-              style={{
-                ...clipResInfoContainer,
-                justifyContent: "center",
-              }}
-            >
-              <select
-                style={{
-                  ...clipResTitleSelector,
-                  width: "90%",
-                }}
-                value={currentContent}
-                onChange={async (event) => {
-                  setCurrentContent(event.target.value);
-                  const res = await jumpToContent(event.target.value);
-                  setResponse(res);
-                }}
-              >
-                {Object.keys(contents.current).map((k) => {
-                  return (
-                    <option value={k} key={k}>
-                      {contentsInfo.current[k]}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          <div style={clipResShowContainer}>
-            {/* if have multiplr pages, we need to display the navigation bar */}
-            {((!showTopk && numPages.current > 1) ||
-              (showTopk && topkPages.current > 1)) && (
-              <ReactPaginate
-                breakLabel="..."
-                nextLabel=">"
-                onPageChange={
-                  showTopk
-                    ? async (data) => {
-                        const pageIndex = data.selected;
-                        setLoadingTopkPage(true);
-                        setHavePlayoutUrl(false);
-                        const res = await jumpToPageinTopk(pageIndex);
-                        setLoadingTopkPage(false);
-                        setHavePlayoutUrl(true);
-                        setResponse(res);
-                      }
-                    : (data) => {
-                        const pageIndex = data.selected + 1;
-                        const res = jumpToPage(pageIndex);
-                        setResponse(res);
-                      }
-                }
-                pageRangeDisplayed={3}
-                pageCount={showTopk ? topkPages.current : numPages.current}
-                previousLabel="<"
-                renderOnZeroPageCount={null}
-                containerClassName="pagination justify-content-center"
-                pageClassName="page-item"
-                pageLinkClassName="page-link"
-                previousClassName="page-item"
-                previousLinkClassName="page-link"
-                nextClassName="page-item"
-                nextLinkClassName="page-link"
-                activeClassName="active"
-              />
+        totalContent > 0 ? (
+          <div style={clipResContainer}>
+            {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
+            {searchVersion.current === "v2" ? (
+              <div style={clipResShowMethodContainer}>
+                <button
+                  style={{
+                    ...clipResShowMethodButton,
+                    ...(!showTopk && { border: "none" }),
+                  }}
+                  onClick={async () => {
+                    setShowTopk(true);
+                    await jumpToPageInTopk(0);
+                  }}
+                >
+                  Show Top {topkCnt.current}
+                </button>
+                <button
+                  style={{
+                    ...clipResShowMethodButton,
+                    ...(showTopk && { border: "none" }),
+                  }}
+                  onClick={async () => {
+                    setShowTopk(false);
+                    await jumpToContent(currentContent);
+                  }}
+                >
+                  Show {totalContent} returned results
+                </button>
+              </div>
+            ) : (
+              <div style={clipResInfoContainer}>
+                <div style={clipResTotal}>total results {totalContent}</div>
+                <select
+                  style={clipResTitleSelector}
+                  value={currentContent}
+                  onChange={async (event) => {
+                    setCurrentContent(event.target.value);
+                    await jumpToContent(event.target.value);
+                  }}
+                >
+                  {Object.keys(contents.current).map((k) => {
+                    return (
+                      <option value={k} key={k}>
+                        {contentsIdNameMap.current[k]}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             )}
 
-            {havePlayoutUrl ? (
-              response.map((clip) => {
-                return (
-                  <ClipRes
-                    clipInfo={clip}
-                    key={clip.id + clip.start_time}
-                    db = {db.current}
-                    clientadd = {clientAdd.current}
-                    searchID={searchID.current}
-                    contents={contents.current}
-                  ></ClipRes>
-                );
-              })
-            ) : loadingPlayoutUrl || loadingTopkPage ? (
-              <div style={loadingUrlContainer}>Loading playout URL</div>
-            ) : null}
+            {/* need to display the movie selector is search version is V2 and grouping by movir title */}
+            {!showTopk && searchVersion.current === "v2" && (
+              <div
+                style={{
+                  ...clipResInfoContainer,
+                  justifyContent: "center",
+                }}
+              >
+                <select
+                  style={{
+                    ...clipResTitleSelector,
+                    width: "90%",
+                  }}
+                  value={currentContent}
+                  onChange={async (event) => {
+                    setCurrentContent(event.target.value);
+                    await jumpToContent(event.target.value);
+                  }}
+                >
+                  {Object.keys(contents.current).map((k) => {
+                    return (
+                      <option value={k} key={k}>
+                        {contentsIdNameMap.current[k]}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            )}
+
+            <div style={clipResShowContainer}>
+              {/* if have multiplr pages, we need to display the navigation bar */}
+              {((!showTopk && numPages.current > 1) ||
+                (showTopk && topkPages.current > 1)) && (
+                <PaginationBar
+                  pageCount={showTopk ? topkPages.current : numPages.current}
+                  onPageChangeHandler={
+                    showTopk
+                      ? async (data) => {
+                          const pageIndex = data.selected;
+                          await jumpToPageInTopk(pageIndex);
+                        }
+                      : (data) => {
+                          const pageIndex = data.selected + 1;
+                          jumpToPageInAll(pageIndex);
+                        }
+                  }
+                />
+              )}
+              {havePlayoutUrl ? (
+                displayingContents.map((clip) => {
+                  return (
+                    <ClipRes
+                      clipInfo={clip}
+                      key={clip.id + clip.start_time}
+                      clientadd = {clientAdd.current}
+                      searchID={searchID.current}
+                      contents={contents.current}
+                      db = {db.current}
+                    ></ClipRes>
+                  );
+                })
+              ) : loadingPlayoutUrl || loadingTopkPage ? (
+                <div style={loadingUrlContainer}>Loading playout URL</div>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={hint}>
+            <p>No clip returned! </p>
+          </div>
+        )
       ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
