@@ -116,7 +116,7 @@ export const createSearchUrl = async ({
             : search === ""
             ? `(${fuzzySearchPhrase})`
             : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
-        select: "/public/asset_metadata/title",
+        select: "text,/public/asset_metadata/title",
         start: 0,
         limit: 160,
         max_total: 160,

@@ -112,21 +112,21 @@ const TagsPad = (props) => {
       const doc = src.document;
       for (let k in tags) {
         for (let v of doc.text[k]) {
-          if (!tags[k].includes(v.text)) {
-            tags[k].push(v.text);
+          for (let text of v.text) {
+            if (!tags[k].includes(text)) {
+              tags[k].push(text);
+            }
           }
         }
       }
     }
-
-    console.log(tags);
   }
 
   return (
     <div
       style={{
         width: "100%",
-        maxHeight: 600,
+        maxHeight: 500,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
