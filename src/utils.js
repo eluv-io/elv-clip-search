@@ -100,7 +100,7 @@ export const createSearchUrl = async ({
           select: "...,text,/public/asset_metadata/title",
           start: 0,
           limit: 160,
-          clips_include_source_tags: false,
+          clips_include_source_tags: true,
           clips: true,
           sort: "f_start_time@asc",
         },
@@ -121,7 +121,7 @@ export const createSearchUrl = async ({
         limit: 160,
         max_total: 160,
         display_fields: "f_start_time,f_end_time",
-        // sort: "f_display_title_as_string@asc,f_start_time@asc",
+        clips_include_source_tags: true,
         clips: true,
         scored: true,
       };
