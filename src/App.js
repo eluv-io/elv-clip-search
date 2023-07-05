@@ -13,6 +13,8 @@ import {
   getFirestore, collection, addDoc, Timestamp
 } from 'firebase/firestore' ;
 
+// import title from "./AppStyle"
+
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -181,6 +183,7 @@ const loadingUrlContainer = {
   borderRadius: 10,
 };
 
+
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
@@ -257,8 +260,7 @@ const App = () => {
       search_time: now.replace(/\([^()]*\)/g, ''),
       fuzzySearchPhrase: fuzzySearchPhrase,
       fuzzySearchFields: fuzzySearchField, 
-      searchKeywords: searchTerms.current,
-      filteredSearchFields: filteredSearchFields.current
+      searchKeywords: searchTerms.current
     }).then((docRef) => {
       console.log("search history updated with docID", docRef.id);
       searchID.current = docRef.id;
@@ -477,6 +479,7 @@ const App = () => {
       }
       // get currernt item
       const item = JSON.parse(JSON.stringify(data[i]));
+      item["rank"] = i + 1;
       item.processed = false;
       topkResPage.push(item);
       if (topkResPage.length === CLIPS_PER_PAGE) {

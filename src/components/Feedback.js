@@ -23,8 +23,8 @@ const feedback = {
 const Feedback = (props) => {
     const [submitted, setSubmitted] = useState(false);
     const [wantinput, setWantinput] = useState(false);
-    const otherreasons = useRef(null);
-    const [reason, setReason] = useState(null);
+    const otherreasons = useRef("");
+    const [reason, setReason] = useState("");
     const [rating, setRating] = useState(0);
     const prevClient = useRef(null);
     const prevRating = useRef(null);
@@ -45,8 +45,11 @@ const Feedback = (props) => {
   
     const collectOption = (event) => {
         const selectedValue = parseInt(event.target.value);
+        var label;
         console.log(selectedValue)
-        const label = options.find((option) => option.value === selectedValue).label;
+        if (selectedValue != 0) {
+            label = options.find((option) => option.value === selectedValue).label;
+        }
         setReason(label);
         if (selectedValue === 5) {
             setWantinput(true);
@@ -86,11 +89,23 @@ const Feedback = (props) => {
 
         //storing the feedback
         const now = Timestamp.now().toDate().toString();
-        const docRef = await doc(feedbackRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
+        // TODO delete all the "async"
+        const docRef = doc(feedbackRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
+        const clipStart = clipInfo.start;
+        const clipEnd = clipInfo.end;
+        const contentHash = clipInfo.hash; //TODO this is the content hash, not clip hash. Change it into start+end time
+        const clipContentIq = clipInfo.id;
+        const clipRef = doc(clipInfoRef, contentHash + "_" + clipStart + "-" + clipEnd);
+        console.log(clipContentIq);
+        console.log(contentHash);
+        const clip = await getDoc(clipRef);
+        // const clipRank = props.contents[clipContentIq].clips;
+        const clipRank = clipInfo.rank;
         setDoc(docRef, {
             client: clientadd, 
             feedback_time: new Date(now),
             rating: rating,
+            contentHash: contentHash,
             // searchID: props.searchID
             reason: reason, 
             other_reasons: otherreasons.current
@@ -100,26 +115,11 @@ const Feedback = (props) => {
         })
 
         //storing the clip information
-        const clipStart = clipInfo.start;
-        const clipEnd = clipInfo.end;
-        const clipHash = clipInfo.hash;
-        const clipContentIq = clipInfo.id;
-        const clipRef = await doc(clipInfoRef, clipHash + "_" + clipStart + "-" + clipEnd);
-        console.log(clipContentIq);
-        const clip = await getDoc(clipRef);
-        // const clipRank = props.contents[clipContentIq].clips;
-        const clipRank = clipInfo.rank;
-        console.log("rank", clipRank);
-        // console.log(clipInfo)
-        // const clipsContent = props.contents[clipIq].clips //all the clips that belongs to this content
-        // const clipRank = clipsContent.find((c) => {
-        //     return c.key === clipHash
-        // })
-        // console.log("do i exist", clip.exists())
+        // console.log("rank", clipRank);
 
         if (!clip.exists()) {
             setDoc(clipRef, {
-                clipHash: clipHash,
+                contentHash: contentHash,
                 start_time: clipStart,
                 end_time: clipEnd,
                 rank: [{saerchID: props.searchID, rank: clipRank}],
@@ -128,10 +128,14 @@ const Feedback = (props) => {
             })
         } else {
             const tempRank = clip.data().rank;
-            tempRank.push({saerchID: props.searchID, rank: clipRank});
-            updateDoc(clipRef, {
-                rank: tempRank
-            })
+            if (!(tempRank[tempRank.length - 1].rank === clipRank && tempRank[tempRank.length - 1].saerchID === props.searchID)) {
+              // console.log(tempRank[tempRank.length - 1].rank, clipRank);
+              // console.log(tempRank[tempRank.length - 1].saerchID, props.searchID)
+              tempRank.push({saerchID: props.searchID, rank: clipRank});
+              updateDoc(clipRef, {
+                  rank: tempRank
+              })
+            }
         }
         
         
