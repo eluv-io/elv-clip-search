@@ -38,6 +38,7 @@ const Feedback = (props) => {
     const clipInfo = props.clipInfo;
     const feedbackRef = collection(db, 'Feedback');
     const clipInfoRef = collection(db, 'Clip_info');
+    const tags = props.tags;
   
     const collectRate = (event) => {
       const selectedRating = parseInt(event.target.value);
@@ -117,13 +118,14 @@ const Feedback = (props) => {
 
         //storing the clip information
         // console.log("rank", clipRank);
-
+        console.log(tags);
         if (!clip.exists()) {
             setDoc(clipRef, {
                 contentHash: contentHash,
                 start_time: clipStart,
                 end_time: clipEnd,
                 rank: [{saerchID: props.searchID, rank: clipRank}],
+                tags: props.tags
             }).then(() => {
                 console.log("corresponding clip stored successfully!");
             })
@@ -168,7 +170,7 @@ const Feedback = (props) => {
           <div style = {{flexDirection: "column"}}>
             <select id="choices" onChange={collectOption}>
               {options.map((option) => (
-                <option key={option.label} value={option.value}>
+                <option key={option.label} value={option.value} style={{width: "100px"}}>
                   {option.label}
                 </option>
               ))}

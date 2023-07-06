@@ -42,12 +42,21 @@ const videoPlayer = {
 
 const videoInfo = {
   width: "95%",
-  height: "20%",
+  height: "10%",
   display: " flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "space-between",
 };
+
+const feedBack = {
+  width: "95%",
+  height: "20%",
+  display: " flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "space-between",
+}
 
 const shortInfo = {
   display: "flex",
@@ -77,16 +86,18 @@ const tagsContainer = {
   padding: 10,
 };
 
+const tags = {
+  "Celebrity Detection": [],
+  "Landmark Recognition": [],
+  "Logo Detection": [],
+  "Object Detection": [],
+  "Optical Character Recognition": [],
+  "Segment Labels": [],
+  "Speech to Text": [],
+};
+
 const TagsPad = (props) => {
-  const tags = {
-    "Celebrity Detection": [],
-    "Landmark Recognition": [],
-    "Logo Detection": [],
-    "Object Detection": [],
-    "Optical Character Recognition": [],
-    "Segment Labels": [],
-    "Speech to Text": [],
-  };
+  
   const tagsMap = {
     "Celebrity Detection": "Celebrity",
     "Landmark Recognition": "LandMark",
@@ -289,15 +300,20 @@ const ClipRes = (props) => {
               readOnly
             ></textarea>
           </div> */}
+          <div style={feedBack}>
+            <Feedback 
+              db = {props.db}
+              clientadd = {props.clientadd}
+              searchID = {props.searchID}
+              viewTime = {viewTime.current}
+              clipInfo = {props.clipInfo}
+              contents = {props.contents}
+              tags = {tags}
+            ></Feedback>
+          </div>
+          
         </div>
-        <Feedback 
-        db = {props.db}
-        clientadd = {props.clientadd}
-        searchID = {props.searchID}
-        viewTime = {viewTime.current}
-        clipInfo = {props.clipInfo}
-        contents = {props.contents}
-      ></Feedback>
+        
       </div>
 
       <div style={tagsContainer}>

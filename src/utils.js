@@ -19,6 +19,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
     }
     // get currernt item
     const item = JSON.parse(JSON.stringify(data[i]));
+    item["rank"] = i + 1;
     topkCount += 1;
     item.processed = false;
     topkResPage.push(item);
@@ -37,6 +38,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
   for (let i = 0; i < data.length; i++) {
     // get currernt item
     const item = data[i];
+    item["rank"] = i + 1;
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
