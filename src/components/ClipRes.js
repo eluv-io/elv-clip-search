@@ -51,14 +51,14 @@ const videoInfo = {
   justifyContent: "space-between",
 };
 
-const feedBack = {
-  width: "95%",
-  height: "20%",
-  display: " flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "space-between",
-}
+// const feedBack = {
+//   width: "95%",
+//   height: "20%",
+//   display: " flex",
+//   flexDirection: "column",
+//   alignItems: "center",
+//   justifyContent: "space-between",
+// }
 
 const shortInfo = {
   display: "flex",
@@ -69,14 +69,14 @@ const shortInfo = {
   flex: 1,
 };
 
-const longInfo = {
-  width: "95%",
-  height: "50%",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-};
+// const longInfo = {
+//   width: "95%",
+//   height: "50%",
+//   display: "flex",
+//   flexDirection: "column",
+//   alignItems: "center",
+//   justifyContent: "center",
+// };
 
 const tagsContainer = {
   width: "25%",
@@ -88,7 +88,7 @@ const tagsContainer = {
   padding: 10,
 };
 
-const tags = { //TODO can i use const
+const tags = { 
   "Celebrity Detection": [],
   "Landmark Recognition": [],
   "Logo Detection": [],

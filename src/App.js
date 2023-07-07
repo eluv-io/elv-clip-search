@@ -11,7 +11,7 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import {initializeApp} from 'firebase/app';
 import firebaseConfig from './configuration';
 import {
-  getFirestore, collection, addDoc, Timestamp, getDoc, setDoc, doc
+  getFirestore, collection, addDoc, Timestamp
 } from 'firebase/firestore' ;
 import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
