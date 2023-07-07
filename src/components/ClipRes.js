@@ -98,6 +98,15 @@ const tags = { //TODO can i use const
   "Speech to Text": [],
 };
 
+const feedback = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  height: 220
+}
+
 const TagsPad = (props) => {
   
   const tagsMap = {
@@ -168,7 +177,6 @@ const TagsPad = (props) => {
     //     // console.log(tags[k], tags[k][j])
     //   }
     // }
-    console.log(tags);
   }
 
   return (
@@ -325,34 +333,6 @@ const ClipRes = (props) => {
             <div>{props.clipInfo.rank}</div>
           </div>
           ): null}
-          
-          {/* <div style={longInfo}>
-            <div>playout url</div>
-            <textarea
-              name="playout url"
-              value={url}
-              style={{
-                height: "100%",
-                width: "100%",
-                padding: 5,
-                borderStyle: "None",
-                borderRadius: 10,
-              }}  
-              readOnly
-            ></textarea>
-          </div> */}
-          {/* <div style={feedBack}> */}
-            {/* <Feedback 
-              db = {props.db}
-              clientadd = {props.clientadd}
-              searchID = {props.searchID}
-              viewTime = {viewTime.current}
-              clipInfo = {props.clipInfo}
-              contents = {props.contents}
-              tags = {tags}
-            ></Feedback> */}
-          {/* </div> */}
-          
         </div>
         
       </div>
@@ -370,13 +350,7 @@ const ClipRes = (props) => {
         <TagsPad clipInfo={props.clipInfo}></TagsPad>
         </div>
 
-        <div style={{display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%",
-                    height: 220
-                    }}>
+        <div style={feedback}>
           <Feedback 
             db = {props.db}
             clientadd = {props.clientadd}
@@ -387,7 +361,6 @@ const ClipRes = (props) => {
             tags = {tags}
           ></Feedback>
         </div>
-        
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import {
-  getFirestore, collection, getDocs, orderBy, doc, query, where, limit, get, setDoc, Timestamp, getDoc, updateDoc
+  getFirestore, collection, doc, setDoc, Timestamp, getDoc, updateDoc
 } from 'firebase/firestore' ;
 
 
@@ -28,7 +28,9 @@ const Feedback = (props) => {
     const [wantinput, setWantinput] = useState(false);
     const otherreasons = useRef("");
     const [reason, setReason] = useState("");
+    const hasReason = useRef(false);
     const [rating, setRating] = useState(-1);
+    const hasRating = useRef(false);
     const prevClient = useRef(null);
     const prevRating = useRef(null);
     const prevReason = useRef(null);
@@ -45,6 +47,7 @@ const Feedback = (props) => {
     const collectRate = (event) => {
       const selectedRating = parseInt(event.target.value);
       setRating(selectedRating);
+      hasRating.current = true;
     }
   
     const collectOption = (event) => {
@@ -60,6 +63,7 @@ const Feedback = (props) => {
         } else {
             setWantinput(false);
         }
+        hasReason.current = true;
     }
   
     const collectOtherReason = (event) => {
@@ -90,26 +94,27 @@ const Feedback = (props) => {
 
 
     const submit = async () => {
-
-        //storing the feedback
+      //storing the feedback
+      const warningElement = document.getElementById("warning");
+      const submissionElement = document.getElementById("submissiontxt");
+      if (!(hasRating.current || hasReason.current)) {
+        warningElement.style.display = "flex";
+      } else {
+        warningElement.remove();
         const now = Timestamp.now().toDate().toString();
         // TODO delete all the "async"
         const docRef = doc(feedbackRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
         const clipStart = clipInfo.start;
         const clipEnd = clipInfo.end;
-        const contentHash = clipInfo.hash; //TODO this is the content hash, not clip hash. Change it into start+end time
-        const clipContentIq = clipInfo.id;
+        const contentHash = clipInfo.hash;
         const clipRef = doc(clipInfoRef, contentHash + "_" + clipStart + "-" + clipEnd);
-        console.log(clipContentIq);
-        console.log(contentHash);
         const clip = await getDoc(clipRef);
-        // const clipRank = props.contents[clipContentIq].clips;
         const clipRank = clipInfo.rank;
         setDoc(docRef, {
             client: clientadd, 
             feedback_time: new Date(now),
             rating: rating,
-            contentHash: contentHash,
+            clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
             // searchID: props.searchID
             reason: reason, 
             other_reasons: otherreasons.current
@@ -118,9 +123,6 @@ const Feedback = (props) => {
             console.log("Feedback collected successfully!");
         })
 
-        //storing the clip information
-        // console.log("rank", clipRank);
-        console.log(tags);
         if (!clip.exists()) {
             setDoc(clipRef, {
                 contentHash: contentHash,
@@ -133,9 +135,8 @@ const Feedback = (props) => {
             })
         } else {
             const tempRank = clip.data().rank;
-            if (!(tempRank[tempRank.length - 1].rank === clipRank && tempRank[tempRank.length - 1].saerchID === props.searchID)) {
-              // console.log(tempRank[tempRank.length - 1].rank, clipRank);
-              // console.log(tempRank[tempRank.length - 1].saerchID, props.searchID)
+            if (!(tempRank[tempRank.length - 1].rank === clipRank && 
+                  tempRank[tempRank.length - 1].saerchID === props.searchID)) {
               tempRank.push({saerchID: props.searchID, rank: clipRank});
               updateDoc(clipRef, {
                   rank: tempRank
@@ -143,13 +144,13 @@ const Feedback = (props) => {
             }
         }
         
-        
         const textElement = document.getElementById('reason_input');
         if (textElement !== null) {
             textElement.remove();
         }
 
-        setSubmitted(true);
+        submissionElement.style.display = "flex";
+      }
     }
   
     return (
@@ -192,13 +193,16 @@ const Feedback = (props) => {
         <div style={{display: "flex", alignItems: "center", justifyContent: "center", marginTop: "3%", marginBottom: "1%"}}>
             <button onClick={submit}>Submit</button>
           </div>
-          
-        {submitted ? (
-          <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
-        ): null}
+        
+        <div id="warning" style={{display: "none", alignItems: "center", justifyContent: "center", marginTop: "3%", marginBottom: "1%"}}>
+          Please give us your feedback
+        </div>
+        <div id='submissiontxt' style={{display: 'none', alignItems: "center", justifyContent: "center"}}>
+          Thanks for your feedback!
+        </div>
+
       </div>
     )
-  
   }
 
   export default Feedback;
