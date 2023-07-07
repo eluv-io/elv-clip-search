@@ -1,6 +1,7 @@
 import Feedback from "./Feedback";
 import React, { useRef, useState } from "react";
 import ReactPlayer from 'react-player';
+import { isEqual } from 'lodash';
 
 const container = {
   width: "97%",
@@ -18,9 +19,10 @@ const container = {
   marginBottom: 10,
   marginTop: 10,
 };
+
 const videoContainer = {
   width: "75%",
-  height: "100%",
+  height: "95%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -42,7 +44,7 @@ const videoPlayer = {
 
 const videoInfo = {
   width: "95%",
-  height: "10%",
+  height: "20%",
   display: " flex",
   flexDirection: "column",
   alignItems: "center",
@@ -81,12 +83,12 @@ const tagsContainer = {
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  justifyContent: "flex-start",
+  justifyContent: "space-between",
   alignItems: "center",
   padding: 10,
 };
 
-const tags = {
+const tags = { //TODO can i use const
   "Celebrity Detection": [],
   "Landmark Recognition": [],
   "Logo Detection": [],
@@ -102,7 +104,7 @@ const TagsPad = (props) => {
     "Celebrity Detection": "Celebrity",
     "Landmark Recognition": "LandMark",
     "Logo Detection": "logo",
-    "Object Detection": "Objcet",
+    "Object Detection": "Object",
     "Optical Character Recognition": "OCR",
     "Segment Labels": "Segment",
     "Speech to Text": "STT",
@@ -118,6 +120,19 @@ const TagsPad = (props) => {
     "Speech to Text": true,
   });
 
+
+  const thumbsUp = (lst, t) => {
+    const idx = lst.findIndex(dic => isEqual(dic, t));
+    lst[idx] = {[Object.keys(t)]: "like"};
+    console.log("You liked me")
+  }
+
+  const thumbsDown = (lst, t) => {
+    const idx = lst.findIndex(dic => isEqual(dic, t));
+    lst[idx] = {[Object.keys(t)]: "dislike"};
+    console.log("You disliked me")
+  }
+
   const hasTags = "text" in props.clipInfo.sources[0].document;
 
   if (hasTags) {
@@ -126,20 +141,41 @@ const TagsPad = (props) => {
       for (let k in tags) {
         for (let v of doc.text[k]) {
           for (let text of v.text) {
-            if (!tags[k].includes(text)) {
-              tags[k].push(text);
+            const dic = {[text]: null};
+            // console.log(dic)
+            const found = tags[k].some(dictionary => JSON.stringify(dic) === JSON.stringify(dictionary));
+            if (!found) {
+              tags[k].push(dic);
             }
+            // if (!tags[k].includes(text)) {
+            //   // tags[k].push({text: null});
+            //   tags[k].push(text);
+            // }
           }
         }
       }
     }
+    
+    // for (const k in tags) {
+    //   // Modify the element
+    //   const temp = tags[k].map(x => ({[x]: null}));
+    //   console.log(typeof(temp))
+    //   // const temp = tags[k].map(x => ({x: null}))
+    //   for (let j = 0; j < tags[k].length; j++) {
+    //     const temp = tags[k][j];
+    //     // console.log(temp);
+    //     tags[k][j] = {[tags[k][j]]: null};
+    //     // console.log(tags[k], tags[k][j])
+    //   }
+    // }
+    console.log(tags);
   }
 
   return (
     <div
       style={{
         width: "100%",
-        maxHeight: 500,
+        maxHeight: 360,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -157,7 +193,7 @@ const TagsPad = (props) => {
               justifyContent: "flex-start",
               alignItems: "center",
               width: "95%",
-              marginBottom: 10,
+              marginBottom: 0,
             }}
           >
             <div
@@ -201,14 +237,20 @@ const TagsPad = (props) => {
                     width: "90%",
                     display: "flex",
                     flexDirection: "row",
-                    justifyContent: "flex-start",
+                    justifyContent: "space-between",
                     paddingLeft: "5%",
                     backgroundColor: "#E6E6E6",
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
                 >
-                  {t}
+                  {Object.keys(t)}
+                  {/* {t} */}
+                  <div> 
+                    <button style={{border:"none", backgroundColor: "#E6E6E6"}} onClick={() => thumbsUp(tags[k], t)}>👍</button>
+                    <button style={{border:"none", backgroundColor: "#E6E6E6"}} onClick={() => thumbsDown(tags[k], t)}>👎</button>
+                  </div>
+                  
                 </div>
               ))}
           </div>
@@ -217,11 +259,6 @@ const TagsPad = (props) => {
     </div>
   );
 };
-
-const buttonInfo = {
-  display: "flex",
-  flexDirection: "row"
-}
 
 
 const ClipRes = (props) => {
@@ -251,20 +288,20 @@ const ClipRes = (props) => {
     <div style={container}>
       <div style={{ ...videoContainer, width: hasTags ? "80%" : "100%" }}>
         <div style={videoPlayer}>
-        <ReactPlayer
-          url={url}
-          width="100%"
-          height="100%"
-          autoPlay={false}
-          controls={true}
-          config={{
-              capLevelToPlayerSize: true,
-              maxBufferLength: 1
-          }}
-          // onProgress={handleProgress}
-          onPlay={handlePlay}
-          onPause={handlePause}
-        ></ReactPlayer>
+          <ReactPlayer
+            url={url}
+            width="100%"
+            height="100%"
+            autoPlay={false}
+            controls={true}
+            config={{
+                capLevelToPlayerSize: true,
+                maxBufferLength: 1
+            }}
+            // onProgress={handleProgress}
+            onPlay={handlePlay}
+            onPause={handlePause}
+          ></ReactPlayer>
         </div>
         <div style={videoInfo}>
           <div style={shortInfo}>
@@ -281,10 +318,14 @@ const ClipRes = (props) => {
             <div>time interval: </div>
             <div>{props.clipInfo.start} - {props.clipInfo.end}</div>
           </div>
-          <div style={shortInfo}>
+
+          {props.searchVersion === "v2" ? (
+            <div style={shortInfo}>
             <div>rank: </div>
             <div>{props.clipInfo.rank}</div>
           </div>
+          ): null}
+          
           {/* <div style={longInfo}>
             <div>playout url</div>
             <textarea
@@ -300,8 +341,8 @@ const ClipRes = (props) => {
               readOnly
             ></textarea>
           </div> */}
-          <div style={feedBack}>
-            <Feedback 
+          {/* <div style={feedBack}> */}
+            {/* <Feedback 
               db = {props.db}
               clientadd = {props.clientadd}
               searchID = {props.searchID}
@@ -309,15 +350,44 @@ const ClipRes = (props) => {
               clipInfo = {props.clipInfo}
               contents = {props.contents}
               tags = {tags}
-            ></Feedback>
-          </div>
+            ></Feedback> */}
+          {/* </div> */}
           
         </div>
         
       </div>
 
       <div style={tagsContainer}>
+        <div style={{width: "100%",
+        height: 360,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 20,
+        backgroundColor: "white"
+        }}>
         <TagsPad clipInfo={props.clipInfo}></TagsPad>
+        </div>
+
+        <div style={{display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    height: 220
+                    }}>
+          <Feedback 
+            db = {props.db}
+            clientadd = {props.clientadd}
+            searchID = {props.searchID}
+            viewTime = {viewTime.current}
+            clipInfo = {props.clipInfo}
+            contents = {props.contents}
+            tags = {tags}
+          ></Feedback>
+        </div>
+        
       </div>
     </div>
   );

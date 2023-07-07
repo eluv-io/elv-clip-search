@@ -7,7 +7,7 @@ export const toTimeString = (totalMiliSeconds) => {
   return result;
 };
 
-export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
+export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE, searchVersion) => {
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];

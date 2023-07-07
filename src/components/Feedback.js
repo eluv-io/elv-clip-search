@@ -8,7 +8,9 @@ const feedback = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    height: "90%",
+    width: "90%"
   }
   
   const options = [
@@ -153,11 +155,9 @@ const Feedback = (props) => {
     return (
       <div style={feedback}>
         {/* <div>rate me</div> */}
-        <br></br>
-  
-        <p></p>
+        
         {/* rating system */}
-        <div className="rating" style={{ display: "flex", flexDirection: "row" }}>
+        <div className="rating" style={{ display: "flex", flexDirection: "row"}}>
           {[0, 1, 2, 3, 4, 5].map((num) => (
             <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
               <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num <= rating} value={num} onChange={collectRate}></input>
@@ -166,39 +166,36 @@ const Feedback = (props) => {
           ))}
         </div>
   
-        <div>
-          <div style = {{flexDirection: "column"}}>
+        <div style={{display: "flex", width: "100%", flexDirection: "column"}}>
+          <div style = {{display: "flex", width: "100%", flexDirection: "column"}}>
             <select id="choices" onChange={collectOption}>
               {options.map((option) => (
-                <option key={option.label} value={option.value} style={{width: "100px"}}>
+                <option key={option.label} value={option.value} style={{width: "100%"}}>
                   {option.label}
                 </option>
               ))}
             </select>
           </div>
-  
+        
           {wantinput ? (
-            <div style = {{flexDirection: "column"}}>
-              <textarea 
+                <textarea 
               id="reason_input" 
               name="freeform"
               rows="4" cols="30" 
               placeholder="Tell us your experience..."
               value={prevOtherReason.current}
-              onChange={(event) => collectOtherReason(event.target.value)}></textarea>
-            </div>
+              onChange={(event) => collectOtherReason(event.target.value)}
+              style = {{width: "100%"}}></textarea>
           ): null}
-  
-          <br></br>
-          <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+        </div>
+
+        <div style={{display: "flex", alignItems: "center", justifyContent: "center", marginTop: "3%", marginBottom: "1%"}}>
             <button onClick={submit}>Submit</button>
           </div>
           
-          {submitted ? (
-            <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
-          ): null}
-          
-        </div>
+        {submitted ? (
+          <div id='submissiontxt' style={{display: 'flex'}}>Thanks for your feedback</div>
+        ): null}
       </div>
     )
   

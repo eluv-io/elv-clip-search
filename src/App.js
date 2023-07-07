@@ -458,7 +458,8 @@ const App = () => {
           } = await parseSearchRes(
             searchRes["data"]["contents"],
             TOPK,
-            CLIPS_PER_PAGE
+            CLIPS_PER_PAGE,
+            searchVersion.current
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
@@ -830,6 +831,7 @@ const App = () => {
                       searchID={searchID.current}
                       contents={contents.current}
                       db = {db.current}
+                      searchVersion={searchVersion.current}
                     ></ClipRes>
                   );
                 })
