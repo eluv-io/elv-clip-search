@@ -8,13 +8,15 @@ import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 
-import {initializeApp} from 'firebase/app';
-import firebaseConfig from './configuration';
+import { initializeApp } from "firebase/app";
+import firebaseConfig from "./configuration";
 import {
-  getFirestore, collection, addDoc, Timestamp
-} from 'firebase/firestore' ;
+  getFirestore,
+  collection,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
-
 
 const title = {
   display: "flex",
@@ -184,7 +186,6 @@ const loadingUrlContainer = {
   borderRadius: 10,
 };
 
-
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
@@ -276,19 +277,19 @@ const App = () => {
   };
 
   const storeSearchHistory = () => {
-    const colRef = collection(db.current, 'Search_history');
+    const colRef = collection(db.current, "Search_history");
     const now = Timestamp.now().toDate().toString();
     addDoc(colRef, {
       client: clientAdd.current,
-      search_time: now.replace(/\([^()]*\)/g, ''),
+      search_time: now.replace(/\([^()]*\)/g, ""),
       fuzzySearchPhrase: fuzzySearchPhrase,
-      fuzzySearchFields: fuzzySearchField, 
-      searchKeywords: searchTerms.current
+      fuzzySearchFields: fuzzySearchField,
+      searchKeywords: searchTerms.current,
     }).then((docRef) => {
       console.log("search history updated with docID", docRef.id);
       searchID.current = docRef.id;
-    })
-  }
+    });
+  };
 
   const getClient = () => {
     if (client.current == null) {
@@ -568,7 +569,7 @@ const App = () => {
     />
   );
   return (
-    <div className="container">
+    <div className="container" style={{ maxWidth: 1600 }}>
       <div style={title}>
         <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
@@ -827,10 +828,10 @@ const App = () => {
                     <ClipRes
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
-                      clientadd = {clientAdd.current}
+                      clientadd={clientAdd.current}
                       searchID={searchID.current}
                       contents={contents.current}
-                      db = {db.current}
+                      db={db.current}
                       searchVersion={searchVersion.current}
                     ></ClipRes>
                   );
@@ -855,4 +856,3 @@ const App = () => {
 };
 
 export default App;
-
