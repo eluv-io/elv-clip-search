@@ -3,7 +3,7 @@ import Feedback from "./Feedback";
 import TagsPad from "./TagsPad";
 
 const container = {
-  width: "25%",
+  width: "30%",
   height: "95%",
   display: "flex",
   flexDirection: "row",

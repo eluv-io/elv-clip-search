@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { isEqual } from "lodash";
-
+import { toTimeString } from "../utils";
 const TagsPad = (props) => {
   const tags = {
     "Celebrity Detection": [],
@@ -52,14 +52,13 @@ const TagsPad = (props) => {
       for (let k in tags) {
         for (let v of doc.text[k]) {
           for (let text of v.text) {
-            const dic = { [text]: null };
-            // console.log(dic)
-            const found = tags[k].some(
-              (dictionary) => JSON.stringify(dic) === JSON.stringify(dictionary)
-            );
-            if (!found) {
-              tags[k].push(dic);
-            }
+            const dic = {
+              [text]: null,
+              [toTimeString(v.start_time - doc.start_time).slice(3) +
+              "-" +
+              toTimeString(v.end_time - doc.start_time).slice(3)]: null,
+            };
+            tags[k].push(dic);
             // if (!tags[k].includes(text)) {
             //   // tags[k].push({text: null});
             //   tags[k].push(text);
@@ -97,7 +96,7 @@ const TagsPad = (props) => {
       }}
     >
       {Object.keys(tags).map((k) => {
-        return (
+        return tags[k].length > 0 ? (
           <div
             style={{
               display: "flex",
@@ -156,15 +155,8 @@ const TagsPad = (props) => {
                     marginBottom: 3,
                   }}
                 >
-                  {Object.keys(t)}
-                  {/* {t} */}
+                  {Object.keys(t).join(" ")}
                   <div>
-                    <button
-                      style={{ border: "none", backgroundColor: "#E6E6E6" }}
-                      onClick={() => thumbsUp(tags[k], t)}
-                    >
-                      👍
-                    </button>
                     <button
                       style={{ border: "none", backgroundColor: "#E6E6E6" }}
                       onClick={() => thumbsDown(tags[k], t)}
@@ -175,7 +167,7 @@ const TagsPad = (props) => {
                 </div>
               ))}
           </div>
-        );
+        ) : null;
       })}
     </div>
   );

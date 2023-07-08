@@ -16,7 +16,7 @@ const container = {
 };
 
 const videoContainer = {
-  width: "75%",
+  width: "70%",
   height: "95%",
   display: "flex",
   flexDirection: "column",
