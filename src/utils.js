@@ -121,12 +121,15 @@ export const createSearchUrl = async ({
         limit: 160,
         max_total: 160,
         display_fields: "f_start_time,f_end_time",
-        // sort: "f_display_title_as_string@asc,f_start_time@asc",
         clips: true,
         scored: true,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
+      }
+      if (fuzzySearchPhrase === "") {
+        queryParams.sort = "f_start_time@asc";
+        queryParams.scored = false;
       }
       const url = await client.Rep({
         libraryId,
