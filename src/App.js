@@ -11,7 +11,7 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import {initializeApp} from 'firebase/app';
 import firebaseConfig from './configuration';
 import {
-  getFirestore, collection, addDoc, Timestamp
+  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, 
 } from 'firebase/firestore' ;
 import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
@@ -249,19 +249,30 @@ const App = () => {
   useEffect(() => {
     initializeApp(firebaseConfig);
     db.current = getFirestore();
-    // getClient();
-    // const userRef = collection(db.current, 'User');
-    // console.log(userRef);
-    // console.log(clientAdd.current);
-    // const clientRef = doc(userRef);
-    // const thisClient = await getDoc(clientRef);
-    // if (!thisClient.exists()) {
-    //   setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
-    //     console.log("User info saved");
-    //   })
-    // } else {
-    //   console.log("This user already exists")
+
+    //store the current user
+    getClient();
+    const userRef = collection(db.current, 'User');
+    const clientRef = doc(userRef, clientAdd.current);
+    getDoc(clientRef).then((thisClient) => {
+      if (!thisClient.exists()) {
+        setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
+          console.log("User info saved");
+        })
+      } else {
+        console.log("This user already exists")
+      }
+    });
+    // const getCurrClient = async () => {
+    //   const thisClient = await getDoc(clientRef);
     // }
+    // getCurrClient();
+
+
+
+    // const thisClient = await getDoc(clientRef);
+    // console.log(thisClient);
+    
   }, []);
 
   const resetLoadStatus = () => {
@@ -301,6 +312,7 @@ const App = () => {
       });
       return _client;
     } else {
+      console.log(client.current)
       client.current.CurrentAccountAddress().then((val) => {
         clientAdd.current = val;
       });
