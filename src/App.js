@@ -565,7 +565,7 @@ const App = () => {
                 filteredSearchFields={filteredSearchFields.current}
                 handleSubmitClick={({ text, fields }) => {
                   resetLoadStatus();
-                  setFuzzySearchPhrase(text.trim());
+                  setFuzzySearchPhrase(text);
                   setFuzzySearchField(fields);
                   currentPage.current = 1;
                 }}
@@ -603,7 +603,7 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion ? (
+      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion && (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
@@ -638,14 +638,16 @@ const App = () => {
             Let's go
           </button>
         </div>
-      ) : haveSearchUrl ? (
+      )}
+
+      {haveSearchUrl && (
         <div style={curlResContainer}>
           <div style={curlRes}>
-            <div style={{ flex: 1 }}>Search url</div>
+            <div style={{ flex: 1 }}>Search url {err && "(FAILED)"}</div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
