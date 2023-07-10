@@ -119,7 +119,7 @@ export const createSearchUrl = async ({
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        max_total: 160,
+        max_total: 160000,
         display_fields: "f_start_time,f_end_time",
         clips: true,
         scored: true,
