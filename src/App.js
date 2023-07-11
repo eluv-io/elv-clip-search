@@ -250,6 +250,7 @@ const App = () => {
   useEffect(() => {
     initializeApp(firebaseConfig);
     db.current = getFirestore();
+
     //store the current user
     getClient();
     client.current.CurrentAccountAddress().then((val) => {
@@ -280,19 +281,8 @@ const App = () => {
     setShowTopk(false);
   };
 
-  const createEngagement = () => {
-    const engTblRef = collection(db.current, "Engagement");
-    const engRef = doc(engTblRef, clientAdd + searchID);
-    getDoc(engRef).then((eng) => {
-      setDoc(engRef, {
-        engagement: engagement.current,
-        User_id: clientAdd.current,
-        Search_id: searchID.current
-      })
-    })
-  }
-
   const initializeEngagement = () => {
+    engagement.current = {};
     const currContents = contents.current;
     for (let content in currContents) {
       for (let page in currContents[content].clips) {
@@ -317,15 +307,20 @@ const App = () => {
     })
   }
 
-
   const updateEngagement = (clipInfo, watchedTime, numView) => {
     if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
       const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      engagement.current[clipID] = {numView: numView, watchedTime: watchedTime};
+      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime; //TODO accumulative or not??
+      const newNumView = numView + engagement.current[clipID].numView;
+      console.log(newNumView)
+      engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
       const engTblRef = collection(db.current, "Engagement");
-      const engRef = doc(engTblRef, clientAdd + searchID);
+      const engRef = doc(engTblRef, clientAdd.current + searchID.current);
       updateDoc(engRef, {
         engagement: engagement.current
+      }).then(() => {
+        console.log(engagement.current)
+        console.log("engagement updated!")
       })
     } else {
       console.log("only keep track of the top 20 clips for v2");
@@ -345,6 +340,7 @@ const App = () => {
     }).then((docRef) => {
       console.log("search history updated with docID", docRef.id);
       searchID.current = docRef.id;
+      initializeEngagement();
     });
   };
 
@@ -754,10 +750,8 @@ const App = () => {
             type="button"
             style={button}
             onClick={async () => {
-              createEngagement();
               getRes().then(() => {
                 storeSearchHistory();
-                initializeEngagement();
               });
             }}
             disabled={loadingSearchRes || loadingPlayoutUrl}

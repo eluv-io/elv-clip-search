@@ -65,17 +65,15 @@ const ClipRes = (props) => {
   const clipEnd = clipInfo.end;
   const contentHash = clipInfo.hash;
   const clipID = contentHash + "_" + clipStart + "-" + clipEnd;
-  const engagementDic = props.engagement;
-  // engagementDic.push({clipID: [0, 0]})
 
+
+  const handleStart = () => {
+    props.updateEngagement(clipInfo, 0, 1);
+    console.log("Started")
+  }
 
   const handlePlay = () => {
     startTime.current = Date.now();
-    // if (!engagementDic.hasOwnProperty(clipID)) {
-    //   engagementDic[clipID] = {watchedTime: viewTime.current, numView: 0}
-    // } else {
-    //   engagementDic[clipID][numView]++;
-    // }
   };
 
   const handlePause = () => {
@@ -83,10 +81,10 @@ const ClipRes = (props) => {
       const elapsedTime = (Date.now() - startTime.current) / 1000;
       viewTime.current = viewTime.current + elapsedTime;
       startTime.current = null;
+      props.updateEngagement(clipInfo, elapsedTime, 0);
     }
+    console.log("paused");
     console.log("total view time", viewTime.current);
-    // engagementDic[clipID][watchedTime] = viewTime.current;
-    
   };
 
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${
@@ -110,6 +108,7 @@ const ClipRes = (props) => {
               maxBufferLength: 1,
             }}
             // onProgress={handleProgress}
+            onStart={handleStart}
             onPlay={handlePlay}
             onPause={handlePause}
           ></ReactPlayer>

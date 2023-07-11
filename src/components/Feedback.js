@@ -78,7 +78,9 @@ const Feedback = (props) => {
       if (!(hasRating.current || hasReason.current)) {
         warningElement.style.display = "flex";
       } else {
-        warningElement.remove();
+        if (warningElement.style.display === "flex") {
+          warningElement.style.display = "none";
+        }
         const now = Timestamp.now().toDate().toString();
         // TODO delete all the "async"
         const docRef = doc(feedbackRef, clientadd + "_" + now.replace(/\([^()]*\)/g, ''));
