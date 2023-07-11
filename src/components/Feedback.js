@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import {
-  collection, doc, setDoc, Timestamp, getDoc, updateDoc
+  collection, doc, setDoc, Timestamp
 } from 'firebase/firestore' ;
 
 
@@ -31,18 +31,13 @@ const Feedback = (props) => {
     const hasReason = useRef(false);
     const [rating, setRating] = useState(-1);
     const hasRating = useRef(false);
-    // const prevClient = useRef(null);
-    // const prevRating = useRef(null);
-    // const prevReason = useRef(null);
     const prevOtherReason = useRef(null);
-    // const prevFeedbackTime = useRef(null);
     
     const db = props.db;
     const clientadd = props.clientadd;
     const clipInfo = props.clipInfo;
     const feedbackRef = collection(db, 'Feedback');
     const clipInfoRef = collection(db, 'Clip_info');
-    // const tags = props.tags;
   
     const collectRate = (event) => {
       const selectedRating = parseInt(event.target.value);
@@ -88,8 +83,6 @@ const Feedback = (props) => {
         const clipEnd = clipInfo.end;
         const contentHash = clipInfo.hash;
         const clipRef = doc(clipInfoRef, contentHash + "_" + clipStart + "-" + clipEnd);
-        const clip = await getDoc(clipRef);
-        const clipRank = clipInfo.rank;
         setDoc(docRef, {
             client: clientadd, 
             feedback_time: new Date(now),

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { isEqual } from "lodash";
 import { toTimeString } from "../utils";
 import {
-  collection, doc, setDoc, Timestamp, getDoc, updateDoc
+  collection, doc, setDoc, getDoc, updateDoc
 } from 'firebase/firestore' ;
 const TagsPad = (props) => {
   const tags = {
@@ -92,29 +92,12 @@ const TagsPad = (props) => {
                 "-" +
                 toTimeString(v.end_time - doc.start_time).slice(3)], 
               dislike: false
-              // [text]: null,
-              // [toTimeString(v.start_time - doc.start_time).slice(3) +
-              // "-" +
-              // toTimeString(v.end_time - doc.start_time).slice(3)]: null,
             };
             tags[k].push(dic);
           }
         }
       }
     }
-
-    // for (const k in tags) {
-    //   // Modify the element
-    //   const temp = tags[k].map(x => ({[x]: null}));
-    //   console.log(typeof(temp))
-    //   // const temp = tags[k].map(x => ({x: null}))
-    //   for (let j = 0; j < tags[k].length; j++) {
-    //     const temp = tags[k][j];
-    //     // console.log(temp);
-    //     tags[k][j] = {[tags[k][j]]: null};
-    //     // console.log(tags[k], tags[k][j])
-    //   }
-    // }
   }
 
   return (

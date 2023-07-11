@@ -1,5 +1,5 @@
 import QAPad from "./QAPad";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import ReactPlayer from "react-player";
 
 const container = {
@@ -61,11 +61,6 @@ const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
-  const clipStart = clipInfo.start;
-  const clipEnd = clipInfo.end;
-  const contentHash = clipInfo.hash;
-  const clipID = contentHash + "_" + clipStart + "-" + clipEnd;
-
 
   const handleStart = () => {
     props.updateEngagement(clipInfo, 0, 1);
@@ -107,7 +102,6 @@ const ClipRes = (props) => {
               capLevelToPlayerSize: true,
               maxBufferLength: 1,
             }}
-            // onProgress={handleProgress}
             onStart={handleStart}
             onPlay={handlePlay}
             onPause={handlePause}
