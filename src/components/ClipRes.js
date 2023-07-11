@@ -60,10 +60,24 @@ const shortInfo = {
 const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
+  const clipInfo = props.clipInfo;
+  const clipStart = clipInfo.start;
+  const clipEnd = clipInfo.end;
+  const contentHash = clipInfo.hash;
+  const clipID = contentHash + "_" + clipStart + "-" + clipEnd;
+  const engagementDic = props.engagement;
+  // engagementDic.push({clipID: [0, 0]})
+
 
   const handlePlay = () => {
     startTime.current = Date.now();
+    // if (!engagementDic.hasOwnProperty(clipID)) {
+    //   engagementDic[clipID] = {watchedTime: viewTime.current, numView: 0}
+    // } else {
+    //   engagementDic[clipID][numView]++;
+    // }
   };
+
   const handlePause = () => {
     if (startTime.current) {
       const elapsedTime = (Date.now() - startTime.current) / 1000;
@@ -71,6 +85,8 @@ const ClipRes = (props) => {
       startTime.current = null;
     }
     console.log("total view time", viewTime.current);
+    // engagementDic[clipID][watchedTime] = viewTime.current;
+    
   };
 
   const url = `${props.clipInfo.url}&resolve=false&clip_start=${

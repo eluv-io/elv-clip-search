@@ -70,7 +70,12 @@ const QAPad = (props) => {
     <div style={container}>
       <div style={QAContainer}>
         <div style={tagsContainer}>
-          <TagsPad clipInfo={props.clipInfo}></TagsPad>
+          <TagsPad 
+            clipInfo={props.clipInfo}
+            db={props.db}
+            searchID={props.searchID}
+            tags={tags}
+            ></TagsPad>
         </div>
 
         <div style={feedbackContainer}>

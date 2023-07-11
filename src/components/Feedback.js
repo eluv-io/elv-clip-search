@@ -70,28 +70,6 @@ const Feedback = (props) => {
       const textareaData = document.getElementById('reason_input').value;
       otherreasons.current = textareaData;
     }
-  
-    
-    // useEffect (() => {
-    //     console.log("fetching")
-    //     const q = query(colRef, where("client", "==", clientadd), 
-    //                             orderBy("feedback_time"),
-    //                             limit(1));
-
-    //     getDocs(q).then((querySnapshot) => {
-    //         if (!querySnapshot.empty) {
-    //             console.log("size of querySnapshot", querySnapshot.size);
-    //             const currdocdata = querySnapshot.docs[0].data(); // This is the document
-    //             prevRating.current = currdocdata.rating;
-    //             prevReason.current = currdocdata.reason;
-    //             prevOtherReason.current = currdocdata.other_reasons;
-    //             console.log("asdfasdf", currdocdata.reason);
-    //             setRating(prevRating.current);
-    //             setReason(prevReason.current);
-    //         }
-    //     })
-    // }, []);
-
 
     const submit = async () => {
       //storing the feedback
@@ -122,27 +100,6 @@ const Feedback = (props) => {
         }).then(() => {
             console.log("Feedback collected successfully!");
         })
-
-        if (!clip.exists()) {
-            setDoc(clipRef, {
-                contentHash: contentHash,
-                start_time: clipStart,
-                end_time: clipEnd,
-                rank: [{saerchID: props.searchID, rank: clipRank}],
-                tags: props.tags
-            }).then(() => {
-                console.log("corresponding clip stored successfully!");
-            })
-        } else {
-            const tempRank = clip.data().rank;
-            if (!(tempRank[tempRank.length - 1].rank === clipRank && 
-                  tempRank[tempRank.length - 1].saerchID === props.searchID)) {
-              tempRank.push({saerchID: props.searchID, rank: clipRank});
-              updateDoc(clipRef, {
-                  rank: tempRank
-              })
-            }
-        }
         
         const textElement = document.getElementById('reason_input');
         if (textElement !== null) {

@@ -11,7 +11,7 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
 import {
-  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, 
+  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
 } from 'firebase/firestore' ;
 
 import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
@@ -244,34 +244,29 @@ const App = () => {
   const clientAdd = useRef(null);
   const searchID = useRef(null);
 
+  const engagement = useRef({});
+
   //initialize the DB and store the useradd
   useEffect(() => {
     initializeApp(firebaseConfig);
     db.current = getFirestore();
-
     //store the current user
     getClient();
-    const userRef = collection(db.current, 'User');
-    const clientRef = doc(userRef, clientAdd.current);
-    getDoc(clientRef).then((thisClient) => {
-      if (!thisClient.exists()) {
-        setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
-          console.log("User info saved");
-        })
-      } else {
-        console.log("This user already exists")
-      }
-    });
-    // const getCurrClient = async () => {
-    //   const thisClient = await getDoc(clientRef);
-    // }
-    // getCurrClient();
-
-
-
-    // const thisClient = await getDoc(clientRef);
-    // console.log(thisClient);
-    
+    client.current.CurrentAccountAddress().then((val) => {
+      clientAdd.current = val;
+      console.log(clientAdd.current)
+      const userRef = collection(db.current, 'User');
+      const clientRef = doc(userRef, clientAdd.current);
+      getDoc(clientRef).then((thisClient) => {
+        if (!thisClient.exists()) {
+          setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
+            console.log("User info saved");
+          })
+        } else {
+          console.log("This user already exists");
+        }
+      });
+    })
   }, []);
 
   const resetLoadStatus = () => {
@@ -284,6 +279,59 @@ const App = () => {
     setTotalContent(0);
     setShowTopk(false);
   };
+
+  const createEngagement = () => {
+    const engTblRef = collection(db.current, "Engagement");
+    const engRef = doc(engTblRef, clientAdd + searchID);
+    getDoc(engRef).then((eng) => {
+      setDoc(engRef, {
+        engagement: engagement.current,
+        User_id: clientAdd.current,
+        Search_id: searchID.current
+      })
+    })
+  }
+
+  const initializeEngagement = () => {
+    const currContents = contents.current;
+    for (let content in currContents) {
+      for (let page in currContents[content].clips) {
+        const clips_per_page = currContents[content].clips[page];
+        for (let key in clips_per_page) {
+          const clip = clips_per_page[key];
+          if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clip.rank <= 20)) {
+            const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
+            engagement.current[clipID] = {numView: 0, watchedTime: 0};
+          }
+        }
+      }
+    }
+    const engTblRef = collection(db.current, "Engagement");
+    const engRef = doc(engTblRef, clientAdd.current + searchID.current);
+    setDoc(engRef, {
+      engagement: engagement.current,
+      User_id: clientAdd.current,
+      Search_id: searchID.current
+    }).then(() => {
+      console.log("Engagement table initialized")
+    })
+  }
+
+
+  const updateEngagement = (clipInfo, watchedTime, numView) => {
+    if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
+      const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
+      engagement.current[clipID] = {numView: numView, watchedTime: watchedTime};
+      const engTblRef = collection(db.current, "Engagement");
+      const engRef = doc(engTblRef, clientAdd + searchID);
+      updateDoc(engRef, {
+        engagement: engagement.current
+      })
+    } else {
+      console.log("only keep track of the top 20 clips for v2");
+    }
+  }
+ 
 
   const storeSearchHistory = () => {
     const colRef = collection(db.current, "Search_history");
@@ -306,15 +354,16 @@ const App = () => {
         target: window.parent,
       });
       client.current = _client;
-      client.current.CurrentAccountAddress().then((val) => {
-        clientAdd.current = val;
-      });
+      // client.current.CurrentAccountAddress().then((val) => {
+      //   clientAdd.current = val;
+        
+      // });
       return _client;
     } else {
-      console.log(client.current)
-      client.current.CurrentAccountAddress().then((val) => {
-        clientAdd.current = val;
-      });
+      // client.current.CurrentAccountAddress().then((val) => {
+      //   clientAdd.current = val;
+        
+      // });
       return client.current;
     }
   };
@@ -705,8 +754,10 @@ const App = () => {
             type="button"
             style={button}
             onClick={async () => {
+              createEngagement();
               getRes().then(() => {
                 storeSearchHistory();
+                initializeEngagement();
               });
             }}
             disabled={loadingSearchRes || loadingPlayoutUrl}
@@ -834,6 +885,7 @@ const App = () => {
               )}
               {havePlayoutUrl ? (
                 displayingContents.map((clip) => {
+                  // engagement.current.push({[clip.contentHash]: [0, 0]});
                   return (
                     <ClipRes
                       clipInfo={clip}
@@ -843,6 +895,8 @@ const App = () => {
                       contents={contents.current}
                       db={db.current}
                       searchVersion={searchVersion.current}
+                      engagement={engagement.current}
+                      updateEngagement={updateEngagement}
                     ></ClipRes>
                   );
                 })

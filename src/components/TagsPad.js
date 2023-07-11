@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { isEqual } from "lodash";
 import { toTimeString } from "../utils";
+import {
+  collection, doc, setDoc, Timestamp, getDoc, updateDoc
+} from 'firebase/firestore' ;
 const TagsPad = (props) => {
   const tags = {
     "Celebrity Detection": [],
@@ -32,16 +35,48 @@ const TagsPad = (props) => {
     "Speech to Text": true,
   });
 
-  const thumbsUp = (lst, t) => {
+  
+  const thumbsDown = async (lst, t) => {
     const idx = lst.findIndex((dic) => isEqual(dic, t));
-    lst[idx] = { [Object.keys(t)]: "like" };
-    console.log("You liked me");
-  };
-
-  const thumbsDown = (lst, t) => {
-    const idx = lst.findIndex((dic) => isEqual(dic, t));
-    lst[idx] = { [Object.keys(t)]: "dislike" };
+    lst[idx].dislike = true;
     console.log("You disliked me");
+    
+    const clipInfo = props.clipInfo;
+    const clipRank = clipInfo.rank
+    const db = props.db;
+    const clipInfoRef = collection(db, 'Clip_info');
+    const clipStart = clipInfo.start;
+    const clipEnd = clipInfo.end;
+    const contentHash = clipInfo.hash;
+    const clipRef = doc(clipInfoRef, contentHash + "_" + clipStart + "-" + clipEnd);
+    const clip = await getDoc(clipRef);
+    if (!clip.exists()) {
+      setDoc(clipRef, {
+          contentHash: contentHash,
+          start_time: clipStart,
+          end_time: clipEnd,
+          rank: [{saerchID: props.searchID, rank: clipRank}],
+          tags: tags
+      }).then(() => {
+          console.log("clip stored successfully!");
+      })
+    } else {
+        const tempRank = clip.data().rank;
+        if (!(tempRank[tempRank.length - 1].rank === clipRank && 
+              tempRank[tempRank.length - 1].saerchID === props.searchID)) {
+          tempRank.push({saerchID: props.searchID, rank: clipRank});
+          updateDoc(clipRef, {
+              rank: tempRank,
+          }).then(() => {
+            console.log("clip rank updated successfully!");
+          })
+        }
+        updateDoc(clipRef, {
+          tags: tags
+        }).then(() => {
+          console.log("clip feedback updated successfully!");
+        })
+    }
   };
 
   const hasTags = "text" in props.clipInfo.sources[0].document;
@@ -53,16 +88,16 @@ const TagsPad = (props) => {
         for (let v of doc.text[k]) {
           for (let text of v.text) {
             const dic = {
-              [text]: null,
-              [toTimeString(v.start_time - doc.start_time).slice(3) +
-              "-" +
-              toTimeString(v.end_time - doc.start_time).slice(3)]: null,
+              status: [text, toTimeString(v.start_time - doc.start_time).slice(3) +
+                "-" +
+                toTimeString(v.end_time - doc.start_time).slice(3)], 
+              dislike: false
+              // [text]: null,
+              // [toTimeString(v.start_time - doc.start_time).slice(3) +
+              // "-" +
+              // toTimeString(v.end_time - doc.start_time).slice(3)]: null,
             };
             tags[k].push(dic);
-            // if (!tags[k].includes(text)) {
-            //   // tags[k].push({text: null});
-            //   tags[k].push(text);
-            // }
           }
         }
       }
@@ -155,7 +190,7 @@ const TagsPad = (props) => {
                     marginBottom: 3,
                   }}
                 >
-                  {Object.keys(t).join(" ")}
+                  {t.status.join(" ")}
                   <div>
                     <button
                       style={{ border: "none", backgroundColor: "#E6E6E6" }}
