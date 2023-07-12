@@ -154,27 +154,32 @@ export const createSearchUrl = async ({
 };
 
 export const getPlayoutUrl = async ({ client, objectId }) => {
-  let offering = null;
-  const offerings = await client.AvailableOfferings({
-    objectId,
-  });
-  if ("default_clear" in offerings) {
-    offering = "default_clear";
-  } else {
-    offering = "default";
+  try {
+    let offering = null;
+    const offerings = await client.AvailableOfferings({
+      objectId,
+    });
+    if ("default_clear" in offerings) {
+      offering = "default_clear";
+    } else {
+      offering = "default";
+    }
+    // given the offering, load the playout url for this content
+    const playoutOptions = await client.PlayoutOptions({
+      objectId,
+      protocols: ["hls"],
+      offering: offering,
+      drms: ["clear", "aes-128", "fairplay"],
+    });
+    const playoutMethods = playoutOptions["hls"].playoutMethods;
+    const playoutInfo =
+      playoutMethods.clear ||
+      playoutMethods["aes-128"] ||
+      playoutMethods.fairplay;
+    const videoUrl = playoutInfo.playoutUrl;
+    return videoUrl;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
-  // given the offering, load the playout url for this content
-  const playoutOptions = await client.PlayoutOptions({
-    objectId,
-    protocols: ["hls"],
-    offering: offering,
-    drms: ["clear", "aes-128", "fairplay"],
-  });
-  const playoutMethods = playoutOptions["hls"].playoutMethods;
-  const playoutInfo =
-    playoutMethods.clear ||
-    playoutMethods["aes-128"] ||
-    playoutMethods.fairplay;
-  const videoUrl = playoutInfo.playoutUrl;
-  return videoUrl;
 };

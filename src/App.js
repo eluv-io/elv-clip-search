@@ -274,10 +274,14 @@ const App = () => {
               client: client.current,
               objectId,
             });
-            playoutUrlMemo.current[objectId] = videoUrl;
             topk.current[pageIndex][i].url = videoUrl;
+            if (videoUrl !== null) {
+              playoutUrlMemo.current[objectId] = videoUrl;
+            }
           }
-          topk.current[pageIndex][i].processed = true;
+          if (topk.current[pageIndex][i].url !== null) {
+            topk.current[pageIndex][i].processed = true;
+          }
         }
       }
       setLoadingTopkPage(false);
@@ -319,14 +323,19 @@ const App = () => {
             client: client.current,
             objectId,
           });
-          playoutUrlMemo.current[objectId] = videoUrl;
+          if (videoUrl !== null) {
+            playoutUrlMemo.current[objectId] = videoUrl;
+          }
         }
         for (let pageIndex in clips_per_content[objectId].clips) {
           for (let item of clips_per_content[objectId].clips[pageIndex]) {
             item.url = videoUrl;
           }
         }
-        clips_per_content[objectId].processed = true;
+        if (videoUrl !== null) {
+          clips_per_content[objectId].processed = true;
+        }
+
         contents.current = clips_per_content;
         numPages.current = Object.keys(
           clips_per_content[objectId].clips
