@@ -260,7 +260,14 @@ const App = () => {
       const clientRef = doc(userRef, clientAdd.current);
       getDoc(clientRef).then((thisClient) => {
         if (!thisClient.exists()) {
-          setDoc(clientRef, {client_address: clientAdd.current}).then(() => {
+          setDoc(clientRef, {
+            Client_address: clientAdd.current,
+            Wallet_id: null,
+            Email_add: null,
+            Creation_time: null,
+            Updated_time: null,
+            Personal_info: {}
+          }).then(() => {
             console.log("User info saved");
           })
         } else {

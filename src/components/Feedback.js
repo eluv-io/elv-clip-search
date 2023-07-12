@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   collection, doc, setDoc, Timestamp
 } from 'firebase/firestore' ;
@@ -34,7 +34,7 @@ const feedback = {
       justifyContent: 'center',
     },
     input: {
-      display: 'none',
+      display: 'flex',
     },
     label: {
       position: 'relative',
@@ -42,24 +42,6 @@ const feedback = {
       fontSize: '3vw',
       color: 'black',
       cursor: 'pointer',
-      // font: bold;
-      // background: red;
-      // backgroundColor: "red"
-      content: '☆'
-    },
-    labelBefore: {
-      content: '\u2605',
-      position: 'absolute',
-      opacity: 0,
-    },
-    labelHoverBefore: {
-      opacity: 1,
-    },
-    inputCheckedBefore: {
-      opacity: 1,
-    },
-    ratingHoverInputCheckedBefore: {
-      opacity: 0.4,
     },
   };
 
@@ -81,13 +63,21 @@ const Feedback = (props) => {
     const feedbackRef = collection(db, 'Feedback');
     const clipInfoRef = collection(db, 'Clip_info');
 
-    const [activeStar, setActiveStar] = useState([1]);
-    const [fixedStar, setFixedStar] = useState([]);
+    const [activeStar, setActiveStar] = useState([]);
+    // const activeStar = useRef([])
   
-    const collectRate = (event) => {
-      const selectedRating = parseInt(event.target.value);
-      setRating(selectedRating);
+
+    const handleRateChange = (num) => {
+      const selectedRating = num;
       hasRating.current = true;
+      const active = []
+      for (var i = 0; i <= num; i++) {
+        active.push(i);
+      }
+      // activeStar.current = active;
+      setRating(selectedRating);
+      setActiveStar(active);
+      // console.log(activeStar);
     }
   
     const collectOption = (event) => {
@@ -118,21 +108,8 @@ const Feedback = (props) => {
         fontSize: '3vw',
         color: 'black',
         cursor: 'pointer',
-        color: num in activeStar ? "red" : "black"
+        color: num in activeStar ? "#EAA14F" : "black"
       }
-    }
-    const handleHover = (num) => {
-      console.log("Here I am");
-      const active = []
-      for (var i = 1; i <= num; i++) {
-        active.push(i);
-      }
-      setActiveStar(active);
-    }
-
-    const handleMouseLeave = (num) => {
-      console.log("Here I leave")
-      
     }
 
     const submit = async () => {
@@ -198,46 +175,15 @@ const Feedback = (props) => {
               style={starStyle.input} 
               checked={num <= rating} 
               value={num} 
-              onChange={collectRate} 
-              onMouseEnter={() => handleHover(num)}
-              onMouseLeave={handleMouseLeave}/>
+              onChange={() => {
+                // collectRate(num);
+                handleRateChange(num);
+                }} / >
               <label htmlFor="5" style={getLabelStyle(num)}>☆</label>
               {/* <label htmlFor={`star${num}`}>{num}</label> */}
             </div>
           ))}
         </div>
-
-        {/* <div class="newrating">
-          <input type="radio" name="rating" value="5" id="5" /><label for="5">☆</label>
-          <input type="radio" name="rating" value="4" id="4" /><label for="4">☆</label>
-          <input type="radio" name="rating" value="3" id="3" /><label for="3">☆</label>
-          <input type="radio" name="rating" value="2" id="2" /><label for="2">☆</label>
-          <input type="radio" name="rating" value="1" id="1" /><label for="1">☆</label>
-        </div> */}
-
-        {/* <div style={starStyle.body}>
-          <div className="rating" style={starStyle.rating}>
-            <input type="checkbox" style={starStyle.input} />
-            <label style={starStyle.label}>☆</label>
-            <input type="checkbox" style={starStyle.input} />
-            <label style={starStyle.label}>☆</label>
-            <input type="checkbox" style={starStyle.input} />
-            <label style={starStyle.label}>☆</label>
-          </div>
-        </div> */}
-
-        {/* <div className="newrating" style={starStyle.rating}>
-          <input type="checkbox" name="rating" value="5" id="5" style={starStyle.input} />
-          <label htmlFor="5" style={starStyle.label}>☆</label>
-          <input type="checkbox" name="rating" value="4" id="4" style={starStyle.input} />
-          <label htmlFor="4" style={starStyle.label}>☆☆</label>
-          <input type="checkbox" name="rating" value="3" id="3" style={starStyle.input} />
-          <label htmlFor="3" style={starStyle.label}>☆</label>
-          <input type="checkbox" name="rating" value="2" id="2" style={starStyle.input} />
-          <label htmlFor="2" style={starStyle.label}>☆</label>
-          <input type="checkbox" name="rating" value="1" id="1" style={starStyle.input} />
-          <label htmlFor="1" style={starStyle.label}>☆</label>
-        </div> */}
 
         <div style={{display: "flex", width: "100%", flexDirection: "column"}}>
           <div style = {{display: "flex", width: "100%", flexDirection: "column"}}>
