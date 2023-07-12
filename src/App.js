@@ -289,7 +289,7 @@ const App = () => {
       setHavePlayoutUrl(false);
       setDisplayingContents([]);
       setErr(true);
-      setErrMsg("loading playout url for contents on this page went wrong");
+      setErrMsg("Loading playout url for contents on this page went wrong");
     }
   };
 
@@ -643,7 +643,9 @@ const App = () => {
       {haveSearchUrl && (
         <div style={curlResContainer}>
           <div style={curlRes}>
-            <div style={{ flex: 1 }}>Search url {err && "(FAILED)"}</div>
+            <div style={{ flex: 1 }}>
+              Search url {err && !haveSearchRes && "(FAILED)"}
+            </div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
         </div>
@@ -769,6 +771,10 @@ const App = () => {
                 })
               ) : loadingPlayoutUrl || loadingTopkPage ? (
                 <div style={loadingUrlContainer}>Loading playout URL</div>
+              ) : err ? (
+                <div style={hint}>
+                  <p>{errMsg}</p>
+                </div>
               ) : null}
             </div>
           </div>
