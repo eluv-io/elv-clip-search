@@ -35,31 +35,87 @@ const TagsPad = (props) => {
 
   const [hasTags, setHasTags] = useState(null);
 
-  useEffect(() => {
-    console.log("parsing tags");
+  // TODO maybe need a Hash to reduce the length
+  const hash = (s) => {
+    return s;
+  };
+
+  // TODO check if shotID exists in DB
+  const shotInDB = (shotID) => {
+    return false;
+  };
+
+  // TODO push the shot and its tags to DB
+  const pushShotToDB = (shot) => {};
+
+  // TODO prepareTags
+  const prepareTags = () => {
     const _hasTags = "text" in props.clipInfo.sources[0].document;
     if (_hasTags) {
+      const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const doc = src.document;
+        const shotID = hash(
+          iqHash + toString(doc.start_time) + toString(doc.end_time)
+        );
+        const shot = {
+          iqHash: iqHash,
+          start: doc.start_time,
+          end: doc.end_time,
+          shotID: shotID,
+          tags: [],
+        };
+
+        // tag index inside one shot
+        // since tags in shot is saved as a list, can use this index directly target at that tag
+        let idx = 0;
+        // TODO
         for (let k in tags.current) {
           for (let v of doc.text[k]) {
             for (let text of v.text) {
               const dic = {
                 status: [
                   text,
-                  toTimeString(v.start_time - doc.start_time).slice(3) +
+                  toTimeString(
+                    Math.max(0, v.start_time - doc.start_time)
+                  ).slice(3) +
                     "-" +
-                    toTimeString(v.end_time - doc.start_time).slice(3),
+                    toTimeString(
+                      Math.min(
+                        v.end_time - doc.start_time,
+                        doc.end_time - doc.start_time
+                      )
+                    ).slice(3),
                 ],
                 dislike: false,
+                shotID: shotID,
+                tagIdx: idx,
               };
               tags.current[k].push(dic);
+
+              // save tags into shot
+              shot.tags.push({
+                track: k,
+                text: text,
+                start: v.start_time,
+                end: v.end_time,
+                idx: idx,
+              });
+
+              // idx +1
+              idx = idx + 1;
             }
           }
         }
+        pushShotToDB(shot);
       }
     }
     setHasTags(_hasTags);
+  };
+
+  useEffect(() => {
+    console.log("parsing tags");
+    prepareTags();
   }, []);
 
   const thumbsDown = async (lst, t) => {
