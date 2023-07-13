@@ -47,30 +47,49 @@ const videoPlayer = {
   width: "90%",
   height: "70%",
   marginTop: "2%",
-  flexDirection: "colomn",
+  flexDirection: "column",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
 };
 
 const ClipRes = (props) => {
-  const url = `${props.clipInfo.url}&resolve=false&clip_start=${
-    props.clipInfo.start_time / 1000
-  }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const url =
+    props.clipInfo.url === null
+      ? null
+      : `${props.clipInfo.url}&resolve=false&clip_start=${
+          props.clipInfo.start_time / 1000
+        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   return (
     <div style={body}>
       <div style={videoPlayer}>
-        <ReactHlsPlayer
-          src={url}
-          width="100%"
-          height="auto"
-          autoPlay={false}
-          controls={true}
-          hlsConfig={{
-            capLevelToPlayerSize: true,
-            maxBufferLength: 1,
-          }}
-        ></ReactHlsPlayer>
+        {url !== null ? (
+          <ReactHlsPlayer
+            src={url}
+            width="100%"
+            height="auto"
+            autoPlay={false}
+            controls={true}
+            hlsConfig={{
+              capLevelToPlayerSize: true,
+              maxBufferLength: 1,
+            }}
+          ></ReactHlsPlayer>
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "white",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            Playout URL Err
+          </div>
+        )}
       </div>
       <div style={info}>
         <div style={shortInfo}>
@@ -93,21 +112,23 @@ const ClipRes = (props) => {
           <div>end_time: </div>
           <div>{props.clipInfo.end}</div>
         </div>
-        <div style={longInfo}>
-          <div>playout url</div>
-          <textarea
-            name="playout url"
-            value={url}
-            style={{
-              height: "100%",
-              width: "100%",
-              padding: 5,
-              borderStyle: "None",
-              borderRadius: 10,
-            }}
-            readOnly
-          ></textarea>
-        </div>
+        {url !== null && (
+          <div style={longInfo}>
+            <div>playout url</div>
+            <textarea
+              name="playout url"
+              value={url}
+              style={{
+                height: "100%",
+                width: "100%",
+                padding: 5,
+                borderStyle: "None",
+                borderRadius: 10,
+              }}
+              readOnly
+            ></textarea>
+          </div>
+        )}
       </div>
     </div>
   );
