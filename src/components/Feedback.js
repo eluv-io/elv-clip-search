@@ -221,7 +221,7 @@ const Feedback = (props) => {
           <textarea
             id="reason_input"
             name="freeform"
-            rows="4"
+            rows="2"
             cols="30"
             placeholder="Tell us your experience..."
             value={prevOtherReason.current}
@@ -236,7 +236,7 @@ const Feedback = (props) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          marginTop: "3%",
+          marginTop: "1%",
           marginBottom: "1%",
         }}
       >

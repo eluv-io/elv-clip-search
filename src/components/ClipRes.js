@@ -1,10 +1,11 @@
 import QAPad from "./QAPad";
-import React, { useRef } from "react";
+import InfoPad from "./InfoPad";
+import React, { useRef, useState } from "react";
 import ReactPlayer from "react-player";
 
 const container = {
   width: "97%",
-  height: 700,
+  height: 800,
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
@@ -16,7 +17,7 @@ const container = {
 };
 
 const videoContainer = {
-  width: "70%",
+  width: "80%",
   height: "95%",
   display: "flex",
   flexDirection: "column",
@@ -29,32 +30,22 @@ const videoContainer = {
   borderRadius: 10,
 };
 
-const videoPlayer = {
+const videoPlayerContainer = {
   width: "95%",
-  height: "80%",
-  marginTop: "1%",
+  height: "70%",
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
 };
 
-const videoInfo = {
+const videoInfoContainer = {
   width: "95%",
-  height: "18%",
-  display: " flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "space-between",
-};
-
-const shortInfo = {
+  height: "30%",
   display: "flex",
-  flexDirection: "row",
+  flexDirection: "column",
+  justifyContent: "center",
   alignItems: "center",
-  justifyContent: "space-between",
-  width: "100%",
-  flex: 1,
 };
 
 const ClipRes = (props) => {
@@ -64,8 +55,8 @@ const ClipRes = (props) => {
 
   const handleStart = () => {
     props.updateEngagement(clipInfo, 0, 1);
-    console.log("Started")
-  }
+    console.log("Started");
+  };
 
   const handlePlay = () => {
     startTime.current = Date.now();
@@ -86,12 +77,23 @@ const ClipRes = (props) => {
     props.clipInfo.start_time / 1000
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
 
-  const hasTags = "text" in props.clipInfo.sources[0].document;
-
   return (
     <div style={container}>
-      <div style={{ ...videoContainer, width: hasTags ? "80%" : "100%" }}>
-        <div style={videoPlayer}>
+      <div style={videoContainer}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "5%",
+            fontWeight: "bold",
+          }}
+        >
+          {props.clipInfo.meta.public.asset_metadata.title}
+        </div>
+        <div style={videoPlayerContainer}>
           <ReactPlayer
             url={url}
             width="100%"
@@ -107,34 +109,21 @@ const ClipRes = (props) => {
             onPause={handlePause}
           ></ReactPlayer>
         </div>
-        <div style={videoInfo}>
-          <div style={shortInfo}>
-            <div>title: </div>
-            <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
-          </div>
 
-          <div style={shortInfo}>
-            <div>content id: </div>
-            <div>{props.clipInfo.id}</div>
-          </div>
+        <div style={videoInfoContainer}>
+          <InfoPad
+            clipInfo={props.clipInfo}
+            db={props.db}
+            clientadd={props.clientadd}
+            searchID={props.searchID}
+            viewTime={viewTime.current}
+            contents={props.contents}
+            searchVersion={props.searchVersion}
+          ></InfoPad>
 
-          <div style={shortInfo}>
-            <div>time interval: </div>
-            <div>
-              {props.clipInfo.start} - {props.clipInfo.end}
-            </div>
-          </div>
-
-          {props.searchVersion === "v2" ? (
-            <div style={shortInfo}>
-              <div>BM25 rank: </div>
-              <div>{props.clipInfo.rank}</div>
-            </div>
-          ) : null}
         </div>
       </div>
 
-      {/* <div style={QAContainer}> */}
       <QAPad
         clipInfo={props.clipInfo}
         db={props.db}
@@ -143,7 +132,6 @@ const ClipRes = (props) => {
         viewTime={viewTime.current}
         contents={props.contents}
       ></QAPad>
-      {/* </div> */}
     </div>
   );
 };

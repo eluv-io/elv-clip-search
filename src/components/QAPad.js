@@ -29,21 +29,12 @@ const QAContainer = {
 const tagsContainer = {
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
+  justifyContent: "flex-start",
   alignItems: "center",
   width: "100%",
-  height: 460,
+  height: 660,
   marginBottom: 20,
-  backgroundColor: "white",
-};
-
-const feedbackContainer = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  height: 220,
+  backgroundColor: "transparent",
 };
 
 const ctrContainer = {
@@ -70,24 +61,12 @@ const QAPad = (props) => {
     <div style={container}>
       <div style={QAContainer}>
         <div style={tagsContainer}>
-          <TagsPad 
+          <TagsPad
             clipInfo={props.clipInfo}
             db={props.db}
             searchID={props.searchID}
             tags={tags}
-            ></TagsPad>
-        </div>
-
-        <div style={feedbackContainer}>
-          <Feedback
-            db={props.db}
-            clientadd={props.clientadd}
-            searchID={props.searchID}
-            viewTime={props.viewTime}
-            clipInfo={props.clipInfo}
-            contents={props.contents}
-            tags={tags}
-          ></Feedback>
+          ></TagsPad>
         </div>
       </div>
       <div style={ctrContainer}>
