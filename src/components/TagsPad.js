@@ -64,25 +64,27 @@ const TagsPad = (props) => {
     console.log("pushing shot into DB ...... ");
     console.log(shot);
 
-    // return
+    // TODO加判断是否在DB
     const shotRef = doc(shotInfoRef, shot.shotID);
-    if (shot.inDB) {
-      updateDoc(shotRef, {
-        tags: shot.tags,
-      }).then(() => {
-        console.log("shot updated successfully!");
-      });
-    } else {
-      setDoc(shotRef, {
-        start: shot.start,
-        end: shot.end,
-        iqHash: shot.iqHash,
-        shotID: shot.shotID,
-        tags: shot.tags,
-      }).then(() => {
-        console.log("shot created successfully");
-      });
-    }
+    getDoc(shotRef).then((s) => {
+      if (s.exists()) {
+        updateDoc(shotRef, {
+          tags: shot.tags,
+        }).then(() => {
+          console.log("shot updated successfully!");
+        });
+      } else {
+        setDoc(shotRef, {
+          start: shot.start,
+          end: shot.end,
+          iqHash: shot.iqHash,
+          shotID: shot.shotID,
+          tags: shot.tags,
+        }).then(() => {
+          console.log("shot created successfully");
+        })
+      }
+    })
   };
 
   // TODO prepareTags
@@ -93,14 +95,14 @@ const TagsPad = (props) => {
       for (let src of props.clipInfo.sources) {
         const doc = src.document;
         const shotID = hash(iqHash + doc.start_time + "-" + doc.end_time);
-        const inDB = await shotInDB(shotID);
+        // const inDB = await shotInDB(shotID);
         const shot = {
           iqHash: iqHash,
           start: doc.start_time,
           end: doc.end_time,
           shotID: shotID,
           tags: [],
-          inDB: inDB,
+          // inDB: inDB,
         };
 
         // tag index inside one shot
@@ -166,6 +168,7 @@ const TagsPad = (props) => {
     shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
     // console.log("updatedshots", shots.current);
     // console.log("updatedtags", tags.current);
+    setRefresh((v) => !v);
     pushShotToDB(shots.current[shotID]);
 
     const clipInfo = props.clipInfo;
@@ -210,7 +213,7 @@ const TagsPad = (props) => {
       //   console.log("clip feedback updated successfully!");
       // });
     }
-    setRefresh((v) => !v);
+    
   };
 
   return (
