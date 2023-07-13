@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { isEqual } from "lodash";
-import { toTimeString } from "../utils";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { BiArrowFromTop, BiArrowToTop, BiDislike } from "react-icons/bi";
 
@@ -46,19 +44,6 @@ const TagsPad = (props) => {
     return s;
   };
 
-  // TODO check if shotID exists in DB
-  const shotInDB = async (shotID) => {
-    console.log("checking if shot is already in DB ...... ");
-    const shotRef = doc(shotInfoRef, shotID);
-    getDoc(shotRef).then((shot) => {
-      if (shot.exists()) {
-        return true;
-      } else {
-        return false;
-      }
-    });
-  };
-
   // TODO push the shot and its tags to DB
   const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
@@ -82,9 +67,9 @@ const TagsPad = (props) => {
           tags: shot.tags,
         }).then(() => {
           console.log("shot created successfully");
-        })
+        });
       }
-    })
+    });
   };
 
   // TODO prepareTags
@@ -113,8 +98,9 @@ const TagsPad = (props) => {
           for (let v of doc.text[k]) {
             for (let text of v.text) {
               const dic = {
+                track: k,
                 status: text,
-                dislike: false,
+                dislike: props.dislikedTags.includes(k + text) ? true : false,
                 shotID: shotID,
                 tagIdx: idx,
               };
@@ -152,14 +138,12 @@ const TagsPad = (props) => {
       .catch((err) => {
         console.log(err);
       });
-    // console.log("shots", shots.current);
-    // console.log("tags", tags.current);
   }, []);
 
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
     console.log("You disliked me");
-
+    props.dislikeTagHook(t.track + t.status);
     const shotID = t.shotID;
     const idx = lst.findIndex((dic) => dic.status === t.status);
     // console.log("lalallallallallla", lst[idx].dislike)
@@ -213,7 +197,6 @@ const TagsPad = (props) => {
       //   console.log("clip feedback updated successfully!");
       // });
     }
-    
   };
 
   return (
