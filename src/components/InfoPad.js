@@ -124,7 +124,7 @@ const InfoPad = (props) => {
 
           {props.searchVersion === "v2" ? (
             <div style={shortInfo}>
-              <div>rank: </div>
+              <div>BM25 rank: </div>
               <div>{props.clipInfo.rank}</div>
             </div>
           ) : null}

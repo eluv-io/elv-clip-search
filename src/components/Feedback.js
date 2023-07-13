@@ -14,11 +14,9 @@ const feedback = {
 
 const options = [
   { value: 0, label: "Please choose an option" },
-  { value: 1, label: "Movie scene matched to speech text" },
-  { value: 2, label: "Speech text matched to movie scene" },
-  { value: 3, label: "Object misrecognition" },
-  { value: 4, label: "Typos recognized as actual words" },
-  { value: 5, label: "None of the above" },
+  { value: 1, label: "Clip is irrelevant" },
+  { value: 2, label: "Clip is offensive" },
+  { value: 3, label: "None of the above" }
 ];
 
 const starStyle = {
@@ -84,7 +82,7 @@ const Feedback = (props) => {
       label = options.find((option) => option.value === selectedValue).label;
     }
     setReason(label);
-    if (selectedValue === 5) {
+    if (selectedValue === 3) {
       setWantinput(true);
     } else {
       setWantinput(false);
@@ -200,6 +198,7 @@ const Feedback = (props) => {
         ))}
       </div>
 
+      <div>How do you like the search result?</div>
       <div style={{ display: "flex", width: "100%", flexDirection: "column" }}>
         <div
           style={{ display: "flex", width: "100%", flexDirection: "column" }}

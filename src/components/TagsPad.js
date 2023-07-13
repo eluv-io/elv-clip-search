@@ -61,7 +61,7 @@ const TagsPad = (props) => {
   };
 
   // TODO push the shot and its tags to DB
-  const pushShotT0oDB = (shot) => {
+  const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
     console.log(shot);
 
@@ -85,9 +85,6 @@ const TagsPad = (props) => {
         console.log("shot created successfully");
       })
     }
-
-    
-
   };
 
   // TODO prepareTags
@@ -141,7 +138,7 @@ const TagsPad = (props) => {
           }
         }
         shots.current[shotID] = shot;
-        pushShotT0oDB(shot);
+        pushShotToDB(shot);
       }
     }
     setRefresh((v) => !v);
@@ -150,30 +147,23 @@ const TagsPad = (props) => {
   useEffect(() => {
     console.log("parsing tags");
     prepareTags();
-    console.log("shots", shots.current);
-    console.log("tags", tags.current);
+    // console.log("shots", shots.current);
+    // console.log("tags", tags.current);
   }, []);
 
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
-
-    const idx = lst.findIndex((dic) => isEqual(dic, t));
-    lst[idx].dislike = true;
-
-
     console.log("You disliked me");
-    // console.log(lst);
-    console.log(t);
     
     const shotID = t.shotID;
     const idx = lst.findIndex((dic) => dic.status === t.status);
     // console.log("lalallallallallla", lst[idx].dislike)
-    lst[idx].dislike[props.searchID] = true;
+    lst[idx].dislike = true;
     const tagIdx = t.tagIdx;
     shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
-    console.log("updatedshots", shots.current);
-    console.log("updatedtags", tags.current);
-    pushShotT0oDB(shots.current[shotID])
+    // console.log("updatedshots", shots.current);
+    // console.log("updatedtags", tags.current);
+    pushShotToDB(shots.current[shotID])
 
 
     const clipInfo = props.clipInfo;
@@ -301,7 +291,7 @@ const TagsPad = (props) => {
                     >
                       <BiDislike
                         style={{
-                          color: t.dislike[props.searchID] ? "#EAA14F" : "black",
+                          color: t.dislike ? "#EAA14F" : "black",
                         }}
                       />
                     </button>
