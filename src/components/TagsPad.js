@@ -13,6 +13,8 @@ const TagsPad = (props) => {
     "Speech to Text": [],
   });
 
+  const shots = useRef({});
+
   const tagsMap = {
     "Celebrity Detection": "Celebrity",
     "Landmark Recognition": "LandMark",
@@ -42,11 +44,14 @@ const TagsPad = (props) => {
 
   // TODO check if shotID exists in DB
   const shotInDB = (shotID) => {
+    console.log("checking if shot is already in DB ...... ");
     return false;
   };
 
   // TODO push the shot and its tags to DB
-  const pushShotToDB = (shot) => {};
+  const pushShotToDB = (shot) => {
+    console.log("pushing shot into DB ...... ");
+  };
 
   // TODO prepareTags
   const prepareTags = () => {
@@ -58,12 +63,14 @@ const TagsPad = (props) => {
         const shotID = hash(
           iqHash + toString(doc.start_time) + toString(doc.end_time)
         );
+        const inDB = shotInDB();
         const shot = {
           iqHash: iqHash,
           start: doc.start_time,
           end: doc.end_time,
           shotID: shotID,
           tags: [],
+          inDB: inDB,
         };
 
         // tag index inside one shot
@@ -107,7 +114,7 @@ const TagsPad = (props) => {
             }
           }
         }
-        pushShotToDB(shot);
+        shots.current[shotID] = shot;
       }
     }
     setHasTags(_hasTags);
@@ -118,6 +125,7 @@ const TagsPad = (props) => {
     prepareTags();
   }, []);
 
+  // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
     // adjust the color of the icon
     // console.log(`thumbs down${t}`)
