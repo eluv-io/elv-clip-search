@@ -178,7 +178,7 @@ const TagsPad = (props) => {
     }
     setRefresh((v) => !v);
   };
-  console.log("refreshing");
+
   return (
     <div
       style={{
