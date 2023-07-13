@@ -679,8 +679,10 @@ const App = () => {
                     ...(!showTopk && { border: "none" }),
                   }}
                   onClick={async () => {
-                    setShowTopk(true);
-                    await jumpToPageInTopk(0);
+                    if (!showTopk) {
+                      setShowTopk(true);
+                      await jumpToPageInTopk(0);
+                    }
                   }}
                 >
                   Show Top {topkCnt.current}
@@ -691,8 +693,10 @@ const App = () => {
                     ...(showTopk && { border: "none" }),
                   }}
                   onClick={async () => {
-                    setShowTopk(false);
-                    await jumpToContent(currentContent);
+                    if (showTopk) {
+                      setShowTopk(false);
+                      await jumpToContent(currentContent);
+                    }
                   }}
                 >
                   Show {totalContent} returned results
