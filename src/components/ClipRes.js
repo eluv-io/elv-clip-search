@@ -62,6 +62,8 @@ const ClipRes = (props) => {
     startTime.current = Date.now();
   };
 
+  const dislikedTags = useRef([]);
+
   const handlePause = () => {
     if (startTime.current) {
       const elapsedTime = (Date.now() - startTime.current) / 1000;
@@ -120,7 +122,6 @@ const ClipRes = (props) => {
             contents={props.contents}
             searchVersion={props.searchVersion}
           ></InfoPad>
-
         </div>
       </div>
 
@@ -131,6 +132,10 @@ const ClipRes = (props) => {
         searchID={props.searchID}
         viewTime={viewTime.current}
         contents={props.contents}
+        dislikedTags={dislikedTags.current}
+        dislikeTagHook={(id) => {
+          dislikedTags.current.push(id);
+        }}
       ></QAPad>
     </div>
   );

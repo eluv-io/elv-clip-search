@@ -48,15 +48,6 @@ const ctrContainer = {
 
 const QAPad = (props) => {
   const [hidden, setHidden] = useState(true);
-  const tags = {
-    "Celebrity Detection": [],
-    "Landmark Recognition": [],
-    "Logo Detection": [],
-    "Object Detection": [],
-    "Optical Character Recognition": [],
-    "Segment Labels": [],
-    "Speech to Text": [],
-  };
   return !hidden ? (
     <div style={container}>
       <div style={QAContainer}>
@@ -65,7 +56,8 @@ const QAPad = (props) => {
             clipInfo={props.clipInfo}
             db={props.db}
             searchID={props.searchID}
-            tags={tags}
+            dislikedTags={props.dislikedTags}
+            dislikeTagHook={props.dislikeTagHook}
           ></TagsPad>
         </div>
       </div>
