@@ -16,7 +16,7 @@ const container = {
 };
 
 const videoContainer = {
-  width: "70%",
+  width: "80%",
   height: "95%",
   display: "flex",
   flexDirection: "column",
@@ -64,8 +64,8 @@ const ClipRes = (props) => {
 
   const handleStart = () => {
     props.updateEngagement(clipInfo, 0, 1);
-    console.log("Started")
-  }
+    console.log("Started");
+  };
 
   const handlePlay = () => {
     startTime.current = Date.now();
@@ -86,11 +86,21 @@ const ClipRes = (props) => {
     props.clipInfo.start_time / 1000
   }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
 
-  const hasTags = "text" in props.clipInfo.sources[0].document;
-
   return (
     <div style={container}>
-      <div style={{ ...videoContainer, width: hasTags ? "80%" : "100%" }}>
+      <div style={videoContainer}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            fontWeight: "bold",
+          }}
+        >
+          {props.clipInfo.meta.public.asset_metadata.title}
+        </div>
         <div style={videoPlayer}>
           <ReactPlayer
             url={url}
@@ -108,11 +118,6 @@ const ClipRes = (props) => {
           ></ReactPlayer>
         </div>
         <div style={videoInfo}>
-          <div style={shortInfo}>
-            <div>title: </div>
-            <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
-          </div>
-
           <div style={shortInfo}>
             <div>content id: </div>
             <div>{props.clipInfo.id}</div>
