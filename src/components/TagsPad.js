@@ -57,13 +57,37 @@ const TagsPad = (props) => {
         return false;
       }
     });
-    return false;
+
   };
 
   // TODO push the shot and its tags to DB
   const pushShotT0oDB = (shot) => {
     console.log("pushing shot into DB ...... ");
     console.log(shot);
+
+
+    // return 
+    const shotRef = doc(shotInfoRef, shot.shotID);
+    if (shot.inDB) {
+      updateDoc(shotRef, {
+        tags: shot.tags
+      }).then(() => {
+        console.log("shot updated successfully!");
+      });
+    } else {
+      setDoc(shotRef, {
+        start: shot.start,
+        end: shot.end,
+        iqHash: shot.iqHash,
+        shotID: shot.shotID,
+        tags: shot.tags
+      }).then(() => {
+        console.log("shot created successfully");
+      })
+    }
+
+    
+
   };
 
   // TODO prepareTags
@@ -107,9 +131,8 @@ const TagsPad = (props) => {
 
               // save tags into shot
               shot.tags.push({
-                track: k,
-                text: text,
-                idx: idx,
+                status: {track: k, text: text, idx: idx},
+                feedback: {[props.searchID]: false}
               });
 
               // idx +1
@@ -118,6 +141,7 @@ const TagsPad = (props) => {
           }
         }
         shots.current[shotID] = shot;
+        pushShotT0oDB(shot);
       }
     }
     setRefresh((v) => !v);
@@ -126,13 +150,31 @@ const TagsPad = (props) => {
   useEffect(() => {
     console.log("parsing tags");
     prepareTags();
+    console.log("shots", shots.current);
+    console.log("tags", tags.current);
   }, []);
 
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
+
     const idx = lst.findIndex((dic) => isEqual(dic, t));
     lst[idx].dislike = true;
+
+
     console.log("You disliked me");
+    // console.log(lst);
+    console.log(t);
+    
+    const shotID = t.shotID;
+    const idx = lst.findIndex((dic) => dic.status === t.status);
+    // console.log("lalallallallallla", lst[idx].dislike)
+    lst[idx].dislike[props.searchID] = true;
+    const tagIdx = t.tagIdx;
+    shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
+    console.log("updatedshots", shots.current);
+    console.log("updatedtags", tags.current);
+    pushShotT0oDB(shots.current[shotID])
+
 
     const clipInfo = props.clipInfo;
     const clipRank = clipInfo.rank;
@@ -151,7 +193,7 @@ const TagsPad = (props) => {
         start_time: clipStart,
         end_time: clipEnd,
         rank: [{ saerchID: props.searchID, rank: clipRank }],
-        tags: tags.current,
+        shots: Object.keys(shots.current),
       }).then(() => {
         console.log("clip stored successfully!");
       });
@@ -170,11 +212,11 @@ const TagsPad = (props) => {
           console.log("clip rank updated successfully!");
         });
       }
-      updateDoc(clipRef, {
-        tags: tags.current,
-      }).then(() => {
-        console.log("clip feedback updated successfully!");
-      });
+      // updateDoc(clipRef, {
+      //   tags: tags.current,
+      // }).then(() => {
+      //   console.log("clip feedback updated successfully!");
+      // });
     }
     setRefresh((v) => !v);
   };
@@ -259,7 +301,7 @@ const TagsPad = (props) => {
                     >
                       <BiDislike
                         style={{
-                          color: t.dislike ? "red" : "black",
+                          color: t.dislike[props.searchID] ? "#EAA14F" : "black",
                         }}
                       />
                     </button>

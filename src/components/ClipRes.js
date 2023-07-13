@@ -109,6 +109,7 @@ const ClipRes = (props) => {
             onPause={handlePause}
           ></ReactPlayer>
         </div>
+
         <div style={videoInfoContainer}>
           <InfoPad
             clipInfo={props.clipInfo}
@@ -119,6 +120,7 @@ const ClipRes = (props) => {
             contents={props.contents}
             searchVersion={props.searchVersion}
           ></InfoPad>
+
         </div>
       </div>
 
