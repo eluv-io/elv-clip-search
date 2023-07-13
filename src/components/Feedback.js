@@ -56,7 +56,6 @@ const Feedback = (props) => {
   const clientadd = props.clientadd;
   const clipInfo = props.clipInfo;
   const feedbackRef = collection(db, "Feedback");
-  const clipInfoRef = collection(db, "Clip_info");
 
   const [activeStar, setActiveStar] = useState([]);
   // const activeStar = useRef([])
@@ -71,6 +70,10 @@ const Feedback = (props) => {
     // activeStar.current = active;
     setRating(selectedRating);
     setActiveStar(active);
+    console.log(rating)
+    submit();
+    const submissionElement = document.getElementById("submissiontxt");
+    submissionElement.style.display = "none";
     // console.log(activeStar);
   };
 
@@ -125,19 +128,14 @@ const Feedback = (props) => {
       const clipStart = clipInfo.start;
       const clipEnd = clipInfo.end;
       const contentHash = clipInfo.hash;
-      const clipRef = doc(
-        clipInfoRef,
-        contentHash + "_" + clipStart + "-" + clipEnd
-      );
+
       setDoc(docRef, {
         client: clientadd,
         feedback_time: new Date(now),
         rating: rating,
         clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
-        // searchID: props.searchID
         reason: reason,
         other_reasons: otherreasons.current,
-        // viewTime: props.viewTime
       }).then(() => {
         console.log("Feedback collected successfully!");
       });
@@ -155,16 +153,6 @@ const Feedback = (props) => {
     <div style={feedback}>
       {/* <div>rate me</div> */}
 
-      {/* rating system */}
-      {/* <div className="rating" style={{ display: "flex", flexDirection: "row"}}>
-          {[0, 1, 2, 3, 4, 5].map((num) => (
-            <div className={`star${num}`} style={{ display: "flex", flexDirection: "column" }} key={`star${num}`}>
-              <input type="checkbox" id={`star${6 - num}`} name="rating" checked={num <= rating} value={num} onChange={collectRate}></input>
-              <label htmlFor={`star${num}`}>{num}</label>
-            </div>
-          ))}
-        </div> */}
-
       <div className="rating" style={starStyle.rating}>
         {[1, 2, 3, 4, 5].map((num) => (
           <div
@@ -172,19 +160,6 @@ const Feedback = (props) => {
             style={{ display: "flex", flexDirection: "column" }}
             key={`star${num}`}
           >
-            {/* <input
-              type="checkbox"
-              id={`star${6 - num}`}
-              name="rating"
-              style={starStyle.input}
-              checked={num <= rating}
-              value={num}
-              onChange={() => {
-                // collectRate(num);
-                handleRateChange(num);
-              }}
-            /> */}
-            {/* <label htmlFor="5" style={getLabelStyle(num)}>☆</label> */}
             <button
               onClick={() => {
                 // collectRate(num);
