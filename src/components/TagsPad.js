@@ -47,7 +47,7 @@ const TagsPad = (props) => {
   };
 
   // TODO check if shotID exists in DB
-  const shotInDB = (shotID) => {
+  const shotInDB = async (shotID) => {
     console.log("checking if shot is already in DB ...... ");
     const shotRef = doc(shotInfoRef, shotID);
     getDoc(shotRef).then((shot) => {
@@ -57,7 +57,6 @@ const TagsPad = (props) => {
         return false;
       }
     });
-
   };
 
   // TODO push the shot and its tags to DB
@@ -65,12 +64,11 @@ const TagsPad = (props) => {
     console.log("pushing shot into DB ...... ");
     console.log(shot);
 
-
-    // return 
+    // return
     const shotRef = doc(shotInfoRef, shot.shotID);
     if (shot.inDB) {
       updateDoc(shotRef, {
-        tags: shot.tags
+        tags: shot.tags,
       }).then(() => {
         console.log("shot updated successfully!");
       });
@@ -80,22 +78,22 @@ const TagsPad = (props) => {
         end: shot.end,
         iqHash: shot.iqHash,
         shotID: shot.shotID,
-        tags: shot.tags
+        tags: shot.tags,
       }).then(() => {
         console.log("shot created successfully");
-      })
+      });
     }
   };
 
   // TODO prepareTags
-  const prepareTags = () => {
+  const prepareTags = async () => {
     const _hasTags = "text" in props.clipInfo.sources[0].document;
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const doc = src.document;
         const shotID = hash(iqHash + doc.start_time + "-" + doc.end_time);
-        const inDB = shotInDB(shotID);
+        const inDB = await shotInDB(shotID);
         const shot = {
           iqHash: iqHash,
           start: doc.start_time,
@@ -128,8 +126,8 @@ const TagsPad = (props) => {
 
               // save tags into shot
               shot.tags.push({
-                status: {track: k, text: text, idx: idx},
-                feedback: {[props.searchID]: false}
+                status: { track: k, text: text, idx: idx },
+                feedback: { [props.searchID]: false },
               });
 
               // idx +1
@@ -141,12 +139,17 @@ const TagsPad = (props) => {
         pushShotToDB(shot);
       }
     }
-    setRefresh((v) => !v);
   };
 
   useEffect(() => {
     console.log("parsing tags");
-    prepareTags();
+    prepareTags()
+      .then(() => {
+        setRefresh((v) => !v);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
     // console.log("shots", shots.current);
     // console.log("tags", tags.current);
   }, []);
@@ -154,7 +157,7 @@ const TagsPad = (props) => {
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
     console.log("You disliked me");
-    
+
     const shotID = t.shotID;
     const idx = lst.findIndex((dic) => dic.status === t.status);
     // console.log("lalallallallallla", lst[idx].dislike)
@@ -163,8 +166,7 @@ const TagsPad = (props) => {
     shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
     // console.log("updatedshots", shots.current);
     // console.log("updatedtags", tags.current);
-    pushShotToDB(shots.current[shotID])
-
+    pushShotToDB(shots.current[shotID]);
 
     const clipInfo = props.clipInfo;
     const clipRank = clipInfo.rank;
