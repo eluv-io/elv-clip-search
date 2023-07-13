@@ -52,18 +52,18 @@ const TagsPad = (props) => {
     const shotRef = doc(shotInfoRef, shotID);
     getDoc(shotRef).then((shot) => {
       if (shot.exists()) {
-        return true
+        return true;
       } else {
-        return false
+        return false;
       }
-    })
+    });
     return false;
   };
 
   // TODO push the shot and its tags to DB
   const pushShotT0oDB = (shot) => {
     console.log("pushing shot into DB ...... ");
-    console.log(shot)
+    console.log(shot);
   };
 
   // TODO prepareTags
@@ -73,9 +73,7 @@ const TagsPad = (props) => {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const doc = src.document;
-        const shotID = hash(
-          iqHash + doc.start_time + "-" + doc.end_time
-        );
+        const shotID = hash(iqHash + doc.start_time + "-" + doc.end_time);
         const inDB = shotInDB(shotID);
         const shot = {
           iqHash: iqHash,
@@ -94,25 +92,17 @@ const TagsPad = (props) => {
           for (let v of doc.text[k]) {
             for (let text of v.text) {
               const dic = {
-                status: 
-                  text
-                  // toTimeString(
-                  //   Math.max(0, v.start_time - doc.start_time)
-                  // ).slice(3) +
-                  //   "-" +
-                  //   toTimeString(
-                  //     Math.min(
-                  //       v.end_time - doc.start_time,
-                  //       doc.end_time - doc.start_time
-                  //     )
-                  //   ).slice(3),
-                ,
-                dislike: {[props.searchID]: false},
+                status: text,
+                dislike: false,
                 shotID: shotID,
                 tagIdx: idx,
               };
-              if (!tags.current[k].some(dictionary => dictionary.status === dic.status)) {
-                tags.current[k].push(dic); 
+              if (
+                !tags.current[k].some(
+                  (dictionary) => dictionary.status === dic.status
+                )
+              ) {
+                tags.current[k].push(dic);
               }
 
               // save tags into shot
@@ -140,8 +130,6 @@ const TagsPad = (props) => {
 
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
-    console.log(shots.current);
-    console.log(tags.current)
     const idx = lst.findIndex((dic) => isEqual(dic, t));
     lst[idx].dislike = true;
     console.log("You disliked me");
@@ -190,12 +178,12 @@ const TagsPad = (props) => {
     }
     setRefresh((v) => !v);
   };
-
+  console.log("refreshing");
   return (
     <div
       style={{
         width: "100%",
-        maxHeight: 360,
+        maxHeight: 660,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -225,7 +213,6 @@ const TagsPad = (props) => {
                 width: "100%",
                 backgroundColor: "lightgray",
                 marginTop: 10,
-                marginBottom: 10,
                 paddingLeft: 5,
                 paddingRight: 5,
                 borderRadius: 5,
@@ -259,7 +246,7 @@ const TagsPad = (props) => {
                     flexDirection: "row",
                     justifyContent: "space-between",
                     paddingLeft: "5%",
-                    backgroundColor: "#E6E6E6",
+                    backgroundColor: "transparent",
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
@@ -267,12 +254,12 @@ const TagsPad = (props) => {
                   {t.status}
                   <div>
                     <button
-                      style={{ border: "none", backgroundColor: "#E6E6E6" }}
+                      style={{ border: "none", backgroundColor: "transparent" }}
                       onClick={() => thumbsDown(tags.current[k], t)}
                     >
                       <BiDislike
                         style={{
-                          color: t.dislike[props.searchID] ? "red" : "black",
+                          color: t.dislike ? "red" : "black",
                         }}
                       />
                     </button>
