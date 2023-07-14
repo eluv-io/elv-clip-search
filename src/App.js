@@ -757,7 +757,7 @@ const App = () => {
               {/* if have multiplr pages, we need to display the navigation bar */}
               {!showTopk && numPages.current > 1 && (
                 <PaginationBar
-                  pageCount={showTopk ? topkPages.current : numPages.current}
+                  pageCount={numPages.current}
                   onPageChangeHandler={(data) => {
                     const pageIndex = data.selected + 1;
                     jumpToPageInAll(pageIndex);
@@ -766,7 +766,7 @@ const App = () => {
               )}
               {showTopk && topkPages.current > 1 && (
                 <PaginationBar
-                  pageCount={showTopk ? topkPages.current : numPages.current}
+                  pageCount={topkPages.current}
                   onPageChangeHandler={async (data) => {
                     const pageIndex = data.selected;
                     await jumpToPageInTopk(pageIndex);
