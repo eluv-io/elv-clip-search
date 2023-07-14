@@ -137,7 +137,8 @@ const Feedback = (props) => {
 
       const textElement = document.getElementById("reason_input");
       if (textElement !== null) {
-        textElement.remove();
+        textElement.style.display = "none"
+        // textElement.remove();
       }
 
       submissionElement.style.display = "flex";

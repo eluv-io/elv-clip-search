@@ -47,7 +47,6 @@ const TagsPad = (props) => {
   // TODO push the shot and its tags to DB
   const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
-    console.log(shot);
 
     const shotRef = doc(shotInfoRef, shot.shotID);
     getDoc(shotRef).then((s) => {
