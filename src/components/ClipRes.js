@@ -75,9 +75,12 @@ const ClipRes = (props) => {
     console.log("total view time", viewTime.current);
   };
 
-  const url = `${props.clipInfo.url}&resolve=false&clip_start=${
-    props.clipInfo.start_time / 1000
-  }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const url =
+    props.clipInfo.url === null
+      ? null
+      : `${props.clipInfo.url}&resolve=false&clip_start=${
+          props.clipInfo.start_time / 1000
+        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
 
   return (
     <div style={container}>
@@ -96,6 +99,7 @@ const ClipRes = (props) => {
           {props.clipInfo.meta.public.asset_metadata.title}
         </div>
         <div style={videoPlayerContainer}>
+        {url !== null ? (
           <ReactPlayer
             url={url}
             width="100%"
@@ -110,6 +114,21 @@ const ClipRes = (props) => {
             onPlay={handlePlay}
             onPause={handlePause}
           ></ReactPlayer>
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "white",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            Playout URL Err
+          </div>
+        )}
         </div>
 
         <div style={videoInfoContainer}>

@@ -7,6 +7,7 @@ import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
+import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
@@ -14,7 +15,6 @@ import {
   getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
 } from 'firebase/firestore' ;
 
-import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
 const title = {
   display: "flex",
@@ -357,16 +357,8 @@ const App = () => {
         target: window.parent,
       });
       client.current = _client;
-      // client.current.CurrentAccountAddress().then((val) => {
-      //   clientAdd.current = val;
-        
-      // });
       return _client;
     } else {
-      // client.current.CurrentAccountAddress().then((val) => {
-      //   clientAdd.current = val;
-        
-      // });
       return client.current;
     }
   };
@@ -391,10 +383,14 @@ const App = () => {
               client: client.current,
               objectId,
             });
-            playoutUrlMemo.current[objectId] = videoUrl;
             topk.current[pageIndex][i].url = videoUrl;
+            if (videoUrl !== null) {
+              playoutUrlMemo.current[objectId] = videoUrl;
+            }
           }
-          topk.current[pageIndex][i].processed = true;
+          if (topk.current[pageIndex][i].url !== null) {
+            topk.current[pageIndex][i].processed = true;
+          }
         }
       }
       setLoadingTopkPage(false);
@@ -406,7 +402,7 @@ const App = () => {
       setHavePlayoutUrl(false);
       setDisplayingContents([]);
       setErr(true);
-      setErrMsg("loading playout url for contents on this page went wrong");
+      setErrMsg("Loading playout url for contents on this page went wrong");
     }
   };
 
@@ -436,14 +432,19 @@ const App = () => {
             client: client.current,
             objectId,
           });
-          playoutUrlMemo.current[objectId] = videoUrl;
+          if (videoUrl !== null) {
+            playoutUrlMemo.current[objectId] = videoUrl;
+          }
         }
         for (let pageIndex in clips_per_content[objectId].clips) {
           for (let item of clips_per_content[objectId].clips[pageIndex]) {
             item.url = videoUrl;
           }
         }
-        clips_per_content[objectId].processed = true;
+        if (videoUrl !== null) {
+          clips_per_content[objectId].processed = true;
+        }
+
         contents.current = clips_per_content;
         numPages.current = Object.keys(
           clips_per_content[objectId].clips
@@ -484,7 +485,7 @@ const App = () => {
       // try to create the search url
       const res = await createSearchUrl({
         client: _client,
-        objectId: objId,
+        [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
         libraryId: libId,
         searchVersion: searchVersion.current,
         search,
@@ -521,8 +522,7 @@ const App = () => {
           } = await parseSearchRes(
             searchRes["data"]["contents"],
             TOPK,
-            CLIPS_PER_PAGE,
-            searchVersion.current
+            CLIPS_PER_PAGE
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
@@ -584,7 +584,7 @@ const App = () => {
 
         try {
           libId = await client.ContentObjectLibraryId({
-            objectId: txt,
+            [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
           });
         } catch (err) {
           setHaveSearchVersion(false);
@@ -597,7 +597,7 @@ const App = () => {
             setLibId(libId);
             const searchObjMeta = await client.ContentObjectMetadata({
               libraryId: libId,
-              objectId: txt,
+              [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
               metadataSubtree: "indexer",
             });
             if (searchObjMeta["version"] === "2.0") {
@@ -686,7 +686,7 @@ const App = () => {
                 filteredSearchFields={filteredSearchFields.current}
                 handleSubmitClick={({ text, fields }) => {
                   resetLoadStatus();
-                  setFuzzySearchPhrase(text.trim());
+                  setFuzzySearchPhrase(text);
                   setFuzzySearchField(fields);
                   currentPage.current = 1;
                 }}
@@ -727,7 +727,7 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion ? (
+      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion && (
         <div style={inputCheckContainer}>
           <div style={inputInfoContainer}>
             <div style={inputInfo}>
@@ -766,14 +766,18 @@ const App = () => {
             Let's go
           </button>
         </div>
-      ) : haveSearchUrl ? (
+      )}
+
+      {haveSearchUrl && (
         <div style={curlResContainer}>
           <div style={curlRes}>
-            <div style={{ flex: 1 }}>Search url</div>
+            <div style={{ flex: 1 }}>
+              Search url {err && !haveSearchRes && "(FAILED)"}
+            </div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* loading status or video player */}
       {loadingSearchRes ? (
@@ -794,8 +798,10 @@ const App = () => {
                     ...(!showTopk && { border: "none" }),
                   }}
                   onClick={async () => {
-                    setShowTopk(true);
-                    await jumpToPageInTopk(0);
+                    if (!showTopk) {
+                      setShowTopk(true);
+                      await jumpToPageInTopk(0);
+                    }
                   }}
                 >
                   Show Top {topkCnt.current}
@@ -806,8 +812,10 @@ const App = () => {
                     ...(showTopk && { border: "none" }),
                   }}
                   onClick={async () => {
-                    setShowTopk(false);
-                    await jumpToContent(currentContent);
+                    if (showTopk) {
+                      setShowTopk(false);
+                      await jumpToContent(currentContent);
+                    }
                   }}
                 >
                   Show {totalContent} returned results
@@ -886,7 +894,6 @@ const App = () => {
               )}
               {havePlayoutUrl ? (
                 displayingContents.map((clip) => {
-                  // engagement.current.push({[clip.contentHash]: [0, 0]});
                   return (
                     <ClipRes
                       clipInfo={clip}
@@ -903,6 +910,10 @@ const App = () => {
                 })
               ) : loadingPlayoutUrl || loadingTopkPage ? (
                 <div style={loadingUrlContainer}>Loading playout URL</div>
+              ) : err ? (
+                <div style={hint}>
+                  <p>{errMsg}</p>
+                </div>
               ) : null}
             </div>
           </div>

@@ -7,7 +7,7 @@ export const toTimeString = (totalMiliSeconds) => {
   return result;
 };
 
-export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE, searchVersion) => {
+export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -81,6 +81,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE, searchVersion) 
 export const createSearchUrl = async ({
   client,
   objectId,
+  versionHash,
   libraryId,
   searchVersion,
   search,
@@ -94,6 +95,7 @@ export const createSearchUrl = async ({
       const url = await client.Rep({
         libraryId,
         objectId,
+        versionHash,
         rep: "search",
         service: "search",
         makeAccessRequest: true,
@@ -121,18 +123,23 @@ export const createSearchUrl = async ({
         select: "text,/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        max_total: 160,
+        max_total: 160000,
         display_fields: "f_start_time,f_end_time",
-        clips_include_source_tags: true,
         clips: true,
         scored: true,
+        clips_include_source_tags: true,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
       }
+      if (fuzzySearchPhrase === "") {
+        queryParams.sort = "f_start_time@asc";
+        queryParams.scored = false;
+      }
       const url = await client.Rep({
         libraryId,
         objectId,
+        versionHash,
         rep: "search",
         service: "search",
         makeAccessRequest: true,
@@ -153,27 +160,32 @@ export const createSearchUrl = async ({
 };
 
 export const getPlayoutUrl = async ({ client, objectId }) => {
-  let offering = null;
-  const offerings = await client.AvailableOfferings({
-    objectId,
-  });
-  if ("default_clear" in offerings) {
-    offering = "default_clear";
-  } else {
-    offering = "default";
+  try {
+    let offering = null;
+    const offerings = await client.AvailableOfferings({
+      objectId,
+    });
+    if ("default_clear" in offerings) {
+      offering = "default_clear";
+    } else {
+      offering = "default";
+    }
+    // given the offering, load the playout url for this content
+    const playoutOptions = await client.PlayoutOptions({
+      objectId,
+      protocols: ["hls"],
+      offering: offering,
+      drms: ["clear", "aes-128", "fairplay"],
+    });
+    const playoutMethods = playoutOptions["hls"].playoutMethods;
+    const playoutInfo =
+      playoutMethods.clear ||
+      playoutMethods["aes-128"] ||
+      playoutMethods.fairplay;
+    const videoUrl = playoutInfo.playoutUrl;
+    return videoUrl;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
-  // given the offering, load the playout url for this content
-  const playoutOptions = await client.PlayoutOptions({
-    objectId,
-    protocols: ["hls"],
-    offering: offering,
-    drms: ["clear", "aes-128", "fairplay"],
-  });
-  const playoutMethods = playoutOptions["hls"].playoutMethods;
-  const playoutInfo =
-    playoutMethods.clear ||
-    playoutMethods["aes-128"] ||
-    playoutMethods.fairplay;
-  const videoUrl = playoutInfo.playoutUrl;
-  return videoUrl;
 };

@@ -124,11 +124,11 @@ const FuzzySearchBox = (props) => {
       type="button"
       style={{ ...button, backgroundColor: "#3b87eb" }}
       onClick={() => {
-        if (text !== "") {
+        if (text.trim() !== "") {
           const fields = options.filter((item, index) => {
             return checkedState[index];
           });
-          props.handleSubmitClick({ fields: fields, text: `(${text})` });
+          props.handleSubmitClick({ fields: fields, text: `(${text.trim()})` });
         } else {
           props.handleSubmitClick({ fields: [], text: "" });
         }
