@@ -13,10 +13,12 @@ const feedback = {
 };
 
 const options = [
-  { value: 0, label: "Please choose an option" },
+  //TODO Perfect Match!
+  { value: 0, label: "Please choose a reason" },
   { value: 1, label: "Clip is irrelevant" },
   { value: 2, label: "Clip is offensive" },
-  { value: 3, label: "None of the above" }
+  { value: 3, label: "Perfect Match!"},
+  { value: 4, label: "Others.." }
 ];
 
 const starStyle = {
@@ -69,9 +71,10 @@ const Feedback = (props) => {
     }
     // activeStar.current = active;
     setRating(selectedRating);
-    setActiveStar(active);
+    // setActiveStar(active);
     console.log(rating)
-    submit();
+    console.log(num)
+    submit(num);
     const submissionElement = document.getElementById("submissiontxt");
     submissionElement.style.display = "none";
     // console.log(activeStar);
@@ -85,12 +88,15 @@ const Feedback = (props) => {
       label = options.find((option) => option.value === selectedValue).label;
     }
     setReason(label);
-    if (selectedValue === 3) {
+    if (selectedValue === 4) {
       setWantinput(true);
     } else {
       setWantinput(false);
     }
     hasReason.current = true;
+    //TODO Let "thank you" disappear when selecting reasons again
+    const submissionElement = document.getElementById("submissiontxt");
+    submissionElement.style.display = "none";
   };
 
   const collectOtherReason = (event) => {
@@ -98,18 +104,7 @@ const Feedback = (props) => {
     otherreasons.current = textareaData;
   };
 
-  const getLabelStyle = (num) => {
-    return {
-      position: "relative",
-      width: "1em",
-      fontSize: "3vw",
-      color: "black",
-      cursor: "pointer",
-      color: num in activeStar ? "#EAA14F" : "black",
-    };
-  };
-
-  const submit = async () => {
+  const submit = async (score) => {
     //storing the feedback
     const warningElement = document.getElementById("warning");
     const submissionElement = document.getElementById("submissiontxt");
@@ -132,7 +127,7 @@ const Feedback = (props) => {
       setDoc(docRef, {
         client: clientadd,
         feedback_time: new Date(now),
-        rating: rating,
+        rating: score,activeStar,
         clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
         reason: reason,
         other_reasons: otherreasons.current,
@@ -197,7 +192,7 @@ const Feedback = (props) => {
             name="freeform"
             rows="2"
             cols="30"
-            placeholder="Tell us your experience..."
+            placeholder="Tell us your thoughts..."
             value={prevOtherReason.current}
             onChange={(event) => collectOtherReason(event.target.value)}
             style={{ width: "100%" }}
@@ -214,7 +209,7 @@ const Feedback = (props) => {
           marginBottom: "1%",
         }}
       >
-        <button onClick={submit}>Submit</button>
+        <button onClick={() => {submit(rating)}}>Submit</button>
       </div>
 
       <div

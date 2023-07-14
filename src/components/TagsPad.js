@@ -115,7 +115,7 @@ const TagsPad = (props) => {
               // save tags into shot
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID]: false },
+                feedback: { [props.searchID]: props.dislikedTags.includes(k + text) ? true : false },
               });
 
               // idx +1
