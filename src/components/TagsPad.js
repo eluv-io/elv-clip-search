@@ -49,7 +49,6 @@ const TagsPad = (props) => {
     console.log("pushing shot into DB ...... ");
     console.log(shot);
 
-    // TODO加判断是否在DB
     const shotRef = doc(shotInfoRef, shot.shotID);
     getDoc(shotRef).then((s) => {
       if (s.exists()) {
@@ -106,7 +105,8 @@ const TagsPad = (props) => {
               };
               if (
                 !tags.current[k].some(
-                  (dictionary) => dictionary.status === dic.status
+                  (dictionary) => dictionary.status.toLowerCase() === dic.status.toLowerCase()
+                  // (dictionary) => dictionary.status === dic.status
                 )
               ) {
                 tags.current[k].push(dic);
@@ -191,11 +191,6 @@ const TagsPad = (props) => {
           console.log("clip rank updated successfully!");
         });
       }
-      // updateDoc(clipRef, {
-      //   tags: tags.current,
-      // }).then(() => {
-      //   console.log("clip feedback updated successfully!");
-      // });
     }
   };
 
