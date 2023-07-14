@@ -79,6 +79,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
 export const createSearchUrl = async ({
   client,
   objectId,
+  versionHash,
   libraryId,
   searchVersion,
   search,
@@ -92,6 +93,7 @@ export const createSearchUrl = async ({
       const url = await client.Rep({
         libraryId,
         objectId,
+        versionHash,
         rep: "search",
         service: "search",
         makeAccessRequest: true,
@@ -134,6 +136,7 @@ export const createSearchUrl = async ({
       const url = await client.Rep({
         libraryId,
         objectId,
+        versionHash,
         rep: "search",
         service: "search",
         makeAccessRequest: true,

@@ -376,7 +376,7 @@ const App = () => {
       // try to create the search url
       const res = await createSearchUrl({
         client: _client,
-        objectId: objId,
+        [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
         libraryId: libId,
         searchVersion: searchVersion.current,
         search,
@@ -475,7 +475,7 @@ const App = () => {
 
         try {
           libId = await client.ContentObjectLibraryId({
-            objectId: txt,
+            [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
           });
         } catch (err) {
           setHaveSearchVersion(false);
@@ -488,7 +488,7 @@ const App = () => {
             setLibId(libId);
             const searchObjMeta = await client.ContentObjectMetadata({
               libraryId: libId,
-              objectId: txt,
+              [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
               metadataSubtree: "indexer",
             });
             if (searchObjMeta["version"] === "2.0") {
