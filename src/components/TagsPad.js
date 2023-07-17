@@ -39,6 +39,28 @@ const TagsPad = (props) => {
   const db = props.db;
   const shotInfoRef = collection(db, "Shot_info");
 
+
+  useEffect(() => {
+    //TODO modify props.dislikes tag
+    console.log("parsing tags");
+    prepareTags()
+      .then(() => {
+        setRefresh((v) => !v);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  const getPrevFeedback = (shot) => {
+    const shotRef = doc(shotInfoRef, shot.shotID);
+    getDoc(shotRef).then((s) => {
+      if (s.exists()) {
+        s.data()
+      }
+    });
+  }
+
   // TODO maybe need a Hash to reduce the length
   const hash = (s) => {
     return s;
@@ -76,13 +98,14 @@ const TagsPad = (props) => {
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
-        const doc = src.document;
-        const shotID = hash(iqHash + doc.start_time + "-" + doc.end_time);
+        const currdoc = src.document;
+        const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
+        const shotRef = doc(shotInfoRef, shotID);
         // const inDB = await shotInDB(shotID);
         const shot = {
           iqHash: iqHash,
-          start: doc.start_time,
-          end: doc.end_time,
+          start: currdoc.start_time,
+          end: currdoc.end_time,
           shotID: shotID,
           tags: [],
           // inDB: inDB,
@@ -91,21 +114,28 @@ const TagsPad = (props) => {
         // tag index inside one shot
         // since tags in shot is saved as a list, can use this index directly target at that tag
         let idx = 0;
-        // TODO
+        // TODO If one tag is updated, update all other tags??? this is only for the repetition
         for (let k in tags.current) {
-          for (let v of doc.text[k]) {
+          for (let v of currdoc.text[k]) {
             for (let text of v.text) {
+              let dislikeState = false;
+              const currShot = await getDoc(shotRef);
+              if (currShot.exists()) {
+                const prevDislike = currShot.data().tags[idx].feedback
+                if (props.searchID in prevDislike) {
+                  dislikeState = prevDislike[props.searchID]
+                }
+              }
               const dic = {
                 track: k,
                 status: text,
-                dislike: props.dislikedTags.includes(k + text) ? true : false,
+                dislike: dislikeState,
                 shotID: shotID,
                 tagIdx: idx,
               };
               if (
                 !tags.current[k].some(
                   (dictionary) => dictionary.status.toLowerCase() === dic.status.toLowerCase()
-                  // (dictionary) => dictionary.status === dic.status
                 )
               ) {
                 tags.current[k].push(dic);
@@ -114,7 +144,7 @@ const TagsPad = (props) => {
               // save tags into shot
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID]: props.dislikedTags.includes(k + text) ? true : false },
+                feedback: { [props.searchID]: dislikeState },
               });
 
               // idx +1
@@ -128,16 +158,7 @@ const TagsPad = (props) => {
     }
   };
 
-  useEffect(() => {
-    console.log("parsing tags");
-    prepareTags()
-      .then(() => {
-        setRefresh((v) => !v);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+  
 
   // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
@@ -145,12 +166,9 @@ const TagsPad = (props) => {
     props.dislikeTagHook(t.track + t.status);
     const shotID = t.shotID;
     const idx = lst.findIndex((dic) => dic.status === t.status);
-    // console.log("lalallallallallla", lst[idx].dislike)
     lst[idx].dislike = true;
     const tagIdx = t.tagIdx;
     shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
-    // console.log("updatedshots", shots.current);
-    // console.log("updatedtags", tags.current);
     setRefresh((v) => !v);
     pushShotToDB(shots.current[shotID]);
 

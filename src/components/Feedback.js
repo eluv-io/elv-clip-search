@@ -114,12 +114,20 @@ const Feedback = (props) => {
       if (warningElement.style.display === "flex") {
         warningElement.style.display = "none";
       }
-      const now = Timestamp.now().toDate().toString();
+      const now = Timestamp.now().toDate().toString().replace(/\([^()]*\)/g, ""); 
       // TODO delete all the "async"
-      const docRef = doc(
-        feedbackRef,
-        clientadd + "_" + now.replace(/\([^()]*\)/g, "")
-      );
+      const userRef = collection(db, "Feedback", clientadd, "Data");
+      // console.log("it works???", userRef)
+      // const docRef = doc(userRef, "asdf");
+      // const docCollection = collection(userRef, "time");
+      console.log("is it working??????????", userRef)
+      
+      const docRef = doc(userRef, now);
+      console.log(docRef.id)
+      // const docRef = doc(
+      //   feedbackRef,
+      //   clientadd + "_" + now.replace(/\([^()]*\)/g, "")
+      // );
       const clipStart = clipInfo.start;
       const clipEnd = clipInfo.end;
       const contentHash = clipInfo.hash;
@@ -127,7 +135,7 @@ const Feedback = (props) => {
       setDoc(docRef, {
         client: clientadd,
         feedback_time: new Date(now),
-        rating: score,activeStar,
+        rating: score,
         clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
         reason: reason,
         other_reasons: otherreasons.current,
