@@ -78,58 +78,6 @@ const ClipRes = (props) => {
 
   const dislikedTags = useRef([]);
 
-  
-  const getPrevFeedback = () => {
-    const shotInfoRef = collection(props.db, "Shot_info");
-    const _hasTags = "text" in props.clipInfo.sources[0].document;
-    if (_hasTags) {
-      const iqHash = props.clipInfo.hash;
-      for (let src of props.clipInfo.sources) {
-        const currdoc = src.document;
-        const shotID = iqHash + currdoc.start_time + "-" + currdoc.end_time;
-        // const inDB = await shotInDB(shotID);
-        const shotRef = doc(shotInfoRef, shotID);
-
-        // tag index inside one shot
-        // since tags in shot is saved as a list, can use this index directly target at that tag
-        let idx = 0;
-        for (let k in tags.current) {
-          for (let v of currdoc.text[k]) {
-            for (let text of v.text) {
-              // console.log(k, v, text)
-              // console.log(tags.current, currdoc.text)
-              getDoc(shotRef).then((s) => {
-                if (s.exists()) {
-                  // console.log("LOOK HERE", idx, s.data().tags);
-                  // console.log(s.data())
-                  console.log(idx)
-                  const prevFeedback = s.data().tags[idx - 1].feedback
-                  console.log(prevFeedback)
-                  // console.log(prevFeedback);
-                  if (props.searchID in prevFeedback) {
-                    if (prevFeedback[props.searchID] === true) {
-                      dislikedTags.current.push(k + text);
-                    }
-                  }
-                }
-              });
-              // idx +1
-              idx = idx + 1;
-            }
-            // break
-          }
-          // break
-        }
-        // break
-      }
-    }
-    console.log("dislikedTags:", dislikedTags.current);
-  }
-
-  useEffect(() => {
-    // getPrevFeedback();
-    
-  }, [])
 
   const handlePause = () => {
     if (startTime.current) {

@@ -101,14 +101,13 @@ const TagsPad = (props) => {
         const currdoc = src.document;
         const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
         const shotRef = doc(shotInfoRef, shotID);
-        // const inDB = await shotInDB(shotID);
+        const currShot = await getDoc(shotRef);
         const shot = {
           iqHash: iqHash,
           start: currdoc.start_time,
           end: currdoc.end_time,
           shotID: shotID,
           tags: [],
-          // inDB: inDB,
         };
 
         // tag index inside one shot
@@ -119,7 +118,6 @@ const TagsPad = (props) => {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
               let dislikeState = false;
-              const currShot = await getDoc(shotRef);
               if (currShot.exists()) {
                 const prevDislike = currShot.data().tags[idx].feedback
                 if (props.searchID in prevDislike) {

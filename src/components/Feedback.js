@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, Timestamp, where, query, getDocs, orderBy, limit, get } from "firebase/firestore";
 
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
@@ -13,7 +13,6 @@ const feedback = {
 };
 
 const options = [
-  //TODO Perfect Match!
   { value: 0, label: "Please choose a reason" },
   { value: 1, label: "Clip is irrelevant" },
   { value: 2, label: "Clip is offensive" },
@@ -45,7 +44,6 @@ const starStyle = {
 };
 
 const Feedback = (props) => {
-  // const [submitted, setSubmitted] = useState(false);
   const [wantinput, setWantinput] = useState(false);
   const otherreasons = useRef("");
   const [reason, setReason] = useState("");
@@ -58,9 +56,26 @@ const Feedback = (props) => {
   const clientadd = props.clientadd;
   const clipInfo = props.clipInfo;
   const feedbackRef = collection(db, "Feedback");
+  const clipStart = clipInfo.start;
+  const clipEnd = clipInfo.end;
+  const contentHash = clipInfo.hash;
+  const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
 
-  const [activeStar, setActiveStar] = useState([]);
-  // const activeStar = useRef([])
+  
+  useEffect(() => {
+    const userRef = collection(db, "Feedback", clientadd, "Data");
+    
+    const q = query(userRef, where("clipHash", "==", clipHash), orderBy("feedback_time", "desc"), limit(1));
+
+    getDocs(q).then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        otherreasons.current = data.other_reasons
+        setReason(data.reason);
+        setRating(data.rating);
+      });
+    })
+  }, []);
 
   const handleRateChange = (num) => {
     const selectedRating = num;
@@ -69,15 +84,10 @@ const Feedback = (props) => {
     for (var i = 0; i <= num; i++) {
       active.push(i);
     }
-    // activeStar.current = active;
     setRating(selectedRating);
-    // setActiveStar(active);
-    console.log(rating)
-    console.log(num)
     submit(num);
     const submissionElement = document.getElementById("submissiontxt");
     submissionElement.style.display = "none";
-    // console.log(activeStar);
   };
 
   const collectOption = (event) => {
@@ -117,20 +127,8 @@ const Feedback = (props) => {
       const now = Timestamp.now().toDate().toString().replace(/\([^()]*\)/g, ""); 
       // TODO delete all the "async"
       const userRef = collection(db, "Feedback", clientadd, "Data");
-      // console.log("it works???", userRef)
-      // const docRef = doc(userRef, "asdf");
-      // const docCollection = collection(userRef, "time");
-      console.log("is it working??????????", userRef)
       
       const docRef = doc(userRef, now);
-      console.log(docRef.id)
-      // const docRef = doc(
-      //   feedbackRef,
-      //   clientadd + "_" + now.replace(/\([^()]*\)/g, "")
-      // );
-      const clipStart = clipInfo.start;
-      const clipEnd = clipInfo.end;
-      const contentHash = clipInfo.hash;
 
       setDoc(docRef, {
         client: clientadd,
@@ -139,6 +137,7 @@ const Feedback = (props) => {
         clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
         reason: reason,
         other_reasons: otherreasons.current,
+        search_id: props.searchID
       }).then(() => {
         console.log("Feedback collected successfully!");
       });
@@ -146,7 +145,6 @@ const Feedback = (props) => {
       const textElement = document.getElementById("reason_input");
       if (textElement !== null) {
         textElement.style.display = "none"
-        // textElement.remove();
       }
 
       submissionElement.style.display = "flex";
@@ -182,7 +180,7 @@ const Feedback = (props) => {
         <div
           style={{ display: "flex", width: "100%", flexDirection: "column" }}
         >
-          <select id="choices" onChange={collectOption}>
+          <select id="choices" onChange={collectOption} value={reason}>
             {options.map((option) => (
               <option
                 key={option.label}
