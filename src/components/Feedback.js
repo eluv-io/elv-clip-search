@@ -1,5 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { collection, doc, setDoc, Timestamp, where, query, getDocs, orderBy, limit, get } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  setDoc,
+  Timestamp,
+  where,
+  query,
+  getDocs,
+  orderBy,
+  limit,
+  get,
+} from "firebase/firestore";
 
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
@@ -16,8 +27,8 @@ const options = [
   { value: 0, label: "Please choose a reason" },
   { value: 1, label: "Clip is irrelevant" },
   { value: 2, label: "Clip is offensive" },
-  { value: 3, label: "Perfect Match!"},
-  { value: 4, label: "Others.." }
+  { value: 3, label: "Perfect Match!" },
+  { value: 4, label: "Others.." },
 ];
 
 const starStyle = {
@@ -47,6 +58,7 @@ const Feedback = (props) => {
   const [wantinput, setWantinput] = useState(false);
   const otherreasons = useRef("");
   const [reason, setReason] = useState("");
+  const [reasonId, setReasonId] = useState(0);
   const hasReason = useRef(false);
   const [rating, setRating] = useState(0);
   const hasRating = useRef(false);
@@ -61,20 +73,30 @@ const Feedback = (props) => {
   const contentHash = clipInfo.hash;
   const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
 
-  
   useEffect(() => {
     const userRef = collection(db, "Feedback", clientadd, "Data");
-    
-    const q = query(userRef, where("clipHash", "==", clipHash), orderBy("feedback_time", "desc"), limit(1));
+
+    const q = query(
+      userRef,
+      where("clipHash", "==", clipHash),
+      orderBy("feedback_time", "desc"),
+      limit(1)
+    );
 
     getDocs(q).then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        const data = doc.data()
-        otherreasons.current = data.other_reasons
+        const data = doc.data();
+        otherreasons.current = data.other_reasons;
         setReason(data.reason);
+        for (let option of options) {
+          if (option.label === data.reason) {
+            setReasonId(option.value);
+            console.log(option.value, option.label);
+          }
+        }
         setRating(data.rating);
       });
-    })
+    });
   }, []);
 
   const handleRateChange = (num) => {
@@ -98,6 +120,8 @@ const Feedback = (props) => {
       label = options.find((option) => option.value === selectedValue).label;
     }
     setReason(label);
+    setReasonId(selectedValue);
+    // setReasonId(selectedValue);
     if (selectedValue === 4) {
       setWantinput(true);
     } else {
@@ -124,10 +148,13 @@ const Feedback = (props) => {
       if (warningElement.style.display === "flex") {
         warningElement.style.display = "none";
       }
-      const now = Timestamp.now().toDate().toString().replace(/\([^()]*\)/g, ""); 
+      const now = Timestamp.now()
+        .toDate()
+        .toString()
+        .replace(/\([^()]*\)/g, "");
       // TODO delete all the "async"
       const userRef = collection(db, "Feedback", clientadd, "Data");
-      
+
       const docRef = doc(userRef, now);
 
       setDoc(docRef, {
@@ -137,14 +164,14 @@ const Feedback = (props) => {
         clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
         reason: reason,
         other_reasons: otherreasons.current,
-        search_id: props.searchID
+        search_id: props.searchID,
       }).then(() => {
         console.log("Feedback collected successfully!");
       });
 
       const textElement = document.getElementById("reason_input");
       if (textElement !== null) {
-        textElement.style.display = "none"
+        textElement.style.display = "none";
       }
 
       submissionElement.style.display = "flex";
@@ -180,7 +207,7 @@ const Feedback = (props) => {
         <div
           style={{ display: "flex", width: "100%", flexDirection: "column" }}
         >
-          <select id="choices" onChange={collectOption} value={reason}>
+          <select id="choices" onChange={collectOption} value={reasonId}>
             {options.map((option) => (
               <option
                 key={option.label}
@@ -216,7 +243,13 @@ const Feedback = (props) => {
           marginBottom: "1%",
         }}
       >
-        <button onClick={() => {submit(rating)}}>Submit</button>
+        <button
+          onClick={() => {
+            submit(rating);
+          }}
+        >
+          Submit
+        </button>
       </div>
 
       <div
