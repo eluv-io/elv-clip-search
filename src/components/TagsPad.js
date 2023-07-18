@@ -110,6 +110,7 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID]
                 }
               }
+              // console.log(text)
               const dic = {
                 track: k,
                 status: text,
@@ -126,6 +127,7 @@ const TagsPad = (props) => {
               }
               // tags.current[k].push(dic)
 
+              //TODO determine if the shot already has such tag or what????????????????????
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID]: dislikeState },
@@ -144,14 +146,22 @@ const TagsPad = (props) => {
 
 
   const thumbsDown = async (lst, t) => {
-    // console.log(tags)
     console.log("You disliked me");
     props.dislikeTagHook(t.track + t.status);
     const shotID = t.shotID;
+    const currTags = shots.current[shotID].tags;
+    const allIndices = currTags.reduce((indices, dic, idx) => {
+      if (dic.status.text === t.status) {
+        indices.push(idx);
+      }
+      return indices;
+    }, [])
+    allIndices.forEach((i) => {
+      shots.current[shotID].tags[i].feedback[props.searchID] = true;
+    })
+    
     const idx = lst.findIndex((dic) => dic.status === t.status);
     lst[idx].dislike = true;
-    const tagIdx = t.tagIdx;
-    shots.current[shotID].tags[tagIdx].feedback[props.searchID] = true;
     setRefresh((v) => !v);
     pushShotToDB(shots.current[shotID]);
 
