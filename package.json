@@ -10,7 +10,7 @@
     "react-dom": "^16.14.0",
     "react-hls-player": "^3.0.7",
     "react-paginate": "^8.1.4",
-    "react-player": "^2.11.0",
+    "react-player": "^2.12.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },

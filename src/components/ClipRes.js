@@ -1,5 +1,6 @@
 import React from "react";
-import ReactHlsPlayer from "react-hls-player";
+import { useRef, useState } from "react";
+import ReactPlayer from "react-player";
 const body = {
   display: "flex",
   flexDirection: "column",
@@ -60,21 +61,36 @@ const ClipRes = (props) => {
       : `${props.clipInfo.url}&resolve=false&clip_start=${
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const playerRef = useRef(null);
   return (
     <div style={body}>
       <div style={videoPlayer}>
         {url !== null ? (
-          <ReactHlsPlayer
-            src={url}
+          <ReactPlayer
+            ref={playerRef}
+            url={url}
             width="100%"
-            height="auto"
+            height="100%"
             autoPlay={false}
             controls={true}
-            hlsConfig={{
+            config={{
               capLevelToPlayerSize: true,
-              maxBufferLength: 1,
+              maxBufferLength: 0,
             }}
-          ></ReactHlsPlayer>
+            onReady={() => {
+              console.log("new player ready");
+              const hls = playerRef.current.getInternalPlayer("hls");
+              const tracks = hls.audioTrackController.tracks;
+              if (tracks !== null && tracks.length > 1) {
+                for (let track of tracks) {
+                  if (track.name.startsWith("English")) {
+                    hls.audioTrackController.setAudioTrack(track.id);
+                    break;
+                  }
+                }
+              }
+            }}
+          ></ReactPlayer>
         ) : (
           <div
             style={{
