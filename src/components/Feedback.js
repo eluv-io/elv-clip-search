@@ -66,7 +66,6 @@ const Feedback = (props) => {
   const db = props.db;
   const clientadd = props.clientadd;
   const clipInfo = props.clipInfo;
-  const feedbackRef = collection(db, "Feedback");
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
   const contentHash = clipInfo.hash;

@@ -51,16 +51,6 @@ const videoInfoContainer = {
 
 const ClipRes = (props) => {
 
-  const tags = useRef({
-    "Celebrity Detection": [],
-    "Landmark Recognition": [],
-    "Logo Detection": [],
-    "Object Detection": [],
-    "Optical Character Recognition": [],
-    "Segment Labels": [],
-    "Speech to Text": [],
-  });
-
   const viewTime = useRef(0);
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;

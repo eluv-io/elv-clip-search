@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Feedback from "./Feedback";
 import TagsPad from "./TagsPad";
 
 const container = {

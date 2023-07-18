@@ -51,15 +51,6 @@ const TagsPad = (props) => {
       });
   }, []);
 
-  const getPrevFeedback = (shot) => {
-    const shotRef = doc(shotInfoRef, shot.shotID);
-    getDoc(shotRef).then((s) => {
-      if (s.exists()) {
-        s.data()
-      }
-    });
-  }
-
   const hash = (s) => {
     return s;
   };
@@ -109,7 +100,6 @@ const TagsPad = (props) => {
         // tag index inside one shot
         // since tags in shot is saved as a list, can use this index directly target at that tag
         let idx = 0;
-        // TODO If one tag is updated, update all other tags??? this is only for the repetition
         for (let k in tags.current) {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
@@ -134,6 +124,7 @@ const TagsPad = (props) => {
               ) {
                 tags.current[k].push(dic);
               }
+              // tags.current[k].push(dic)
 
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
@@ -148,10 +139,12 @@ const TagsPad = (props) => {
         pushShotToDB(shot);
       }
     }
+    // console.log(tags)
   };
 
 
   const thumbsDown = async (lst, t) => {
+    // console.log(tags)
     console.log("You disliked me");
     props.dislikeTagHook(t.track + t.status);
     const shotID = t.shotID;
