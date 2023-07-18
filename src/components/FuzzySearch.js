@@ -95,6 +95,23 @@ const FuzzySearchBox = (props) => {
       onChange={(event) => {
         setText(event.target.value);
       }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          if (text.trim() !== "") {
+            const fields = options.filter((item, index) => {
+              return checkedState[index];
+            });
+            props.handleSubmitClick({
+              fields: fields,
+              text: `(${text.trim()})`,
+            });
+          } else {
+            props.handleSubmitClick({ fields: [], text: "" });
+          }
+
+          props.statusHandler();
+        }
+      }}
     />
   );
   const fieldBox = (

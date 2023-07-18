@@ -61,13 +61,24 @@ const InputBox = (props) => {
           style={box}
           id="ObjId"
           onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              if (value.trim() !== "") {
+                props.handleSubmitClick(value.trim());
+              }
+            }
+          }}
         />
       </div>
       <div style={right}>
         <button
           type="button"
           style={button}
-          onClick={() => props.handleSubmitClick(value.trim())}
+          onClick={() => {
+            if (value.trim() !== "") {
+              props.handleSubmitClick(value.trim());
+            }
+          }}
           disabled={props.disabled}
         >
           ADD

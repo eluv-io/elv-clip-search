@@ -365,7 +365,6 @@ const App = () => {
     setDisplayingContents(contents.current[currentContent].clips[pageIndex]);
   };
 
-  // TODO not sure if it is a good apporach to wrap the whole process using try catch
   const jumpToPageInTopk = async (pageIndex) => {
     setLoadingTopkPage(true);
     setHavePlayoutUrl(false);
@@ -872,21 +871,22 @@ const App = () => {
 
             <div style={clipResShowContainer}>
               {/* if have multiplr pages, we need to display the navigation bar */}
-              {((!showTopk && numPages.current > 1) ||
-                (showTopk && topkPages.current > 1)) && (
+              {!showTopk && numPages.current > 1 && (
                 <PaginationBar
-                  pageCount={showTopk ? topkPages.current : numPages.current}
-                  onPageChangeHandler={
-                    showTopk
-                      ? async (data) => {
-                          const pageIndex = data.selected;
-                          await jumpToPageInTopk(pageIndex);
-                        }
-                      : (data) => {
-                          const pageIndex = data.selected + 1;
-                          jumpToPageInAll(pageIndex);
-                        }
-                  }
+                  pageCount={numPages.current}
+                  onPageChangeHandler={(data) => {
+                    const pageIndex = data.selected + 1;
+                    jumpToPageInAll(pageIndex);
+                  }}
+                />
+              )}
+              {showTopk && topkPages.current > 1 && (
+                <PaginationBar
+                  pageCount={topkPages.current}
+                  onPageChangeHandler={async (data) => {
+                    const pageIndex = data.selected;
+                    await jumpToPageInTopk(pageIndex);
+                  }}
                 />
               )}
               {havePlayoutUrl ? (

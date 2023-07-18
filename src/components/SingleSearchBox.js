@@ -117,6 +117,16 @@ const SingleSearchBox = (props) => {
       onChange={(event) => {
         setText(event.target.value);
       }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          if (text !== "") {
+            props.addHandler({ field: field, text: text.trim() });
+            setField("all");
+            setText("");
+          }
+          props.statusHandler();
+        }
+      }}
     />
   );
   const fieldBox = props.display ? (
