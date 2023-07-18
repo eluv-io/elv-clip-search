@@ -62,6 +62,8 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const playerRef = useRef(null);
+  const [audioTracks, setAudioTracks] = useState(null);
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   return (
     <div style={body}>
       <div style={videoPlayer}>
@@ -82,12 +84,8 @@ const ClipRes = (props) => {
               const hls = playerRef.current.getInternalPlayer("hls");
               const tracks = hls.audioTrackController.tracks;
               if (tracks !== null && tracks.length > 1) {
-                for (let track of tracks) {
-                  if (track.name.startsWith("English")) {
-                    hls.audioTrackController.setAudioTrack(track.id);
-                    break;
-                  }
-                }
+                setAudioTracks(tracks);
+                setSelectedAudioTrack(0);
               }
             }}
           ></ReactPlayer>
@@ -105,6 +103,26 @@ const ClipRes = (props) => {
           >
             Playout URL Err
           </div>
+        )}
+        {audioTracks && (
+          <select
+            onChange={(event) => {
+              const audioTrackId = event.target.value;
+              setSelectedAudioTrack(audioTrackId);
+              console.log(`set to ${audioTrackId}`);
+              const hls = playerRef.current.getInternalPlayer("hls");
+              hls.audioTrackController.setAudioTrack(audioTrackId);
+            }}
+            value={selectedAudioTrack}
+          >
+            {audioTracks.map((track) => {
+              return (
+                <option key={`option-${track.id}`} value={track.id}>
+                  {track.name}
+                </option>
+              );
+            })}
+          </select>
         )}
       </div>
       <div style={info}>
