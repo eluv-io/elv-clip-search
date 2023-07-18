@@ -250,8 +250,6 @@ const App = () => {
   useEffect(() => {
     initializeApp(firebaseConfig);
     db.current = getFirestore();
-
-    //store the current user
     getClient();
     client.current.CurrentAccountAddress().then((val) => {
       clientAdd.current = val;
@@ -317,7 +315,7 @@ const App = () => {
   const updateEngagement = (clipInfo, watchedTime, numView) => {
     if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
       const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime; //TODO accumulative or not??
+      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime;
       const newNumView = numView + engagement.current[clipID].numView;
       console.log(newNumView)
       engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
@@ -334,7 +332,6 @@ const App = () => {
     }
   }
  
-
   const storeSearchHistory = () => {
     const colRef = collection(db.current, "Search_history");
     const now = Timestamp.now().toDate().toString();

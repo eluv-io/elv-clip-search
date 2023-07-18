@@ -41,7 +41,6 @@ const TagsPad = (props) => {
 
 
   useEffect(() => {
-    //TODO modify props.dislikes tag
     console.log("parsing tags");
     prepareTags()
       .then(() => {
@@ -61,12 +60,10 @@ const TagsPad = (props) => {
     });
   }
 
-  // TODO maybe need a Hash to reduce the length
   const hash = (s) => {
     return s;
   };
 
-  // TODO push the shot and its tags to DB
   const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
 
@@ -92,7 +89,6 @@ const TagsPad = (props) => {
     });
   };
 
-  // TODO prepareTags
   const prepareTags = async () => {
     const _hasTags = "text" in props.clipInfo.sources[0].document;
     if (_hasTags) {
@@ -139,13 +135,11 @@ const TagsPad = (props) => {
                 tags.current[k].push(dic);
               }
 
-              // save tags into shot
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID]: dislikeState },
               });
 
-              // idx +1
               idx = idx + 1;
             }
           }
@@ -156,9 +150,7 @@ const TagsPad = (props) => {
     }
   };
 
-  
 
-  // TODO Need to change from "pushing the dislike state to clip-info table" to "pushing to shot table"
   const thumbsDown = async (lst, t) => {
     console.log("You disliked me");
     props.dislikeTagHook(t.track + t.status);

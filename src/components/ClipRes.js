@@ -1,7 +1,6 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
-import React, { useEffect, useRef, useState } from "react";
-import { collection, getDoc, doc } from "firebase/firestore";
+import React, { useRef } from "react";
 import ReactPlayer from "react-player";
 
 const container = {
@@ -48,7 +47,6 @@ const videoInfoContainer = {
   justifyContent: "center",
   alignItems: "center",
 };
-
 
 
 const ClipRes = (props) => {

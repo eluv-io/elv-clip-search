@@ -9,7 +9,6 @@ import {
   getDocs,
   orderBy,
   limit,
-  get,
 } from "firebase/firestore";
 
 import { BiStar, BiSolidStar } from "react-icons/bi";
@@ -128,7 +127,6 @@ const Feedback = (props) => {
       setWantinput(false);
     }
     hasReason.current = true;
-    //TODO Let "thank you" disappear when selecting reasons again
     const submissionElement = document.getElementById("submissiontxt");
     submissionElement.style.display = "none";
   };
@@ -138,7 +136,7 @@ const Feedback = (props) => {
     otherreasons.current = textareaData;
   };
 
-  const submit = async (score) => {
+  const submit = (score) => {
     //storing the feedback
     const warningElement = document.getElementById("warning");
     const submissionElement = document.getElementById("submissiontxt");
@@ -152,7 +150,6 @@ const Feedback = (props) => {
         .toDate()
         .toString()
         .replace(/\([^()]*\)/g, "");
-      // TODO delete all the "async"
       const userRef = collection(db, "Feedback", clientadd, "Data");
 
       const docRef = doc(userRef, now);
@@ -191,7 +188,6 @@ const Feedback = (props) => {
           >
             <button
               onClick={() => {
-                // collectRate(num);
                 handleRateChange(num);
               }}
               style={{ border: "none", backgroundColor: "transparent" }}
