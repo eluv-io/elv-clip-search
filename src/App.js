@@ -302,7 +302,7 @@ const App = () => {
       }
     }
     const engTblRef = collection(db.current, "Engagement");
-    const engRef = doc(engTblRef, clientAdd.current + searchID.current);
+    const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
     setDoc(engRef, {
       engagement: engagement.current,
       User_id: clientAdd.current,
@@ -320,7 +320,7 @@ const App = () => {
       console.log(newNumView)
       engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
       const engTblRef = collection(db.current, "Engagement");
-      const engRef = doc(engTblRef, clientAdd.current + searchID.current);
+      const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
       updateDoc(engRef, {
         engagement: engagement.current
       }).then(() => {

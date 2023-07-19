@@ -181,7 +181,7 @@ const TagsPad = (props) => {
         contentHash: contentHash,
         start_time: clipStart,
         end_time: clipEnd,
-        rank: [{ saerchID: props.searchID, rank: clipRank }],
+        rank: [{ searchID: props.searchID, rank: clipRank }],
         shots: Object.keys(shots.current),
       }).then(() => {
         console.log("clip stored successfully!");

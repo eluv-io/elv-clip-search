@@ -106,8 +106,10 @@ const Feedback = (props) => {
     }
     setRating(selectedRating);
     submit(num);
-    const submissionElement = document.getElementById("submissiontxt");
+    const submissionElement = document.getElementById(`submissiontxt${props.clipInfo.start}`);
+    const warningElement = document.getElementById(`warning${props.clipInfo.start}`);
     submissionElement.style.display = "none";
+    warningElement.style.display = "none";
   };
 
   const collectOption = (event) => {
@@ -126,19 +128,21 @@ const Feedback = (props) => {
       setWantinput(false);
     }
     hasReason.current = true;
-    const submissionElement = document.getElementById("submissiontxt");
+    const submissionElement = document.getElementById(`submissiontxt${props.clipInfo.start}`);
+    const warningElement = document.getElementById(`warning${props.clipInfo.start}`);
     submissionElement.style.display = "none";
+    warningElement.style.display = "none";
   };
 
   const collectOtherReason = (event) => {
-    const textareaData = document.getElementById("reason_input").value;
+    const textareaData = document.getElementById(`reason_input${props.clipInfo.start}`).value;
     otherreasons.current = textareaData;
   };
 
   const submit = (score) => {
     //storing the feedback
-    const warningElement = document.getElementById("warning");
-    const submissionElement = document.getElementById("submissiontxt");
+    const warningElement = document.getElementById(`warning${props.clipInfo.start}`);
+    const submissionElement = document.getElementById(`submissiontxt${props.clipInfo.start}`);
     if (!(hasRating.current || hasReason.current)) {
       warningElement.style.display = "flex";
     } else {
@@ -171,6 +175,7 @@ const Feedback = (props) => {
       }
 
       submissionElement.style.display = "flex";
+      // console.log(submissionElement)
     }
   };
 
@@ -217,7 +222,7 @@ const Feedback = (props) => {
 
         {wantinput ? (
           <textarea
-            id="reason_input"
+            id={`reason_input${props.clipInfo.start}`}
             name="freeform"
             rows="2"
             cols="30"
@@ -248,7 +253,7 @@ const Feedback = (props) => {
       </div>
 
       <div
-        id="warning"
+        id={`warning${props.clipInfo.start}`}
         style={{
           display: "none",
           alignItems: "center",
@@ -260,7 +265,7 @@ const Feedback = (props) => {
         Please give us your feedback
       </div>
       <div
-        id="submissiontxt"
+        id={`submissiontxt${props.clipInfo.start}`}
         style={{
           display: "none",
           alignItems: "center",
