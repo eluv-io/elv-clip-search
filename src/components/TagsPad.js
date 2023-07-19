@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-import { BiArrowFromTop, BiArrowToTop, BiDislike } from "react-icons/bi";
+import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi";
 
 const TagsPad = (props) => {
   const tags = useRef({
@@ -103,14 +103,14 @@ const TagsPad = (props) => {
         for (let k in tags.current) {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
-              let dislikeState = false;
+              let dislikeState = 0;
               if (currShot.exists()) {
                 const prevDislike = currShot.data().tags[idx].feedback
                 if (props.searchID in prevDislike) {
                   dislikeState = prevDislike[props.searchID]
                 }
               }
-              // console.log(text)
+
               const dic = {
                 track: k,
                 status: text,
@@ -125,9 +125,7 @@ const TagsPad = (props) => {
               ) {
                 tags.current[k].push(dic);
               }
-              // tags.current[k].push(dic)
 
-              //TODO determine if the shot already has such tag or what????????????????????
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID]: dislikeState },
@@ -141,11 +139,11 @@ const TagsPad = (props) => {
         pushShotToDB(shot);
       }
     }
-    // console.log(tags)
+
   };
 
 
-  const thumbsDown = async (lst, t) => {
+  const collect = async (lst, t, score) => {
     console.log("You disliked me");
     props.dislikeTagHook(t.track + t.status);
     const shotID = t.shotID;
@@ -157,11 +155,11 @@ const TagsPad = (props) => {
       return indices;
     }, [])
     allIndices.forEach((i) => {
-      shots.current[shotID].tags[i].feedback[props.searchID] = true;
+      shots.current[shotID].tags[i].feedback[props.searchID] = score;
     })
     
     const idx = lst.findIndex((dic) => dic.status === t.status);
-    lst[idx].dislike = true;
+    lst[idx].dislike = score;
     setRefresh((v) => !v);
     pushShotToDB(shots.current[shotID]);
 
@@ -278,13 +276,25 @@ const TagsPad = (props) => {
                 >
                   {t.status}
                   <div>
+
                     <button
                       style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => thumbsDown(tags.current[k], t)}
+                      onClick={() => collect(tags.current[k], t, 1)}
+                    >
+                      <BiLike
+                        style={{
+                          color: t.dislike === 1 ? "#EAA14F" : "black",
+                        }}
+                      />
+                    </button>
+
+                    <button
+                      style={{ border: "none", backgroundColor: "transparent" }}
+                      onClick={() => collect(tags.current[k], t, -1)}
                     >
                       <BiDislike
                         style={{
-                          color: t.dislike ? "#EAA14F" : "black",
+                          color: t.dislike === -1 ? "#EAA14F" : "black",
                         }}
                       />
                     </button>
