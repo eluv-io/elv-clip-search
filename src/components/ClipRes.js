@@ -27,9 +27,9 @@ const videoPlayerContainer = {
 
 const audioCtrlContainer = {
   display: " flex",
-  flexDirection: "column",
+  flexDirection: "row",
   width: "100%",
-  height: "10%",
+  height: "5%",
   alignItems: "center",
   justifyContent: "center",
 };
@@ -114,8 +114,10 @@ const ClipRes = (props) => {
           </div>
         )}
       </div>
-      <div style={audioCtrlContainer}>
-        {audioTracks && (
+
+      {audioTracks && (
+        <div style={audioCtrlContainer}>
+          audio track:
           <select
             onChange={(event) => {
               const audioTrackId = event.target.value;
@@ -125,7 +127,7 @@ const ClipRes = (props) => {
               hls.audioTrackController.setAudioTrack(audioTrackId);
             }}
             value={selectedAudioTrack}
-            style={{ height: "100%", width: "20%" }}
+            style={{ height: "100%", width: "20%", marginLeft: 5 }}
           >
             {audioTracks.map((track) => {
               return (
@@ -135,8 +137,9 @@ const ClipRes = (props) => {
               );
             })}
           </select>
-        )}
-      </div>
+        </div>
+      )}
+
       <div style={info}>
         <div style={shortInfo}>
           <div>title: </div>
