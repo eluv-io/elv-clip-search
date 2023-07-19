@@ -36,6 +36,7 @@ const TagsPad = (props) => {
   });
 
   const [refresh, setRefresh] = useState(false);
+  const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
   const shotInfoRef = collection(db, "Shot_info");
 
@@ -44,6 +45,7 @@ const TagsPad = (props) => {
     console.log("parsing tags");
     prepareTags()
       .then(() => {
+        setTagsReady(true);
         setRefresh((v) => !v);
       })
       .catch((err) => {
@@ -139,7 +141,6 @@ const TagsPad = (props) => {
         pushShotToDB(shot);
       }
     }
-
   };
 
 
@@ -215,6 +216,20 @@ const TagsPad = (props) => {
         scrollbarWidth: "thin",
       }}
     >
+      {!tagsReady ? (
+        <div style={
+          {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+          }
+        }>Loading tags... 
+        </div>
+        
+      ) : null}
+
       {Object.keys(tags.current).map((k) => {
         return tags.current[k].length > 0 ? (
           <div
