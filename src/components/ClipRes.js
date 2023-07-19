@@ -15,6 +15,25 @@ const body = {
   width: "96%",
 };
 
+const videoPlayerContainer = {
+  width: "90%",
+  height: "70%",
+  marginTop: "2%",
+  flexDirection: "column",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const audioCtrlContainer = {
+  display: " flex",
+  flexDirection: "column",
+  width: "100%",
+  height: "10%",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
 const info = {
   display: " flex",
   flexDirection: "column",
@@ -44,16 +63,6 @@ const longInfo = {
   justifyContent: "center",
 };
 
-const videoPlayer = {
-  width: "90%",
-  height: "70%",
-  marginTop: "2%",
-  flexDirection: "column",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 const ClipRes = (props) => {
   const url =
     props.clipInfo.url === null
@@ -66,13 +75,13 @@ const ClipRes = (props) => {
   const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   return (
     <div style={body}>
-      <div style={videoPlayer}>
+      <div style={videoPlayerContainer}>
         {url !== null ? (
           <ReactPlayer
             ref={playerRef}
             url={url}
             width="100%"
-            height="100%"
+            height="auto"
             autoPlay={false}
             controls={true}
             config={{
@@ -104,16 +113,19 @@ const ClipRes = (props) => {
             Playout URL Err
           </div>
         )}
+      </div>
+      <div style={audioCtrlContainer}>
         {audioTracks && (
           <select
             onChange={(event) => {
               const audioTrackId = event.target.value;
               setSelectedAudioTrack(audioTrackId);
-              console.log(`set to ${audioTrackId}`);
+              console.log(`set audio track to ${audioTrackId}`);
               const hls = playerRef.current.getInternalPlayer("hls");
               hls.audioTrackController.setAudioTrack(audioTrackId);
             }}
             value={selectedAudioTrack}
+            style={{ height: "100%", width: "20%" }}
           >
             {audioTracks.map((track) => {
               return (
