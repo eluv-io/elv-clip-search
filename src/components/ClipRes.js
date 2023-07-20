@@ -1,5 +1,6 @@
 import React from "react";
-import ReactHlsPlayer from "react-hls-player";
+import { useRef, useState } from "react";
+import ReactPlayer from "react-player";
 const body = {
   display: "flex",
   flexDirection: "column",
@@ -12,6 +13,25 @@ const body = {
   marginBottom: 10,
   borderRadius: 10,
   width: "96%",
+};
+
+const videoPlayerContainer = {
+  width: "90%",
+  height: "70%",
+  marginTop: "2%",
+  flexDirection: "column",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const audioCtrlContainer = {
+  display: " flex",
+  flexDirection: "row",
+  width: "100%",
+  height: "5%",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const info = {
@@ -43,16 +63,6 @@ const longInfo = {
   justifyContent: "center",
 };
 
-const videoPlayer = {
-  width: "90%",
-  height: "70%",
-  marginTop: "2%",
-  flexDirection: "column",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 const ClipRes = (props) => {
   const url =
     props.clipInfo.url === null
@@ -60,21 +70,34 @@ const ClipRes = (props) => {
       : `${props.clipInfo.url}&resolve=false&clip_start=${
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const playerRef = useRef(null);
+  const [audioTracks, setAudioTracks] = useState(null);
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   return (
     <div style={body}>
-      <div style={videoPlayer}>
+      <div style={videoPlayerContainer}>
         {url !== null ? (
-          <ReactHlsPlayer
-            src={url}
+          <ReactPlayer
+            ref={playerRef}
+            url={url}
             width="100%"
             height="auto"
             autoPlay={false}
             controls={true}
-            hlsConfig={{
+            config={{
               capLevelToPlayerSize: true,
-              maxBufferLength: 1,
+              maxBufferLength: 0,
             }}
-          ></ReactHlsPlayer>
+            onReady={() => {
+              console.log("new player ready");
+              const hls = playerRef.current.getInternalPlayer("hls");
+              const tracks = hls.audioTrackController.tracks;
+              if (tracks !== null && tracks.length > 1) {
+                setAudioTracks(tracks);
+                setSelectedAudioTrack(0);
+              }
+            }}
+          ></ReactPlayer>
         ) : (
           <div
             style={{
@@ -91,6 +114,32 @@ const ClipRes = (props) => {
           </div>
         )}
       </div>
+
+      {audioTracks && (
+        <div style={audioCtrlContainer}>
+          audio track:
+          <select
+            onChange={(event) => {
+              const audioTrackId = event.target.value;
+              setSelectedAudioTrack(audioTrackId);
+              console.log(`set audio track to ${audioTrackId}`);
+              const hls = playerRef.current.getInternalPlayer("hls");
+              hls.audioTrackController.setAudioTrack(audioTrackId);
+            }}
+            value={selectedAudioTrack}
+            style={{ height: "100%", width: "20%", marginLeft: 5 }}
+          >
+            {audioTracks.map((track) => {
+              return (
+                <option key={`option-${track.id}`} value={track.id}>
+                  {track.name}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
+
       <div style={info}>
         <div style={shortInfo}>
           <div>title: </div>
