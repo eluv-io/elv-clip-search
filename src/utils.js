@@ -121,7 +121,6 @@ export const createSearchUrl = async ({
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        max_total: 160000,
         display_fields: "f_start_time,f_end_time",
         clips: true,
         scored: true,
@@ -132,6 +131,9 @@ export const createSearchUrl = async ({
       if (fuzzySearchPhrase === "") {
         queryParams.sort = "f_start_time@asc";
         queryParams.scored = false;
+      } else {
+        // only  set the max-total when we are using fuzzy search
+        queryParams.max_total = 160;
       }
       const url = await client.Rep({
         libraryId,
