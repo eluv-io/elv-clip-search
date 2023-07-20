@@ -92,7 +92,7 @@ const TagsPad = (props) => {
         const currdoc = src.document;
         const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
         const shotRef = doc(shotInfoRef, shotID);
-        const currShot = await getDoc(shotRef);
+        // const currShot = await getDoc(shotRef);
         const shot = {
           iqHash: iqHash,
           start: currdoc.start_time,
@@ -108,8 +108,8 @@ const TagsPad = (props) => {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
               let dislikeState = 0;
-              if (currShot.exists()) {
-                const prevDislike = currShot.data().tags[idx].feedback
+              if (shotID in props.prevShots) {
+                const prevDislike = props.prevShots[shotID].tags[idx].feedback
                 if (props.searchID in prevDislike) {
                   dislikeState = prevDislike[props.searchID]
                 }
@@ -159,6 +159,7 @@ const TagsPad = (props) => {
     }, [])
     allIndices.forEach((i) => {
       shots.current[shotID].tags[i].feedback[props.searchID] = score;
+      props.updatePrevShots(shotID, i, score)
     })
     
     const idx = lst.findIndex((dic) => dic.status === t.status);

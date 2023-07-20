@@ -149,8 +149,9 @@ const InfoPad = (props) => {
                 backgroundColor: "transparent",
               }}
               readOnly
+              value={props.clipInfo.url}
             >
-              {props.clipInfo.url}
+              
             </textarea>
           </div>
         </div>

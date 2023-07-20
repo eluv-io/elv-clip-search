@@ -57,6 +57,8 @@ const QAPad = (props) => {
             searchID={props.searchID}
             dislikedTags={props.dislikedTags}
             dislikeTagHook={props.dislikeTagHook}
+            updatePrevShots={props.updatePrevShots}
+            prevShots={props.prevShots}
           ></TagsPad>
         </div>
       </div>

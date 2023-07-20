@@ -1,7 +1,8 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import ReactPlayer from "react-player";
+import { collection, doc, getDoc } from "firebase/firestore";
 
 const container = {
   width: "97%",
@@ -54,6 +55,35 @@ const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
+  const shots = useRef({});
+
+  useEffect(() => {
+    prepareShots();
+  }, [])
+
+  const hash = (s) => {
+    return s;
+  };
+
+  const prepareShots = async () => {
+    const shotInfoRef = collection(props.db, "Shot_info");
+    const _hasTags = "text" in props.clipInfo.sources[0].document;
+    if (_hasTags) {
+      const iqHash = props.clipInfo.hash;
+      for (let src of props.clipInfo.sources) {
+        const currdoc = src.document;
+        const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
+        const shotRef = doc(shotInfoRef, shotID);
+        getDoc(shotRef).then((shot) => {
+          if (shot.exists()) {
+            console.log(shotID);
+            console.log(shot.data())
+            shots.current[shotID] = shot.data();
+          }
+        });
+      }
+    }
+  };
 
   const handleStart = () => {
     props.updateEngagement(clipInfo, 0, 1);
@@ -159,6 +189,10 @@ const ClipRes = (props) => {
         dislikeTagHook={(id) => {
           dislikedTags.current.push(id);
         }}
+        updatePrevShots={(shotID, i, score) => {
+          shots.current[shotID].tags[i].feedback[props.searchID] = score;
+        }}
+        prevShots={shots.current}
       ></QAPad>
     </div>
   );
