@@ -11,7 +11,6 @@ import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
-import { storeClient, initializeEngagement, updateEngagement, storeSearchHistory } from "./fn";
 import {
   getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
 } from 'firebase/firestore' ;
