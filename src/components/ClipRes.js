@@ -58,6 +58,7 @@ const ClipRes = (props) => {
   const handleStart = () => {
     props.updateEngagement(clipInfo, 0, 1);
     console.log("Started");
+
   };
 
   const handlePlay = () => {

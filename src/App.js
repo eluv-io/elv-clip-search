@@ -11,6 +11,7 @@ import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
 
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
+import { storeClient, initializeEngagement, updateEngagement, storeSearchHistory } from "./fn";
 import {
   getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
 } from 'firebase/firestore' ;
@@ -248,31 +249,44 @@ const App = () => {
 
   //initialize the DB and store the useradd
   useEffect(() => {
-    initializeApp(firebaseConfig);
-    db.current = getFirestore();
+    try {
+      initializeApp(firebaseConfig);
+      db.current = getFirestore();
+    } catch (err) {
+      console.log("Error occured when initializing the DB");
+      console.log(err);
+    }
+
     getClient();
-    client.current.CurrentAccountAddress().then((val) => {
-      clientAdd.current = val;
-      console.log(clientAdd.current)
-      const userRef = collection(db.current, 'User');
-      const clientRef = doc(userRef, clientAdd.current);
-      getDoc(clientRef).then((thisClient) => {
-        if (!thisClient.exists()) {
-          setDoc(clientRef, {
-            Client_address: clientAdd.current,
-            Wallet_id: null,
-            Email_add: null,
-            Creation_time: null,
-            Updated_time: null,
-            Personal_info: {}
-          }).then(() => {
-            console.log("User info saved");
-          })
-        } else {
-          console.log("This user already exists");
-        }
-      });
-    })
+    // storeClient(db, clientAdd, client);
+    try {
+      client.current.CurrentAccountAddress().then((val) => {
+        clientAdd.current = val;
+        console.log(clientAdd.current)
+        const userRef = collection(db.current, 'User');
+        const clientRef = doc(userRef, clientAdd.current);
+        getDoc(clientRef).then((thisClient) => {
+          if (!thisClient.exists()) {
+            setDoc(clientRef, {
+              Client_address: clientAdd.current,
+              Wallet_id: null,
+              Email_add: null,
+              Creation_time: null,
+              Updated_time: null,
+              Personal_info: {}
+            }).then(() => {
+              console.log("User info saved");
+            })
+          } else {
+            console.log("This user already exists");
+          }
+        });
+      })
+    } catch (err) {
+      console.log("Error occured when storing the user info");
+      console.log(err)
+    }
+
   }, []);
 
   const resetLoadStatus = () => {
@@ -301,15 +315,23 @@ const App = () => {
         }
       }
     }
-    const engTblRef = collection(db.current, "Engagement");
-    const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
-    setDoc(engRef, {
-      engagement: engagement.current,
-      User_id: clientAdd.current,
-      Search_id: searchID.current
-    }).then(() => {
-      console.log("Engagement table initialized")
-    })
+
+    if (db.current !== null) {
+      try {
+        const engTblRef = collection(db.current, "Engagement");
+        const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
+        setDoc(engRef, {
+          engagement: engagement.current,
+          User_id: clientAdd.current,
+          Search_id: searchID.current
+        }).then(() => {
+          console.log("Engagement table initialized")
+        })
+      } catch (err) {
+        console.log("Error occured when initializing the engagement table");
+        console.log(err);
+      }
+    }
   }
 
   const updateEngagement = (clipInfo, watchedTime, numView) => {
@@ -319,33 +341,47 @@ const App = () => {
       const newNumView = numView + engagement.current[clipID].numView;
       console.log(newNumView)
       engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
-      const engTblRef = collection(db.current, "Engagement");
-      const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
-      updateDoc(engRef, {
-        engagement: engagement.current
-      }).then(() => {
-        console.log(engagement.current)
-        console.log("engagement updated!")
-      })
+      if (db !== null) {
+        try {
+          const engTblRef = collection(db.current, "Engagement");
+          const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
+          updateDoc(engRef, {
+            engagement: engagement.current
+          }).then(() => {
+            console.log(engagement.current)
+            console.log("engagement updated!")
+          })
+        } catch (err) {
+          console.log("Error occured when updating the engagement table")
+          console.log(err);
+        }
+      }
     } else {
       console.log("only keep track of the top 20 clips for v2");
     }
   }
  
   const storeSearchHistory = () => {
-    const colRef = collection(db.current, "Search_history");
-    const now = Timestamp.now().toDate().toString();
-    addDoc(colRef, {
-      client: clientAdd.current,
-      search_time: now.replace(/\([^()]*\)/g, ""),
-      fuzzySearchPhrase: fuzzySearchPhrase,
-      fuzzySearchFields: fuzzySearchField,
-      searchKeywords: searchTerms.current,
-    }).then((docRef) => {
-      console.log("search history updated with docID", docRef.id);
-      searchID.current = docRef.id;
-      initializeEngagement();
-    });
+    if (db !== null) {
+      try {
+        const colRef = collection(db.current, "Search_history");
+        const now = Timestamp.now().toDate().toString();
+        addDoc(colRef, {
+          client: clientAdd.current,
+          search_time: now.replace(/\([^()]*\)/g, ""),
+          fuzzySearchPhrase: fuzzySearchPhrase,
+          fuzzySearchFields: fuzzySearchField,
+          searchKeywords: searchTerms.current,
+        }).then((docRef) => {
+          console.log("search history updated with docID", docRef.id);
+          searchID.current = docRef.id;
+          initializeEngagement();
+        })
+      } catch (err) {
+        console.log("Error occured when storing the search history")
+        console.log(err)
+      }
+    }
   };
 
   const getClient = () => {

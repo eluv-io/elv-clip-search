@@ -10,7 +10,7 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-
+// import { storeFeedback } from "./src/fn";
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
 const feedback = {
@@ -72,29 +72,35 @@ const Feedback = (props) => {
   const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
 
   useEffect(() => {
-    const userRef = collection(db, "Feedback", clientadd, "Data");
+    if (db !== null) {
+      try {
+        const userRef = collection(db, "Feedback", clientadd, "Data");
+        const q = query(
+          userRef,
+          where("clipHash", "==", clipHash),
+          orderBy("feedback_time", "desc"),
+          limit(1)
+        );
 
-    const q = query(
-      userRef,
-      where("clipHash", "==", clipHash),
-      orderBy("feedback_time", "desc"),
-      limit(1)
-    );
-
-    getDocs(q).then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        otherreasons.current = data.other_reasons;
-        setReason(data.reason);
-        for (let option of options) {
-          if (option.label === data.reason) {
-            setReasonId(option.value);
-            console.log(option.value, option.label);
-          }
-        }
-        setRating(data.rating);
-      });
-    });
+        getDocs(q).then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            otherreasons.current = data.other_reasons;
+            setReason(data.reason);
+            for (let option of options) {
+              if (option.label === data.reason) {
+                setReasonId(option.value);
+                console.log(option.value, option.label);
+              }
+            }
+            setRating(data.rating);
+          });
+        });
+      } catch(err) {
+        console.log("Error occured when fetching previous feedbacks")
+        console.log(err)
+      }
+    }
   }, []);
 
   const handleRateChange = (num) => {
@@ -153,29 +159,35 @@ const Feedback = (props) => {
         .toDate()
         .toString()
         .replace(/\([^()]*\)/g, "");
-      const userRef = collection(db, "Feedback", clientadd, "Data");
+      
+      if (db !== null) {
+        try {
+          const userRef = collection(db, "Feedback", clientadd, "Data");
+          const docRef = doc(userRef, now);
+          setDoc(docRef, {
+            client: clientadd,
+            feedback_time: new Date(now),
+            rating: score,
+            clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
+            reason: reason,
+            other_reasons: otherreasons.current,
+            search_id: props.searchID,
+          }).then(() => {
+            console.log("Feedback collected successfully!");
+          });
 
-      const docRef = doc(userRef, now);
+          const textElement = document.getElementById("reason_input");
+          if (textElement !== null) {
+            textElement.style.display = "none";
+          }
 
-      setDoc(docRef, {
-        client: clientadd,
-        feedback_time: new Date(now),
-        rating: score,
-        clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
-        reason: reason,
-        other_reasons: otherreasons.current,
-        search_id: props.searchID,
-      }).then(() => {
-        console.log("Feedback collected successfully!");
-      });
-
-      const textElement = document.getElementById("reason_input");
-      if (textElement !== null) {
-        textElement.style.display = "none";
+          submissionElement.style.display = "flex";
+          // console.log(submissionElement)
+        } catch (err) {
+          console.log("Error occured when storing the feedback")
+          console.log(err);
+        }
       }
-
-      submissionElement.style.display = "flex";
-      // console.log(submissionElement)
     }
   };
 

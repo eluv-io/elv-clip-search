@@ -67,6 +67,8 @@ const TagsPad = (props) => {
           tags: shot.tags,
         }).then(() => {
           console.log("shot updated successfully!");
+        }).catch((err) => {
+          console.log(err);
         });
       } else {
         setDoc(shotRef, {
@@ -166,40 +168,45 @@ const TagsPad = (props) => {
 
     const clipInfo = props.clipInfo;
     const clipRank = clipInfo.rank;
-    const clipInfoRef = collection(db, "Clip_info");
     const clipStart = clipInfo.start;
     const clipEnd = clipInfo.end;
     const contentHash = clipInfo.hash;
-    const clipRef = doc(
-      clipInfoRef,
-      contentHash + "_" + clipStart + "-" + clipEnd
-    );
-    const clip = await getDoc(clipRef);
-    if (!clip.exists()) {
-      setDoc(clipRef, {
-        contentHash: contentHash,
-        start_time: clipStart,
-        end_time: clipEnd,
-        rank: [{ searchID: props.searchID, rank: clipRank }],
-        shots: Object.keys(shots.current),
-      }).then(() => {
-        console.log("clip stored successfully!");
-      });
-    } else {
-      const tempRank = clip.data().rank;
-      if (
-        !(
-          tempRank[tempRank.length - 1].rank === clipRank &&
-          tempRank[tempRank.length - 1].saerchID === props.searchID
-        )
-      ) {
-        tempRank.push({ saerchID: props.searchID, rank: clipRank });
-        updateDoc(clipRef, {
-          rank: tempRank,
+
+    try {
+      const clipInfoRef = collection(db, "Clip_info");
+      const clipRef = doc(
+        clipInfoRef,
+        contentHash + "_" + clipStart + "-" + clipEnd
+      );
+      const clip = await getDoc(clipRef);
+      if (!clip.exists()) {
+        setDoc(clipRef, {
+          contentHash: contentHash,
+          start_time: clipStart,
+          end_time: clipEnd,
+          rank: [{ searchID: props.searchID, rank: clipRank }],
+          shots: Object.keys(shots.current),
         }).then(() => {
-          console.log("clip rank updated successfully!");
+          console.log("clip stored successfully!");
         });
+      } else {
+        const tempRank = clip.data().rank;
+        if (
+          !(
+            tempRank[tempRank.length - 1].rank === clipRank &&
+            tempRank[tempRank.length - 1].saerchID === props.searchID
+          )
+        ) {
+          tempRank.push({ saerchID: props.searchID, rank: clipRank });
+          updateDoc(clipRef, {
+            rank: tempRank,
+          }).then(() => {
+            console.log("clip rank updated successfully!");
+          });
+        }
       }
+    } catch (err) {
+      console.log(err)
     }
   };
 
