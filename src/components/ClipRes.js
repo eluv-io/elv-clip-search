@@ -91,6 +91,14 @@ const ClipRes = (props) => {
                 console.log(shotID);
                 console.log(shot.data())
                 shots.current[shotID] = shot.data();
+              } else {
+                shots.current[shotID] = {
+                  iqHash: null,
+                  start: null,
+                  end: null,
+                  shotID: shotID,
+                  tags: [],
+                }
               }
             });
           }
@@ -243,7 +251,12 @@ const ClipRes = (props) => {
           dislikedTags.current.push(id);
         }}
         updatePrevShots={(shotID, i, score) => {
-          shots.current[shotID].tags[i].feedback[props.searchID] = score;
+          if (shotID in shots.current) {
+            shots.current[shotID].tags[i].feedback[props.searchID] = score;
+          }
+        }}
+        initializePrevShots={(shotID, tag) => {
+          shots.current[shotID].tags.push(tag);
         }}
         prevShots={shots.current}
       ></QAPad>

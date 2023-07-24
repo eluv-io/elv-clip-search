@@ -64,6 +64,10 @@ const TagsPad = (props) => {
     getDoc(shotRef).then((s) => {
       if (s.exists()) {
         updateDoc(shotRef, {
+          start: shot.start,
+          end: shot.end,
+          iqHash: shot.iqHash,
+          shotID: shot.shotID,
           tags: shot.tags,
         }).then(() => {
           console.log("shot updated successfully!");
@@ -108,7 +112,8 @@ const TagsPad = (props) => {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
               let dislikeState = 0;
-              if (shotID in props.prevShots) {
+              if (shotID in props.prevShots && props.prevShots[shotID].tags.length != 0) {
+                // console.log(props.prevShots[shotID].tags)
                 const prevDislike = props.prevShots[shotID].tags[idx].feedback
                 if (props.searchID in prevDislike) {
                   dislikeState = prevDislike[props.searchID]
@@ -134,6 +139,10 @@ const TagsPad = (props) => {
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID]: dislikeState },
               });
+              props.initializePrevShots(shotID, {
+                status: { track: k, text: text, idx: idx },
+                feedback: { [props.searchID]: dislikeState },
+              })
 
               idx = idx + 1;
             }

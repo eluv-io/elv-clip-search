@@ -58,6 +58,7 @@ const QAPad = (props) => {
             dislikedTags={props.dislikedTags}
             dislikeTagHook={props.dislikeTagHook}
             updatePrevShots={props.updatePrevShots}
+            initializePrevShots={props.initializePrevShots}
             prevShots={props.prevShots}
           ></TagsPad>
         </div>
