@@ -149,7 +149,6 @@ const FuzzySearchBox = (props) => {
         } else {
           props.handleSubmitClick({ fields: [], text: "" });
         }
-
         props.statusHandler();
       }}
       disabled={props.disabled}
