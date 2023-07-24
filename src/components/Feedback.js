@@ -10,7 +10,6 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-// import { storeFeedback } from "./src/fn";
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
 const feedback = {
@@ -182,7 +181,6 @@ const Feedback = (props) => {
           }
 
           submissionElement.style.display = "flex";
-          // console.log(submissionElement)
         } catch (err) {
           console.log("Error occured when storing the feedback")
           console.log(err);

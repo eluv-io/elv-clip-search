@@ -38,7 +38,7 @@ const TagsPad = (props) => {
   const [refresh, setRefresh] = useState(false);
   const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
-  const shotInfoRef = collection(db, "Shot_info");
+
 
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const TagsPad = (props) => {
 
   const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
-
+    const shotInfoRef = collection(db, "Shot_info");
     const shotRef = doc(shotInfoRef, shot.shotID);
     getDoc(shotRef).then((s) => {
       if (s.exists()) {
@@ -91,7 +91,7 @@ const TagsPad = (props) => {
       for (let src of props.clipInfo.sources) {
         const currdoc = src.document;
         const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
-        const shotRef = doc(shotInfoRef, shotID);
+        // const shotRef = doc(shotInfoRef, shotID);
         // const currShot = await getDoc(shotRef);
         const shot = {
           iqHash: iqHash,

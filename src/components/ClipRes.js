@@ -76,21 +76,27 @@ const ClipRes = (props) => {
   };
 
   const prepareShots = async () => {
-    const shotInfoRef = collection(props.db, "Shot_info");
-    const _hasTags = "text" in props.clipInfo.sources[0].document;
-    if (_hasTags) {
-      const iqHash = props.clipInfo.hash;
-      for (let src of props.clipInfo.sources) {
-        const currdoc = src.document;
-        const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
-        const shotRef = doc(shotInfoRef, shotID);
-        getDoc(shotRef).then((shot) => {
-          if (shot.exists()) {
-            console.log(shotID);
-            console.log(shot.data())
-            shots.current[shotID] = shot.data();
+    if (props.db !== null) {
+      try {
+        const shotInfoRef = collection(props.db, "Shot_info");
+        const _hasTags = "text" in props.clipInfo.sources[0].document;
+        if (_hasTags) {
+          const iqHash = props.clipInfo.hash;
+          for (let src of props.clipInfo.sources) {
+            const currdoc = src.document;
+            const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
+            const shotRef = doc(shotInfoRef, shotID);
+            getDoc(shotRef).then((shot) => {
+              if (shot.exists()) {
+                console.log(shotID);
+                console.log(shot.data())
+                shots.current[shotID] = shot.data();
+              }
+            });
           }
-        });
+        }
+      } catch (err) {
+        console.log(err)
       }
     }
   };
