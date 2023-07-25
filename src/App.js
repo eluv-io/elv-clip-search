@@ -14,7 +14,6 @@ import firebaseConfig from "./configuration";
 import {
   getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
 } from 'firebase/firestore' ;
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
 
 const title = {
@@ -258,34 +257,36 @@ const App = () => {
     }
 
     getClient();
-    // storeClient(db, clientAdd, client);
     try {
-      client.current.CurrentAccountAddress().then((val) => {
-        clientAdd.current = val;
-        console.log(clientAdd.current)
-        const userRef = collection(db.current, 'User');
-        const clientRef = doc(userRef, clientAdd.current);
-        getDoc(clientRef).then((thisClient) => {
-          if (!thisClient.exists()) {
-            setDoc(clientRef, {
-              Client_address: clientAdd.current,
-              Wallet_id: null,
-              Email_add: null,
-              Creation_time: null,
-              Updated_time: null,
-              Personal_info: {}
-            }).then(() => {
-              console.log("User info saved");
-            })
-          } else {
-            console.log("This user already exists");
-          }
-        });
-      })
+      if (db.current != null) {
+
+        client.current.CurrentAccountAddress().then((val) => {
+          clientAdd.current = val;
+          const userRef = collection(db.current, 'User');
+          const clientRef = doc(userRef, clientAdd.current);
+          getDoc(clientRef).then((thisClient) => {
+            if (!thisClient.exists()) {
+              setDoc(clientRef, {
+                Client_address: clientAdd.current,
+                Wallet_id: null,
+                Email_add: null,
+                Creation_time: null,
+                Updated_time: null,
+                Personal_info: {}
+              }).then(() => {
+                console.log("User info saved");
+              })
+            } else {
+              console.log("This user already exists");
+            }
+          });
+        })
+      }
     } catch (err) {
       console.log("Error occured when storing the user info");
-      console.log(err)
+      console.error(err)
     }
+    
 
   }, []);
 
@@ -341,7 +342,7 @@ const App = () => {
       const newNumView = numView + engagement.current[clipID].numView;
       console.log(newNumView)
       engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
-      if (db !== null) {
+      if (db.current !== null) {
         try {
           const engTblRef = collection(db.current, "Engagement");
           const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);

@@ -68,7 +68,9 @@ const ClipRes = (props) => {
   const shots = useRef({});
 
   useEffect(() => {
-    prepareShots();
+    prepareShots().then(() => {
+      console.log(shots.current)
+    });
   }, [])
 
   const hash = (s) => {
@@ -88,17 +90,7 @@ const ClipRes = (props) => {
             const shotRef = doc(shotInfoRef, shotID);
             getDoc(shotRef).then((shot) => {
               if (shot.exists()) {
-                console.log(shotID);
-                console.log(shot.data())
                 shots.current[shotID] = shot.data();
-              } else {
-                shots.current[shotID] = {
-                  iqHash: null,
-                  start: null,
-                  end: null,
-                  shotID: shotID,
-                  tags: [],
-                }
               }
             });
           }
@@ -259,6 +251,10 @@ const ClipRes = (props) => {
           shots.current[shotID].tags.push(tag);
         }}
         prevShots={shots.current}
+        setShots={(s) => {
+          shots.current = s
+        }}
+        prevS={shots}
       ></QAPad>
 
     </div>

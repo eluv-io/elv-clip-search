@@ -120,7 +120,7 @@ export const createSearchUrl = async ({
             : search === ""
             ? `(${fuzzySearchPhrase})`
             : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
-        select: "text,/public/asset_metadata/title",
+        select: "start_time,end_time,text,/public/asset_metadata/title",
         start: 0,
         limit: 160,
         display_fields: "f_start_time,f_end_time",

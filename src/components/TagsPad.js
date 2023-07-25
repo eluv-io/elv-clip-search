@@ -43,14 +43,17 @@ const TagsPad = (props) => {
 
   useEffect(() => {
     console.log("parsing tags");
-    prepareTags()
-      .then(() => {
-        setTagsReady(true);
-        setRefresh((v) => !v);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    try{
+      prepareTags()
+        .then(() => {
+          // props.prevS.current = shots.current
+          console.log("Before clicking", props.prevS.current)
+          setTagsReady(true);
+          setRefresh((v) => !v);
+        })
+      } catch(err) {
+        console.log(err)
+      }
   }, []);
 
   const hash = (s) => {
@@ -59,6 +62,9 @@ const TagsPad = (props) => {
 
   const pushShotToDB = (shot) => {
     console.log("pushing shot into DB ...... ");
+    if (db === null) {
+      return
+    }
     const shotInfoRef = collection(db, "Shot_info");
     const shotRef = doc(shotInfoRef, shot.shotID);
     getDoc(shotRef).then((s) => {
@@ -83,7 +89,9 @@ const TagsPad = (props) => {
           tags: shot.tags,
         }).then(() => {
           console.log("shot created successfully");
-        });
+        }).catch((err) => {
+          console.log(err);
+        })
       }
     });
   };
@@ -95,8 +103,6 @@ const TagsPad = (props) => {
       for (let src of props.clipInfo.sources) {
         const currdoc = src.document;
         const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
-        // const shotRef = doc(shotInfoRef, shotID);
-        // const currShot = await getDoc(shotRef);
         const shot = {
           iqHash: iqHash,
           start: currdoc.start_time,
@@ -112,13 +118,20 @@ const TagsPad = (props) => {
           for (let v of currdoc.text[k]) {
             for (let text of v.text) {
               let dislikeState = 0;
-              if (shotID in props.prevShots && props.prevShots[shotID].tags.length != 0) {
+              // if (shotID in props.prevShots && props.prevShots[shotID].tags.length !== 0) {
+              console.log(shotID in props.prevS.current)
+              console.log(props.searchID)
+              if (shotID in props.prevS.current) {
                 // console.log(props.prevShots[shotID].tags)
-                const prevDislike = props.prevShots[shotID].tags[idx].feedback
+                const prevDislike = props.prevS.current[shotID].tags[idx].feedback
+                // console.log("prevDislike", prevDislike)
+                // console.log(props.searchID)
                 if (props.searchID in prevDislike) {
+                  // console.log(prevDislike[props.searchID])
                   dislikeState = prevDislike[props.searchID]
                 }
               }
+              // console.log(dislikeState)
 
               const dic = {
                 track: k,
@@ -139,10 +152,10 @@ const TagsPad = (props) => {
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID]: dislikeState },
               });
-              props.initializePrevShots(shotID, {
-                status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID]: dislikeState },
-              })
+              // props.initializePrevShots(shotID, {
+              //   status: { track: k, text: text, idx: idx },
+              //   feedback: { [props.searchID]: dislikeState },
+              // })
 
               idx = idx + 1;
             }
@@ -168,8 +181,12 @@ const TagsPad = (props) => {
     }, [])
     allIndices.forEach((i) => {
       shots.current[shotID].tags[i].feedback[props.searchID] = score;
-      props.updatePrevShots(shotID, i, score)
+      // props.updatePrevShots(shotID, i, score)
     })
+    // props.setShots(shots.current)
+    props.prevS.current = shots.current
+    // console.log(shots.current, props.prevS.current)
+    console.log("After clicking", props.prevS.current)
     
     const idx = lst.findIndex((dic) => dic.status === t.status);
     lst[idx].dislike = score;

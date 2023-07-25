@@ -174,18 +174,17 @@ const Feedback = (props) => {
           }).then(() => {
             console.log("Feedback collected successfully!");
           });
-
-          const textElement = document.getElementById("reason_input");
-          if (textElement !== null) {
-            textElement.style.display = "none";
-          }
-
-          submissionElement.style.display = "flex";
         } catch (err) {
           console.log("Error occured when storing the feedback")
           console.log(err);
         }
       }
+      const textElement = document.getElementById("reason_input");
+      if (textElement !== null) {
+        textElement.style.display = "none";
+      }
+
+      submissionElement.style.display = "flex";
     }
   };
 
