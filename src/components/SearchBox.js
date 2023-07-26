@@ -69,6 +69,7 @@ const SearchBox = (props) => {
                 const secondHalf = terms.slice(index + 1, terms.length);
                 const newTerms = firstHalf.concat(secondHalf);
                 setTerms(newTerms);
+                props.setSearchTerm(newTerms)
                 const res = makeString(newTerms);
                 props.handleSubmitClick(res);
               }

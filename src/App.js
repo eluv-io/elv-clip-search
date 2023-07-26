@@ -203,8 +203,6 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
-  // const [response, setResponse] = useState([]); //TODO replace all the "response" as displayingContents
-  // const searchTerms = useRef([]);
   const [searchTerms, setSearchTerms] = useState([])
   const [displayingContents, setDisplayingContents] = useState([]);
 
