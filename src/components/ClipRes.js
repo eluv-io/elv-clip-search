@@ -102,7 +102,11 @@ const ClipRes = (props) => {
   };
 
   const handleStart = () => {
+    try {
     props.updateEngagement(clipInfo, 0, 1);
+    } catch (err) {
+      console.log(err)
+    }
     console.log("Started");
 
   };
@@ -119,7 +123,11 @@ const ClipRes = (props) => {
       const elapsedTime = (Date.now() - startTime.current) / 1000;
       viewTime.current = viewTime.current + elapsedTime;
       startTime.current = null;
+      try {
       props.updateEngagement(clipInfo, elapsedTime, 0);
+      } catch (err) {
+        console.log(err)
+      }
     }
     console.log("paused");
     console.log("total view time", viewTime.current);

@@ -204,7 +204,8 @@ const App = () => {
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
   // const [response, setResponse] = useState([]); //TODO replace all the "response" as displayingContents
-  const searchTerms = useRef([]);
+  // const searchTerms = useRef([]);
+  const [searchTerms, setSearchTerms] = useState([])
   const [displayingContents, setDisplayingContents] = useState([]);
 
   // for help the topk showing method to rescue the BM25 matching results
@@ -365,6 +366,7 @@ const App = () => {
   const storeSearchHistory = () => {
     if (db !== null) {
       try {
+        console.log(searchTerms)
         const colRef = collection(db.current, "Search_history");
         const now = Timestamp.now().toDate().toString();
         addDoc(colRef, {
@@ -372,7 +374,7 @@ const App = () => {
           search_time: now.replace(/\([^()]*\)/g, ""),
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchField,
-          searchKeywords: searchTerms.current,
+          searchKeywords: searchTerms,
         }).then((docRef) => {
           console.log("search history updated with docID", docRef.id);
           searchID.current = docRef.id;
@@ -695,7 +697,7 @@ const App = () => {
                 currentPage.current = 1;
               }}
               setSearchTerm={(terms) => {
-                searchTerms.current = terms;
+                setSearchTerms(terms);
               }}
               statusHandler={resetLoadStatus}
             />
@@ -748,7 +750,7 @@ const App = () => {
                   currentPage.current = 1;
                 }}
                 setSearchTerm={(terms) => {
-                  searchTerms.current = terms;
+                  setSearchTerms(terms);
                 }}
                 statusHandler={resetLoadStatus}
               />
