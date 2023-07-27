@@ -73,7 +73,7 @@ const TagsPad = (props) => {
           start: shot.start,
           end: shot.end,
           iqHash: shot.iqHash,
-          shotID: shot.shotID,
+          "iqHash_start-end": shot.shotID,
           tags: shot.tags,
         }).then(() => {
           console.log("shot updated successfully!");
@@ -85,7 +85,7 @@ const TagsPad = (props) => {
           start: shot.start,
           end: shot.end,
           iqHash: shot.iqHash,
-          shotID: shot.shotID,
+          "iqHash_start-end": shot.shotID,
           tags: shot.tags,
         }).then(() => {
           console.log("shot created successfully");
