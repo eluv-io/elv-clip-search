@@ -610,6 +610,7 @@ const App = () => {
         setSearch("");
         setFuzzySearchField([]);
         setFuzzySearchPhrase("");
+        setSearchTerms("");
 
         currentPage.current = 1;
         let libId = "";
