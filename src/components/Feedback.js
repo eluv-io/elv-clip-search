@@ -170,7 +170,7 @@ const Feedback = (props) => {
             clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
             reason: reason,
             other_reasons: otherreasons.current,
-            search_id: props.searchID,
+            search_id: props.searchID.current,
           }).then(() => {
             console.log("Feedback collected successfully!");
           });

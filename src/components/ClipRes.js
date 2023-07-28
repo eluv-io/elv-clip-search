@@ -252,7 +252,7 @@ const ClipRes = (props) => {
         }}
         updatePrevShots={(shotID, i, score) => {
           if (shotID in shots.current) {
-            shots.current[shotID].tags[i].feedback[props.searchID] = score;
+            shots.current[shotID].tags[i].feedback[props.searchID.current] = score;
           }
         }}
         initializePrevShots={(shotID, tag) => {

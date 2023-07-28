@@ -120,15 +120,15 @@ const TagsPad = (props) => {
               let dislikeState = 0;
               // if (shotID in props.prevShots && props.prevShots[shotID].tags.length !== 0) {
               console.log(shotID in props.prevS.current)
-              console.log(props.searchID)
+              // console.log(props.searchID)
               if (shotID in props.prevS.current) {
                 // console.log(props.prevShots[shotID].tags)
                 const prevDislike = props.prevS.current[shotID].tags[idx].feedback
                 // console.log("prevDislike", prevDislike)
                 // console.log(props.searchID)
-                if (props.searchID in prevDislike) {
+                if (props.searchID.current in prevDislike) {
                   // console.log(prevDislike[props.searchID])
-                  dislikeState = prevDislike[props.searchID]
+                  dislikeState = prevDislike[props.searchID.current]
                 }
               }
               // console.log(dislikeState)
@@ -150,7 +150,7 @@ const TagsPad = (props) => {
 
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID]: dislikeState },
+                feedback: { [props.searchID.current]: dislikeState },
               });
               // props.initializePrevShots(shotID, {
               //   status: { track: k, text: text, idx: idx },
@@ -180,7 +180,7 @@ const TagsPad = (props) => {
       return indices;
     }, [])
     allIndices.forEach((i) => {
-      shots.current[shotID].tags[i].feedback[props.searchID] = score;
+      shots.current[shotID].tags[i].feedback[props.searchID.current] = score;
       // props.updatePrevShots(shotID, i, score)
     })
     // props.setShots(shots.current)
@@ -211,7 +211,7 @@ const TagsPad = (props) => {
           contentHash: contentHash,
           start_time: clipStart,
           end_time: clipEnd,
-          rank: [{ searchID: props.searchID, rank: clipRank }],
+          rank: [{ searchID: props.searchID.current, rank: clipRank }],
           shots: Object.keys(shots.current),
         }).then(() => {
           console.log("clip stored successfully!");
@@ -221,10 +221,10 @@ const TagsPad = (props) => {
         if (
           !(
             tempRank[tempRank.length - 1].rank === clipRank &&
-            tempRank[tempRank.length - 1].saerchID === props.searchID
+            tempRank[tempRank.length - 1].saerchID === props.searchID.current
           )
         ) {
-          tempRank.push({ saerchID: props.searchID, rank: clipRank });
+          tempRank.push({ saerchID: props.searchID.current, rank: clipRank });
           updateDoc(clipRef, {
             rank: tempRank,
           }).then(() => {

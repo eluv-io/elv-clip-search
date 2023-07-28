@@ -934,7 +934,7 @@ const App = () => {
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
                       clientadd={clientAdd.current}
-                      searchID={searchID.current}
+                      searchID={searchID}
                       contents={contents.current}
                       db={db.current}
                       searchVersion={searchVersion.current}
