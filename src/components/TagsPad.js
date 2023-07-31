@@ -132,14 +132,14 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID.current]
                 }
               }
-              const start = v.start_time - shotStart
-              const startmin = Math.floor((start/60000) << 0);
-              const startsec = ((start % 60000) / 1000).toFixed(0);
-              const end = v.end_time - shotStart
-              const endmin = Math.floor((end/60000) << 0);
-              const endsec = ((end % 60000) / 1000).toFixed(0);
-              const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
-              console.log(text, timeline)
+              // const start = v.start_time - shotStart
+              // const startmin = Math.floor((start/60000) << 0);
+              // const startsec = ((start % 60000) / 1000).toFixed(0);
+              // const end = v.end_time - shotStart
+              // const endmin = Math.floor((end/60000) << 0);
+              // const endsec = ((end % 60000) / 1000).toFixed(0);
+              // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
+              // console.log(text, timeline)
               // console.log(v.start_time, v.end_time, shotStart, shotEnd)
               const dic = {
                 track: k,
@@ -147,7 +147,6 @@ const TagsPad = (props) => {
                 dislike: dislikeState,
                 shotID: shotID,
                 tagIdx: idx,
-                timeline: timeline
               };
               if (
                 !tags.current[k].some(
@@ -332,7 +331,7 @@ const TagsPad = (props) => {
                     marginBottom: 3,
                   }}
                 >
-                  {t.status} {t.timeline}
+                  {t.status}
                   <div>
 
                     <button
