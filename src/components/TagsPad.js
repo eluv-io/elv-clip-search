@@ -102,11 +102,14 @@ const TagsPad = (props) => {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const currdoc = src.document;
-        const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
+        console.log(currdoc)
+        const shotStart = currdoc.start_time
+        const shotEnd = currdoc.end_time
+        const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
         const shot = {
           iqHash: iqHash,
-          start: currdoc.start_time,
-          end: currdoc.end_time,
+          start: shotStart,
+          end: shotEnd,
           shotID: shotID,
           tags: [],
         };
@@ -119,8 +122,6 @@ const TagsPad = (props) => {
             for (let text of v.text) {
               let dislikeState = 0;
               // if (shotID in props.prevShots && props.prevShots[shotID].tags.length !== 0) {
-              console.log(shotID in props.prevS.current)
-              // console.log(props.searchID)
               if (shotID in props.prevS.current) {
                 // console.log(props.prevShots[shotID].tags)
                 const prevDislike = props.prevS.current[shotID].tags[idx].feedback
@@ -131,14 +132,22 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID.current]
                 }
               }
-              // console.log(dislikeState)
-
+              const start = v.start_time - shotStart
+              const startmin = Math.floor((start/60000) << 0);
+              const startsec = ((start % 60000) / 1000).toFixed(0);
+              const end = v.end_time - shotStart
+              const endmin = Math.floor((end/60000) << 0);
+              const endsec = ((end % 60000) / 1000).toFixed(0);
+              const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
+              console.log(text, timeline)
+              // console.log(v.start_time, v.end_time, shotStart, shotEnd)
               const dic = {
                 track: k,
                 status: text,
                 dislike: dislikeState,
                 shotID: shotID,
                 tagIdx: idx,
+                timeline: timeline
               };
               if (
                 !tags.current[k].some(
@@ -221,10 +230,10 @@ const TagsPad = (props) => {
         if (
           !(
             tempRank[tempRank.length - 1].rank === clipRank &&
-            tempRank[tempRank.length - 1].saerchID === props.searchID.current
+            tempRank[tempRank.length - 1].searchID === props.searchID.current
           )
         ) {
-          tempRank.push({ saerchID: props.searchID.current, rank: clipRank });
+          tempRank.push({ searchID: props.searchID.current, rank: clipRank });
           updateDoc(clipRef, {
             rank: tempRank,
           }).then(() => {
@@ -323,7 +332,7 @@ const TagsPad = (props) => {
                     marginBottom: 3,
                   }}
                 >
-                  {t.status}
+                  {t.status} {t.timeline}
                   <div>
 
                     <button

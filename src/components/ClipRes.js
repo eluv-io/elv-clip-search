@@ -86,7 +86,7 @@ const ClipRes = (props) => {
           const iqHash = props.clipInfo.hash;
           for (let src of props.clipInfo.sources) {
             const currdoc = src.document;
-            const shotID = hash(iqHash + currdoc.start_time + "-" + currdoc.end_time);
+            const shotID = hash(iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time);
             const shotRef = doc(shotInfoRef, shotID);
             getDoc(shotRef).then((shot) => {
               if (shot.exists()) {

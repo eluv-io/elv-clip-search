@@ -366,10 +366,10 @@ const App = () => {
       try {
         console.log(searchTerms)
         const colRef = collection(db.current, "Search_history");
-        const now = Timestamp.now().toDate().toString();
+        const now = Timestamp.now().toDate().toUTCString();
         addDoc(colRef, {
           client: clientAdd.current,
-          search_time: now.replace(/\([^()]*\)/g, ""),
+          search_time: now,
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchField,
           searchKeywords: searchTerms,
