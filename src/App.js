@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
@@ -8,6 +8,13 @@ import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
+
+import { initializeApp } from "firebase/app";
+import firebaseConfig from "./configuration";
+import {
+  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc, 
+} from 'firebase/firestore' ;
+
 
 const title = {
   display: "flex",
@@ -196,6 +203,7 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
+  const [searchTerms, setSearchTerms] = useState([])
   const [displayingContents, setDisplayingContents] = useState([]);
 
   // for help the topk showing method to rescue the BM25 matching results
@@ -231,6 +239,56 @@ const App = () => {
   const [currentContent, setCurrentContent] = useState("");
   const filteredSearchFields = useRef([]);
 
+  const db = useRef(null);
+  const clientAdd = useRef(null);
+  const searchID = useRef(null);
+
+  const engagement = useRef({});
+
+  //initialize the DB and store the useradd
+  useEffect(() => {
+    try {
+      initializeApp(firebaseConfig);
+      db.current = getFirestore();
+    } catch (err) {
+      console.log("Error occured when initializing the DB");
+      console.log(err);
+    }
+
+    getClient();
+    try {
+      if (db.current != null) {
+
+        client.current.CurrentAccountAddress().then((val) => {
+          clientAdd.current = val;
+          const userRef = collection(db.current, 'User');
+          const clientRef = doc(userRef, clientAdd.current);
+          getDoc(clientRef).then((thisClient) => {
+            if (!thisClient.exists()) {
+              setDoc(clientRef, {
+                Client_address: clientAdd.current,
+                Wallet_id: null,
+                Email_add: null,
+                Creation_time: null,
+                Updated_time: null,
+                Personal_info: {}
+              }).then(() => {
+                console.log("User info saved");
+              })
+            } else {
+              console.log("This user already exists");
+            }
+          });
+        })
+      }
+    } catch (err) {
+      console.log("Error occured when storing the user info");
+      console.error(err)
+    }
+    
+
+  }, []);
+
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
     setLoadingPlayoutUrl(false);
@@ -240,6 +298,91 @@ const App = () => {
     setErr(false);
     setTotalContent(0);
     setShowTopk(false);
+  };
+
+  const initializeEngagement = () => {
+    engagement.current = {};
+    const currContents = contents.current;
+    for (let content in currContents) {
+      for (let page in currContents[content].clips) {
+        const clips_per_page = currContents[content].clips[page];
+        for (let key in clips_per_page) {
+          const clip = clips_per_page[key];
+          if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clip.rank <= 20)) {
+            const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
+            engagement.current[clipID] = {numView: 0, watchedTime: 0};
+          }
+        }
+      }
+    }
+
+    if (db.current !== null) {
+      try {
+        const engTblRef = collection(db.current, "Engagement");
+        const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
+        setDoc(engRef, {
+          engagement: engagement.current,
+          User_id: clientAdd.current,
+          Search_id: searchID.current
+        }).then(() => {
+          console.log("Engagement table initialized")
+        })
+      } catch (err) {
+        console.log("Error occured when initializing the engagement table");
+        console.log(err);
+      }
+    }
+  }
+
+  const updateEngagement = (clipInfo, watchedTime, numView) => {
+    if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
+      const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
+      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime;
+      const newNumView = numView + engagement.current[clipID].numView;
+      console.log(newNumView)
+      engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
+      if (db.current !== null) {
+        try {
+          const engTblRef = collection(db.current, "Engagement");
+          const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
+          updateDoc(engRef, {
+            engagement: engagement.current
+          }).then(() => {
+            console.log(engagement.current)
+            console.log("engagement updated!")
+          })
+        } catch (err) {
+          console.log("Error occured when updating the engagement table")
+          console.log(err);
+        }
+      }
+    } else {
+      console.log("only keep track of the top 20 clips for v2");
+    }
+  }
+ 
+  const storeSearchHistory = () => {
+    if (db !== null) {
+      try {
+        console.log(searchTerms)
+        const colRef = collection(db.current, "Search_history");
+        const now = Timestamp.now().toDate().toUTCString();
+        addDoc(colRef, {
+          client: clientAdd.current,
+          search_time: now,
+          fuzzySearchPhrase: fuzzySearchPhrase,
+          fuzzySearchFields: fuzzySearchField,
+          searchKeywords: searchTerms,
+        }).then((docRef) => {
+          console.log("search history updated with docID", docRef.id);
+          searchID.current = docRef.id;
+          initializeEngagement();
+        })
+      } catch (err) {
+        console.log("Error occured when storing the search history")
+        console.log(err)
+      }
+    }
   };
 
   const getClient = () => {
@@ -467,6 +610,7 @@ const App = () => {
         setSearch("");
         setFuzzySearchField([]);
         setFuzzySearchPhrase("");
+        setSearchTerms("");
 
         currentPage.current = 1;
         let libId = "";
@@ -521,7 +665,7 @@ const App = () => {
     />
   );
   return (
-    <div className="container">
+    <div className="container" style={{ maxWidth: 1600 }}>
       <div style={title}>
         <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
       </div>
@@ -550,6 +694,9 @@ const App = () => {
                 resetLoadStatus();
                 setSearch(txt.trim());
                 currentPage.current = 1;
+              }}
+              setSearchTerm={(terms) => {
+                setSearchTerms(terms);
               }}
               statusHandler={resetLoadStatus}
             />
@@ -601,6 +748,9 @@ const App = () => {
                   setSearch(txt.trim());
                   currentPage.current = 1;
                 }}
+                setSearchTerm={(terms) => {
+                  setSearchTerms(terms);
+                }}
                 statusHandler={resetLoadStatus}
               />
             </div>
@@ -640,7 +790,11 @@ const App = () => {
           <button
             type="button"
             style={button}
-            onClick={getRes}
+            onClick={async () => {
+              getRes().then(() => {
+                storeSearchHistory();
+              });
+            }}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
             Let's go
@@ -779,6 +933,13 @@ const App = () => {
                     <ClipRes
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
+                      clientadd={clientAdd.current}
+                      searchID={searchID}
+                      contents={contents.current}
+                      db={db.current}
+                      searchVersion={searchVersion.current}
+                      engagement={engagement.current}
+                      updateEngagement={updateEngagement}
                     ></ClipRes>
                   );
                 })

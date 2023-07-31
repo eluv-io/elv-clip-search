@@ -10,6 +10,7 @@ const container = {
 
 const SearchBox = (props) => {
   const [terms, setTerms] = useState([]);
+  // TODO change for fuzzy search
   const makeString = (terms) => {
     const res = [];
     for (let item of terms) {
@@ -33,6 +34,8 @@ const SearchBox = (props) => {
       return "";
     }
   };
+
+
   return (
     <div style={container}>
       <SingleSearchBox
@@ -42,6 +45,8 @@ const SearchBox = (props) => {
         addHandler={(newElement) => {
           const newTerms = terms.concat(newElement);
           setTerms(newTerms);
+          console.log("newterms", newTerms);
+          props.setSearchTerm(newTerms);
           const res = makeString(newTerms);
           props.handleSubmitClick(res);
         }}
@@ -64,6 +69,7 @@ const SearchBox = (props) => {
                 const secondHalf = terms.slice(index + 1, terms.length);
                 const newTerms = firstHalf.concat(secondHalf);
                 setTerms(newTerms);
+                props.setSearchTerm(newTerms)
                 const res = makeString(newTerms);
                 props.handleSubmitClick(res);
               }
