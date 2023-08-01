@@ -19,6 +19,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
     }
     // get currernt item
     const item = JSON.parse(JSON.stringify(data[i]));
+    item["rank"] = i + 1;
     topkCount += 1;
     item.processed = false;
     topkResPage.push(item);
@@ -37,6 +38,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
   for (let i = 0; i < data.length; i++) {
     // get currernt item
     const item = data[i];
+    item["rank"] = i + 1;
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
@@ -102,7 +104,7 @@ export const createSearchUrl = async ({
           select: "...,text,/public/asset_metadata/title",
           start: 0,
           limit: 160,
-          clips_include_source_tags: false,
+          clips_include_source_tags: true,
           clips: true,
           sort: "f_start_time@asc",
         },
@@ -118,12 +120,13 @@ export const createSearchUrl = async ({
             : search === ""
             ? `(${fuzzySearchPhrase})`
             : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
-        select: "/public/asset_metadata/title",
+        select: "start_time,end_time,text,/public/asset_metadata/title",
         start: 0,
         limit: 160,
         display_fields: "f_start_time,f_end_time",
         clips: true,
         scored: true,
+        clips_include_source_tags: true,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
