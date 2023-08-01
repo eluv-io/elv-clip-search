@@ -221,6 +221,7 @@ const App = () => {
   const [showTopk, setShowTopk] = useState(false);
 
   // processed info
+  const network = useRef("main");
   const searchVersion = useRef("v1");
   const [showFuzzy, setShowFuzzy] = useState(false);
   const contents = useRef({});
@@ -471,7 +472,14 @@ const App = () => {
         currentPage.current = 1;
         let libId = "";
         const client = getClient();
-
+        try {
+          network.current = await client.NetworkInfo().name;
+        } catch (err) {
+          setHaveSearchVersion(false);
+          setLoadingSearchVersion(false);
+          setErr(true);
+          setErrMsg("Extract network err");
+        }
         try {
           libId = await client.ContentObjectLibraryId({
             [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
@@ -780,6 +788,7 @@ const App = () => {
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
                       client={getClient()}
+                      network={network.current}
                     ></ClipRes>
                   );
                 })

@@ -1,7 +1,7 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import EluvioPlayer, {EluvioPlayerParameters} from "@eluvio/elv-player-js";
+import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 const body = {
   display: "flex",
   flexDirection: "column",
@@ -71,35 +71,29 @@ const ClipRes = (props) => {
       : `${props.clipInfo.url}&resolve=false&clip_start=${
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
-  const token = new URL(url).searchParams.get("authorization");
-  const playerRef = useRef(null);
-  const [audioTracks, setAudioTracks] = useState(null);
-  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   const [player, setPlayer] = useState(undefined);
-  const [playoutUrl, setPlayoutUrl] = useState("");
 
   useEffect(() => {
-    return player && player.Destroy();
-  }, [player]);
-
-
-  const InitializeVideo = async ({element}) => {
-    if (!element) { return; }
-
-    if(player) {
-      // Ensure existing player is destroyed
-      try {
+    return () => {
+      if (player) {
         player.Destroy();
-      } catch(error) {}
+      }
+    };
+  }, []);
+
+  const InitializeVideo = ({ element }) => {
+    if (!element || player) {
+      return;
     }
 
-    const networkName = await props.client.NetworkInfo().name;
-    new EluvioPlayer(
-      element,
-      {
+    setPlayer(
+      new EluvioPlayer(element, {
         clientOptions: {
-          network: EluvioPlayerParameters.networks[networkName === "main" ? "MAIN" : "DEMO"],
-          client: props.client
+          network:
+            EluvioPlayerParameters.networks[
+              props.network === "main" ? "MAIN" : "DEMO"
+            ],
+          client: props.client,
         },
         sourceOptions: {
           playoutParameters: {
@@ -108,21 +102,20 @@ const ClipRes = (props) => {
             clipEnd: props.clipInfo.end_time / 1000,
             ignoreTrimming: true,
             //resolve: true
-          }
+          },
         },
         playerOptions: {
-          controls: EluvioPlayerParameters.controls.AUTO_HIDE
-        }
-      }
+          controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+        },
+      })
     );
-    setPlayer(player);
   };
 
   return (
     <div style={body}>
-      <div className={`${player ? "loaded" : "loading"}`} style={videoPlayerContainer}>
+      <div style={videoPlayerContainer}>
         {url !== null ? (
-          <div className="player-container" ref={element => InitializeVideo({element})}></div>
+          <div ref={(element) => InitializeVideo({ element })}></div>
         ) : (
           <div
             style={{
@@ -139,31 +132,6 @@ const ClipRes = (props) => {
           </div>
         )}
       </div>
-
-      {audioTracks && (
-        <div style={audioCtrlContainer}>
-          audio track:
-          <select
-            onChange={(event) => {
-              const audioTrackId = event.target.value;
-              setSelectedAudioTrack(audioTrackId);
-              console.log(`set audio track to ${audioTrackId}`);
-              const hls = playerRef.current.getInternalPlayer("hls");
-              hls.audioTrackController.setAudioTrack(audioTrackId);
-            }}
-            value={selectedAudioTrack}
-            style={{ height: "100%", width: "20%", marginLeft: 5 }}
-          >
-            {audioTracks.map((track) => {
-              return (
-                <option key={`option-${track.id}`} value={track.id}>
-                  {track.name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )}
 
       <div style={info}>
         <div style={shortInfo}>
