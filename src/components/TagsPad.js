@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi";
+import { select } from "./ExtractDes";
 
 const TagsPad = (props) => {
   const tags = useRef({
@@ -12,6 +13,8 @@ const TagsPad = (props) => {
     "Segment Labels": [],
     "Speech to Text": [],
   });
+
+  const git = useRef({})
 
   const shots = useRef({});
 
@@ -43,17 +46,25 @@ const TagsPad = (props) => {
 
   useEffect(() => {
     console.log("parsing tags");
-    try{
-      prepareTags()
-        .then(() => {
-          // props.prevS.current = shots.current
-          console.log("Before clicking", props.prevS.current)
-          setTagsReady(true);
-          setRefresh((v) => !v);
-        })
-      } catch(err) {
+    prepareTags()
+      .then(() => {
+        git.current = select(git.current)
+        console.log(git.current)
+        tags.current["Object Detection"] = []
+        for (const s in git.current) {
+          for (const d in git.current[s]) {
+            if (!tags.current["Object Detection"].some(
+              (dic) => dic.status.toLowerCase() === git.current[s][d].status.toLowerCase())
+            )
+            tags.current["Object Detection"].push(git.current[s][d])
+          }
+        }
+        console.log(tags.current)
+        setTagsReady(true);
+        setRefresh((v) => !v);
+      }).catch((err) => {
         console.log(err)
-      }
+      })
   }, []);
 
   const hash = (s) => {
@@ -93,6 +104,8 @@ const TagsPad = (props) => {
           console.log(err);
         })
       }
+    }).catch((err) => {
+      console.log(err);
     });
   };
 
@@ -102,7 +115,6 @@ const TagsPad = (props) => {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const currdoc = src.document;
-        console.log(currdoc)
         const shotStart = currdoc.start_time
         const shotEnd = currdoc.end_time
         const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
@@ -132,15 +144,6 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID.current]
                 }
               }
-              // const start = v.start_time - shotStart
-              // const startmin = Math.floor((start/60000) << 0);
-              // const startsec = ((start % 60000) / 1000).toFixed(0);
-              // const end = v.end_time - shotStart
-              // const endmin = Math.floor((end/60000) << 0);
-              // const endsec = ((end % 60000) / 1000).toFixed(0);
-              // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
-              // console.log(text, timeline)
-              // console.log(v.start_time, v.end_time, shotStart, shotEnd)
               const dic = {
                 track: k,
                 status: text,
@@ -156,20 +159,27 @@ const TagsPad = (props) => {
                 tags.current[k].push(dic);
               }
 
+              if (k === "Object Detection") {
+                if (shotID in git.current) {
+                  git.current[shotID].push(dic);
+                } else {
+                  git.current[shotID] = [];
+                  git.current[shotID].push(dic)
+                }
+              }
+
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID.current]: dislikeState },
               });
-              // props.initializePrevShots(shotID, {
-              //   status: { track: k, text: text, idx: idx },
-              //   feedback: { [props.searchID]: dislikeState },
-              // })
 
               idx = idx + 1;
             }
           }
         }
         shots.current[shotID] = shot;
+        // console.log(tags.current["Object Detection"])
+        // tags.current["Object Detection"] = select(tags.current["Object Detection"], shotID)
         pushShotToDB(shot);
       }
     }
@@ -330,6 +340,8 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  //TODO add globally unique keys
+                  // key={}
                 >
                   {t.status}
                   <div>
