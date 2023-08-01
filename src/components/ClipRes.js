@@ -21,7 +21,6 @@ const container = {
 
 const videoContainer = {
   width: "80%",
-  height: "95%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -169,8 +168,7 @@ const ClipRes = (props) => {
             versionHash: props.clipInfo.hash,
             clipStart: props.clipInfo.start_time / 1000,
             clipEnd: props.clipInfo.end_time / 1000,
-            ignoreTrimming: true,
-            //resolve: true
+            ignoreTrimming: true
           },
         },
         playerOptions: {
