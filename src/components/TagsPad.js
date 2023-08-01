@@ -338,6 +338,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  key={t.idx}
                 >
                   {t.status}
                   <div>
