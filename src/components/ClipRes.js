@@ -70,6 +70,8 @@ const ClipRes = (props) => {
   useEffect(() => {
     prepareShots().then(() => {
       console.log(shots.current)
+    }).catch((err) => {
+      console.log(err)
     });
   }, [])
 
@@ -92,6 +94,8 @@ const ClipRes = (props) => {
               if (shot.exists()) {
                 shots.current[shotID] = shot.data();
               }
+            }).catch((err) => {
+              console.log(err)
             });
           }
         }

@@ -50,6 +50,8 @@ const TagsPad = (props) => {
           console.log("Before clicking", props.prevS.current)
           setTagsReady(true);
           setRefresh((v) => !v);
+        }).catch((err) => {
+          console.log(err)
         })
       } catch(err) {
         console.log(err)
@@ -93,6 +95,8 @@ const TagsPad = (props) => {
           console.log(err);
         })
       }
+    }).catch((err) => {
+      console.log(err)
     });
   };
 
@@ -223,6 +227,8 @@ const TagsPad = (props) => {
           shots: Object.keys(shots.current),
         }).then(() => {
           console.log("clip stored successfully!");
+        }).catch((err) => {
+          console.log(err)
         });
       } else {
         const tempRank = clip.data().rank;
@@ -237,6 +243,8 @@ const TagsPad = (props) => {
             rank: tempRank,
           }).then(() => {
             console.log("clip rank updated successfully!");
+          }).catch((err) => {
+            console.log(err)
           });
         }
       }

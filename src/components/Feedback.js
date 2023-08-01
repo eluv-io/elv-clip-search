@@ -94,6 +94,8 @@ const Feedback = (props) => {
             }
             setRating(data.rating);
           });
+        }).catch((err) => {
+          console.log(err)
         });
       } catch(err) {
         console.log("Error occured when fetching previous feedbacks")
@@ -173,6 +175,8 @@ const Feedback = (props) => {
             search_id: props.searchID.current,
           }).then(() => {
             console.log("Feedback collected successfully!");
+          }).catch((err) => {
+            console.log(err)
           });
         } catch (err) {
           console.log("Error occured when storing the feedback")
