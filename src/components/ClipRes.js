@@ -78,34 +78,20 @@ const ClipRes = (props) => {
   const [player, setPlayer] = useState(undefined);
   const [playoutUrl, setPlayoutUrl] = useState("");
 
-  // useEffect(() => {
-  //   const GenerateEmbedUrl = async () => {
-  //     const networkInfo = await props.client.NetworkInfo();
-  //     let embedUrl = new URL("http://localhost:8088");
-  //     const networkName = networkInfo.name === "demov3" ? "demo" : (networkInfo.name === "test" && networkInfo.id === 955205) ? "testv4" : networkInfo.name;
-  //
-  //     embedUrl.searchParams.set("vid", props.clipInfo.hash);
-  //     embedUrl.searchParams.set("ath", token);
-  //     embedUrl.searchParams.set("p", "");
-  //     embedUrl.searchParams.set("lp", "");
-  //     embedUrl.searchParams.set("net", networkName);
-  //     embedUrl.searchParams.set("ct", "s");
-  //     embedUrl.searchParams.set("cap", "");
-  //     embedUrl.searchParams.set("start", props.clipInfo.start_time);
-  //     embedUrl.searchParams.set("end", props.clipInfo.end_time);
-  //     embedUrl.searchParams.set("igt", "");
-  //     embedUrl.searchParams.set("nr", "")
-  //
-  //     setPlayoutUrl(embedUrl.toString());
-  //     console.log("embed", embedUrl.toString())
-  //   };
-  //
-  //   GenerateEmbedUrl();
-  // }, []);
+  useEffect(() => {
+    return player && player.Destroy();
+  }, [player]);
 
 
   const InitializeVideo = async ({element}) => {
     if (!element) { return; }
+
+    if(player) {
+      // Ensure existing player is destroyed
+      try {
+        player.Destroy();
+      } catch(error) {}
+    }
 
     const networkName = await props.client.NetworkInfo().name;
     new EluvioPlayer(
@@ -118,14 +104,14 @@ const ClipRes = (props) => {
         sourceOptions: {
           playoutParameters: {
             versionHash: props.clipInfo.hash,
-            clipStart: props.clipInfo.start_time,
-            clipEnd: props.clipInfo.end_time,
+            clipStart: props.clipInfo.start_time / 1000,
+            clipEnd: props.clipInfo.end_time / 1000,
             ignoreTrimming: true,
-            resolve: false
+            //resolve: true
           }
         },
         playerOptions: {
-          controls: EluvioPlayerParameters.controls.ON
+          controls: EluvioPlayerParameters.controls.AUTO_HIDE
         }
       }
     );
@@ -135,38 +121,8 @@ const ClipRes = (props) => {
   return (
     <div style={body}>
       <div className={`${player ? "loaded" : "loading"}`} style={videoPlayerContainer}>
-        {/*{ playoutUrl ? <iframe*/}
-        {/*  width="100%" height="500"*/}
-        {/*  type="text/html"*/}
-        {/*  src={playoutUrl}*/}
-        {/*  allowtransparency="true"*/}
-        {/*/> : null }*/}
         {url !== null ? (
           <div className="player-container" ref={element => InitializeVideo({element})}></div>
-          // Goal is to replace the below code
-          //
-          //
-          // <ReactPlayer
-          //   ref={playerRef}
-          //   url={url}
-          //   width="100%"
-          //   height="auto"
-          //   autoPlay={false}
-          //   controls={true}
-          //   config={{
-          //     capLevelToPlayerSize: true,
-          //     maxBufferLength: 0,
-          //   }}
-          //   onReady={() => {
-          //     console.log("new player ready");
-          //     const hls = playerRef.current.getInternalPlayer("hls");
-          //     const tracks = hls.audioTrackController.tracks;
-          //     if (tracks !== null && tracks.length > 1) {
-          //       setAudioTracks(tracks);
-          //       setSelectedAudioTrack(0);
-          //     }
-          //   }}
-          // ></ReactPlayer>
         ) : (
           <div
             style={{
