@@ -1,6 +1,4 @@
-import React, { useEffect } from "react";
-import { useRef, useState } from "react";
-import ReactPlayer from "react-player";
+import React, { useEffect, useState } from "react";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 const body = {
   display: "flex",
@@ -22,15 +20,6 @@ const videoPlayerContainer = {
   marginTop: "2%",
   flexDirection: "column",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const audioCtrlContainer = {
-  display: " flex",
-  flexDirection: "row",
-  width: "100%",
-  height: "5%",
   alignItems: "center",
   justifyContent: "center",
 };
