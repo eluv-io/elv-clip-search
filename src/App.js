@@ -7,7 +7,7 @@ import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
-import { parseSearchRes, createSearchUrl, getPlayoutUrl } from "./utils";
+import { parseSearchRes, createSearchUrl } from "./utils";
 
 const title = {
   display: "flex",
@@ -203,7 +203,7 @@ const App = () => {
   const topkCnt = useRef(0); // because the actual returned results may be less than TOPK
   const topkPages = useRef(1);
   const [loadingTopkPage, setLoadingTopkPage] = useState(false);
-  const playoutUrlMemo = useRef({});
+  // const playoutUrlMemo = useRef({});
 
   // loading status
   const [loadingSearchRes, setLoadingSearchRes] = useState(false);
@@ -221,6 +221,7 @@ const App = () => {
   const [showTopk, setShowTopk] = useState(false);
 
   // processed info
+  const network = useRef("main");
   const searchVersion = useRef("v1");
   const [showFuzzy, setShowFuzzy] = useState(false);
   const contents = useRef({});
@@ -259,103 +260,114 @@ const App = () => {
     setDisplayingContents(contents.current[currentContent].clips[pageIndex]);
   };
 
-  const jumpToPageInTopk = async (pageIndex) => {
-    setLoadingTopkPage(true);
-    setHavePlayoutUrl(false);
-    try {
-      for (let i = 0; i < topk.current[pageIndex].length; i++) {
-        if (!topk.current[pageIndex][i].processed) {
-          const objectId = topk.current[pageIndex][i].id;
-          if (objectId in playoutUrlMemo.current) {
-            topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
-          } else {
-            const videoUrl = await getPlayoutUrl({
-              client: client.current,
-              objectId,
-            });
-            topk.current[pageIndex][i].url = videoUrl;
-            if (videoUrl !== null) {
-              playoutUrlMemo.current[objectId] = videoUrl;
-            }
-          }
-          if (topk.current[pageIndex][i].url !== null) {
-            topk.current[pageIndex][i].processed = true;
-          }
-        }
-      }
-      setLoadingTopkPage(false);
-      setHavePlayoutUrl(true);
-      setDisplayingContents(topk.current[pageIndex]);
-    } catch (err) {
-      console.log(err);
-      setLoadingTopkPage(false);
-      setHavePlayoutUrl(false);
-      setDisplayingContents([]);
-      setErr(true);
-      setErrMsg("Loading playout url for contents on this page went wrong");
-    }
+  const jumpToPageInTopk = (pageIndex) => {
+    // setLoadingTopkPage(true);
+    // setHavePlayoutUrl(false);
+    // try {
+    //   for (let i = 0; i < topk.current[pageIndex].length; i++) {
+    //     if (!topk.current[pageIndex][i].processed) {
+    //       const objectId = topk.current[pageIndex][i].id;
+    //       if (objectId in playoutUrlMemo.current) {
+    //         topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
+    //       } else {
+    //         const videoUrl = await getPlayoutUrl({
+    //           client: client.current,
+    //           objectId,
+    //         });
+    //         topk.current[pageIndex][i].url = videoUrl;
+    //         if (videoUrl !== null) {
+    //           playoutUrlMemo.current[objectId] = videoUrl;
+    //         }
+    //       }
+    //       if (topk.current[pageIndex][i].url !== null) {
+    //         topk.current[pageIndex][i].processed = true;
+    //       }
+    //     }
+    //   }
+    //   setLoadingTopkPage(false);
+    //   setHavePlayoutUrl(true);
+    //   setDisplayingContents(topk.current[pageIndex]);
+    // } catch (err) {
+    //   console.log(err);
+    //   setLoadingTopkPage(false);
+    //   setHavePlayoutUrl(false);
+    //   setDisplayingContents([]);
+    //   setErr(true);
+    //   setErrMsg("Loading playout url for contents on this page went wrong");
+    // }
+
+    // after replacing the player, we do not need to load the url explicitly
+    setLoadingTopkPage(false);
+    setHavePlayoutUrl(true);
+    setDisplayingContents(topk.current[pageIndex]);
   };
 
-  const jumpToContent = async (objectId) => {
-    try {
-      // loading playout url for each clip res
-      setHavePlayoutUrl(false);
-      setLoadingPlayoutUrl(true);
-      currentPage.current = 1;
-      const clips_per_content = contents.current;
-      if (clips_per_content[objectId].processed) {
-        // if it is processed, just return that
-        numPages.current = Object.keys(
-          clips_per_content[objectId].clips
-        ).length;
-        setLoadingPlayoutUrl(false);
-        setHavePlayoutUrl(true);
-        setDisplayingContents(clips_per_content[objectId].clips[1]);
-        return;
-      } else {
-        // get the possible offerings
-        let videoUrl = "";
-        if (objectId in playoutUrlMemo.current) {
-          videoUrl = playoutUrlMemo.current[objectId];
-        } else {
-          videoUrl = await getPlayoutUrl({
-            client: client.current,
-            objectId,
-          });
-          if (videoUrl !== null) {
-            playoutUrlMemo.current[objectId] = videoUrl;
-          }
-        }
-        for (let pageIndex in clips_per_content[objectId].clips) {
-          for (let item of clips_per_content[objectId].clips[pageIndex]) {
-            item.url = videoUrl;
-          }
-        }
-        if (videoUrl !== null) {
-          clips_per_content[objectId].processed = true;
-        }
+  const jumpToContent = (objectId) => {
+    // try {
+    //   // loading playout url for each clip res
+    //   setHavePlayoutUrl(false);
+    //   setLoadingPlayoutUrl(true);
+    //   currentPage.current = 1;
+    //   const clips_per_content = contents.current;
+    //   if (clips_per_content[objectId].processed) {
+    //     // if it is processed, just return that
+    //     numPages.current = Object.keys(
+    //       clips_per_content[objectId].clips
+    //     ).length;
+    //     setLoadingPlayoutUrl(false);
+    //     setHavePlayoutUrl(true);
+    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
+    //     return;
+    //   } else {
+    //     // get the possible offerings
+    //     let videoUrl = "";
+    //     if (objectId in playoutUrlMemo.current) {
+    //       videoUrl = playoutUrlMemo.current[objectId];
+    //     } else {
+    //       videoUrl = await getPlayoutUrl({
+    //         client: client.current,
+    //         objectId,
+    //       });
+    //       if (videoUrl !== null) {
+    //         playoutUrlMemo.current[objectId] = videoUrl;
+    //       }
+    //     }
+    //     for (let pageIndex in clips_per_content[objectId].clips) {
+    //       for (let item of clips_per_content[objectId].clips[pageIndex]) {
+    //         item.url = videoUrl;
+    //       }
+    //     }
+    //     if (videoUrl !== null) {
+    //       clips_per_content[objectId].processed = true;
+    //     }
+    //     contents.current = clips_per_content;
+    //     numPages.current = Object.keys(
+    //       clips_per_content[objectId].clips
+    //     ).length;
+    //     setLoadingPlayoutUrl(false);
+    //     setHavePlayoutUrl(true);
+    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
+    //     return;
+    //   }
+    // } catch (err) {
+    //   console.log(`Error message : ${err.message} - `, err.code);
+    //   setLoadingPlayoutUrl(false);
+    //   setHavePlayoutUrl(false);
+    //   setErrMsg("Playout URL error");
+    //   setErr(true);
+    //   return null;
+    // }
 
-        contents.current = clips_per_content;
-        numPages.current = Object.keys(
-          clips_per_content[objectId].clips
-        ).length;
-        setLoadingPlayoutUrl(false);
-        setHavePlayoutUrl(true);
-        setDisplayingContents(clips_per_content[objectId].clips[1]);
-        return;
-      }
-    } catch (err) {
-      console.log(`Error message : ${err.message} - `, err.code);
-      setLoadingPlayoutUrl(false);
-      setHavePlayoutUrl(false);
-      setErrMsg("Playout URL error");
-      setErr(true);
-      return null;
-    }
+    // after replacing the player, we do not need to load the url explicitly
+    currentPage.current = 1;
+    numPages.current = Object.keys(contents.current[objectId].clips).length;
+    setLoadingPlayoutUrl(false);
+    setHavePlayoutUrl(true);
+    setDisplayingContents(contents.current[objectId].clips[1]);
   };
 
   const getRes = async () => {
-    playoutUrlMemo.current = {};
+    // playoutUrlMemo.current = {};
     const _client = getClient();
     if (search === "" && fuzzySearchPhrase === "") {
       console.log("err");
@@ -443,7 +455,7 @@ const App = () => {
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
           // there are err handling things inside this function
-          await jumpToContent(firstContentToDisplay);
+          jumpToContent(firstContentToDisplay);
         }
       } else {
         // create search url err
@@ -471,7 +483,14 @@ const App = () => {
         currentPage.current = 1;
         let libId = "";
         const client = getClient();
-
+        try {
+          network.current = await client.NetworkInfo().name;
+        } catch (err) {
+          setHaveSearchVersion(false);
+          setLoadingSearchVersion(false);
+          setErr(true);
+          setErrMsg("Extract network err");
+        }
         try {
           libId = await client.ContentObjectLibraryId({
             [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
@@ -677,10 +696,10 @@ const App = () => {
                     ...clipResShowMethodButton,
                     ...(!showTopk && { border: "none" }),
                   }}
-                  onClick={async () => {
+                  onClick={() => {
                     if (!showTopk) {
                       setShowTopk(true);
-                      await jumpToPageInTopk(0);
+                      jumpToPageInTopk(0);
                     }
                   }}
                 >
@@ -691,10 +710,10 @@ const App = () => {
                     ...clipResShowMethodButton,
                     ...(showTopk && { border: "none" }),
                   }}
-                  onClick={async () => {
+                  onClick={() => {
                     if (showTopk) {
                       setShowTopk(false);
-                      await jumpToContent(currentContent);
+                      jumpToContent(currentContent);
                     }
                   }}
                 >
@@ -707,9 +726,9 @@ const App = () => {
                 <select
                   style={clipResTitleSelector}
                   value={currentContent}
-                  onChange={async (event) => {
+                  onChange={(event) => {
                     setCurrentContent(event.target.value);
-                    await jumpToContent(event.target.value);
+                    jumpToContent(event.target.value);
                   }}
                 >
                   {Object.keys(contents.current).map((k) => {
@@ -737,9 +756,9 @@ const App = () => {
                     width: "90%",
                   }}
                   value={currentContent}
-                  onChange={async (event) => {
+                  onChange={(event) => {
                     setCurrentContent(event.target.value);
-                    await jumpToContent(event.target.value);
+                    jumpToContent(event.target.value);
                   }}
                 >
                   {Object.keys(contents.current).map((k) => {
@@ -769,7 +788,7 @@ const App = () => {
                   pageCount={topkPages.current}
                   onPageChangeHandler={async (data) => {
                     const pageIndex = data.selected;
-                    await jumpToPageInTopk(pageIndex);
+                    jumpToPageInTopk(pageIndex);
                   }}
                 />
               )}
@@ -780,6 +799,7 @@ const App = () => {
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
                       client={getClient()}
+                      network={network.current}
                     ></ClipRes>
                   );
                 })
