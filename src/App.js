@@ -779,6 +779,7 @@ const App = () => {
                     <ClipRes
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
+                      client={getClient()}
                     ></ClipRes>
                   );
                 })

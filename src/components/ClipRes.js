@@ -1,6 +1,7 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { useRef, useState } from "react";
 import ReactPlayer from "react-player";
+import EluvioPlayer, {EluvioPlayerParameters} from "@eluvio/elv-player-js";
 const body = {
   display: "flex",
   flexDirection: "column",
@@ -70,34 +71,102 @@ const ClipRes = (props) => {
       : `${props.clipInfo.url}&resolve=false&clip_start=${
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const token = new URL(url).searchParams.get("authorization");
   const playerRef = useRef(null);
   const [audioTracks, setAudioTracks] = useState(null);
   const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
+  const [player, setPlayer] = useState(undefined);
+  const [playoutUrl, setPlayoutUrl] = useState("");
+
+  // useEffect(() => {
+  //   const GenerateEmbedUrl = async () => {
+  //     const networkInfo = await props.client.NetworkInfo();
+  //     let embedUrl = new URL("http://localhost:8088");
+  //     const networkName = networkInfo.name === "demov3" ? "demo" : (networkInfo.name === "test" && networkInfo.id === 955205) ? "testv4" : networkInfo.name;
+  //
+  //     embedUrl.searchParams.set("vid", props.clipInfo.hash);
+  //     embedUrl.searchParams.set("ath", token);
+  //     embedUrl.searchParams.set("p", "");
+  //     embedUrl.searchParams.set("lp", "");
+  //     embedUrl.searchParams.set("net", networkName);
+  //     embedUrl.searchParams.set("ct", "s");
+  //     embedUrl.searchParams.set("cap", "");
+  //     embedUrl.searchParams.set("start", props.clipInfo.start_time);
+  //     embedUrl.searchParams.set("end", props.clipInfo.end_time);
+  //     embedUrl.searchParams.set("igt", "");
+  //     embedUrl.searchParams.set("nr", "")
+  //
+  //     setPlayoutUrl(embedUrl.toString());
+  //     console.log("embed", embedUrl.toString())
+  //   };
+  //
+  //   GenerateEmbedUrl();
+  // }, []);
+
+
+  const InitializeVideo = async ({element}) => {
+    if (!element) { return; }
+
+    const networkName = await props.client.NetworkInfo().name;
+    new EluvioPlayer(
+      element,
+      {
+        clientOptions: {
+          network: EluvioPlayerParameters.networks[networkName === "main" ? "MAIN" : "DEMO"],
+          client: props.client
+        },
+        sourceOptions: {
+          playoutParameters: {
+            versionHash: props.clipInfo.hash,
+            clipStart: props.clipInfo.start_time,
+            clipEnd: props.clipInfo.end_time,
+            ignoreTrimming: true,
+            resolve: false
+          }
+        },
+        playerOptions: {
+          controls: EluvioPlayerParameters.controls.ON
+        }
+      }
+    );
+    setPlayer(player);
+  };
+
   return (
     <div style={body}>
-      <div style={videoPlayerContainer}>
+      <div className={`${player ? "loaded" : "loading"}`} style={videoPlayerContainer}>
+        {/*{ playoutUrl ? <iframe*/}
+        {/*  width="100%" height="500"*/}
+        {/*  type="text/html"*/}
+        {/*  src={playoutUrl}*/}
+        {/*  allowtransparency="true"*/}
+        {/*/> : null }*/}
         {url !== null ? (
-          <ReactPlayer
-            ref={playerRef}
-            url={url}
-            width="100%"
-            height="auto"
-            autoPlay={false}
-            controls={true}
-            config={{
-              capLevelToPlayerSize: true,
-              maxBufferLength: 0,
-            }}
-            onReady={() => {
-              console.log("new player ready");
-              const hls = playerRef.current.getInternalPlayer("hls");
-              const tracks = hls.audioTrackController.tracks;
-              if (tracks !== null && tracks.length > 1) {
-                setAudioTracks(tracks);
-                setSelectedAudioTrack(0);
-              }
-            }}
-          ></ReactPlayer>
+          <div className="player-container" ref={element => InitializeVideo({element})}></div>
+          // Goal is to replace the below code
+          //
+          //
+          // <ReactPlayer
+          //   ref={playerRef}
+          //   url={url}
+          //   width="100%"
+          //   height="auto"
+          //   autoPlay={false}
+          //   controls={true}
+          //   config={{
+          //     capLevelToPlayerSize: true,
+          //     maxBufferLength: 0,
+          //   }}
+          //   onReady={() => {
+          //     console.log("new player ready");
+          //     const hls = playerRef.current.getInternalPlayer("hls");
+          //     const tracks = hls.audioTrackController.tracks;
+          //     if (tracks !== null && tracks.length > 1) {
+          //       setAudioTracks(tracks);
+          //       setSelectedAudioTrack(0);
+          //     }
+          //   }}
+          // ></ReactPlayer>
         ) : (
           <div
             style={{

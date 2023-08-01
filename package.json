@@ -4,8 +4,10 @@
   "private": true,
   "dependencies": {
     "@eluvio/elv-client-js": "^4.0.25",
+    "@eluvio/elv-player-js": "^1.0.115",
     "axios": "^1.2.5",
     "bootstrap": "^5.2.3",
+    "crypto-browserify": "^3.12.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-hls-player": "^3.0.7",
@@ -14,10 +16,20 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "@svgr/webpack": "^8.0.1",
+    "customize-cra": "^1.0.0",
+    "file-loader": "^6.2.0",
+    "react-app-rewired": "^2.2.1",
+    "resolve-url-loader": "^5.0.0",
+    "sass": "^1.64.1",
+    "svg-inline-loader": "^0.8.2",
+    "url-loader": "^4.1.1"
+  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "BUILD_PATH=\"./dist\" react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "BUILD_PATH=\"./dist\" react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
