@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi";
 import { select } from "./ExtractDes";
+import cloneDeep from 'lodash/cloneDeep';
 
 const TagsPad = (props) => {
   const tags = useRef({
@@ -13,6 +14,9 @@ const TagsPad = (props) => {
     "Segment Labels": [],
     "Speech to Text": [],
   });
+
+  const gitTags = useRef({});
+  const noGitTags = useRef({});
 
   const git = useRef({})
 
@@ -40,6 +44,8 @@ const TagsPad = (props) => {
 
   const [refresh, setRefresh] = useState(false);
   const [tagsReady, setTagsReady] = useState(false);
+  const [isGit, setIsGit] = useState(false);
+  const [displayGit, setDisplayGit] = useState(false);
   const db = props.db;
 
 
@@ -48,9 +54,10 @@ const TagsPad = (props) => {
     console.log("parsing tags");
     prepareTags()
       .then(() => {
-        git.current = select(git.current)
-        console.log(git.current)
-        tags.current["Object Detection"] = []
+        gitTags.current = cloneDeep(tags.current);
+        git.current = select(git.current);
+        console.log(git.current);
+        tags.current["Object Detection"] = [];
         for (const s in git.current) {
           for (const d in git.current[s]) {
             if (!tags.current["Object Detection"].some(
@@ -59,7 +66,12 @@ const TagsPad = (props) => {
             tags.current["Object Detection"].push(git.current[s][d])
           }
         }
-        console.log(tags.current)
+        console.log(tags.current, gitTags.current)
+        noGitTags.current = cloneDeep(tags.current);
+        if (noGitTags.current["Object Detection"] !== gitTags.current["Object Detection"]) {
+          setIsGit(true);
+        }
+        console.log(isGit);
         setTagsReady(true);
         setRefresh((v) => !v);
       }).catch((err) => {
@@ -340,8 +352,6 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
-                  //TODO add globally unique keys
-                  // key={}
                 >
                   {t.status}
                   <div>
@@ -370,7 +380,40 @@ const TagsPad = (props) => {
                   </div>
                 </div>
               ))}
-          </div>
+
+              <div>
+                {k === "Object Detection" && isGit ? (
+                  <div>
+                  {displayGit ? (
+                    
+                    <div>
+                      <button onClick={() => {
+                        tags.current = gitTags.current;
+                        setDisplayGit(false);
+                        }}
+                        >
+                        collapse
+                      </button>
+                    </div>
+
+                  ) : (
+
+                    <div>
+                      <button onClick={() => {
+                        tags.current = noGitTags.current;
+                        setDisplayGit(true);
+                        }}
+                        >
+                        show all
+                      </button>
+                    </div>
+                    
+                    )}
+                  </div>
+                  ) : null}
+                </div>
+              </div>
+        
         ) : null;
       })}
     </div>
