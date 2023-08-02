@@ -247,6 +247,8 @@ const TagsPad = (props) => {
           shots: Object.keys(shots.current),
         }).then(() => {
           console.log("clip stored successfully!");
+        }).catch((err) => {
+          console.log(err)
         });
       } else {
         const tempRank = clip.data().rank;
@@ -261,6 +263,8 @@ const TagsPad = (props) => {
             rank: tempRank,
           }).then(() => {
             console.log("clip rank updated successfully!");
+          }).catch((err) => {
+            console.log(err)
           });
         }
       }
@@ -354,6 +358,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  key={t.idx}
                 >
                   {t.status}
                   <div>
