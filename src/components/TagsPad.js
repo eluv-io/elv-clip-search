@@ -3,6 +3,7 @@ import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi";
 import { select } from "./ExtractDes";
 import cloneDeep from 'lodash/cloneDeep';
+import { isString } from "lodash";
 
 const TagsPad = (props) => {
   const tags = useRef({
@@ -25,7 +26,7 @@ const TagsPad = (props) => {
   const tagsMap = {
     "Celebrity Detection": "Celebrity",
     "Landmark Recognition": "LandMark",
-    "Logo Detection": "logo",
+    "Logo Detection": "Logo",
     "Object Detection": "Object",
     "Optical Character Recognition": "OCR",
     "Segment Labels": "Segment",
@@ -68,7 +69,8 @@ const TagsPad = (props) => {
         }
         console.log(tags.current, gitTags.current)
         noGitTags.current = cloneDeep(tags.current);
-        if (noGitTags.current["Object Detection"] !== gitTags.current["Object Detection"]) {
+        if (noGitTags.current["Object Detection"].length !== gitTags.current["Object Detection"].length) {
+          console.log("I'm setting it now.")
           setIsGit(true);
         }
         console.log(isGit);
@@ -388,7 +390,7 @@ const TagsPad = (props) => {
                     
                     <div>
                       <button onClick={() => {
-                        tags.current = gitTags.current;
+                        tags.current = noGitTags.current;
                         setDisplayGit(false);
                         }}
                         >
@@ -400,7 +402,7 @@ const TagsPad = (props) => {
 
                     <div>
                       <button onClick={() => {
-                        tags.current = noGitTags.current;
+                        tags.current = gitTags.current;
                         setDisplayGit(true);
                         }}
                         >
