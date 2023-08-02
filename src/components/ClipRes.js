@@ -1,10 +1,8 @@
-import ReactPlayer from "react-player";
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
-
 
 const container = {
   width: "97%",
@@ -42,15 +40,6 @@ const videoPlayerContainer = {
   justifyContent: "center",
 };
 
-const audioCtrlContainer = {
-  display: " flex",
-  flexDirection: "row",
-  width: "100%",
-  height: "5%",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 const videoInfoContainer = {
   width: "95%",
   height: "30%",
@@ -61,90 +50,12 @@ const videoInfoContainer = {
 };
 
 const ClipRes = (props) => {
-
   const viewTime = useRef(0);
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
   const shots = useRef({});
   const clipRecorded = useRef(false);
-
-  useEffect(() => {
-    prepareShots().then(() => {
-      console.log(shots.current)
-    });
-  }, [])
-
-  const hash = (s) => {
-    return s;
-  };
-
-  const prepareShots = async () => {
-    if (props.db !== null) {
-      try {
-        const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "text" in props.clipInfo.sources[0].document;
-        if (_hasTags) {
-          const iqHash = props.clipInfo.hash;
-          for (let src of props.clipInfo.sources) {
-            const currdoc = src.document;
-            const shotID = hash(iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time);
-            const shotRef = doc(shotInfoRef, shotID);
-            getDoc(shotRef).then((shot) => {
-              if (shot.exists()) {
-                shots.current[shotID] = shot.data();
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.log(err)
-      }
-    }
-  };
-
-  const handleStart = () => {
-    try {
-    props.updateEngagement(clipInfo, 0, 1);
-    } catch (err) {
-      console.log(err)
-    }
-    console.log("Started");
-
-  };
-
-  // const handleTimeUpdate = (video) => {
-  //   cumTime.current += 
-  // }
-
-  const handlePlay = (video) => {
-    console.log(video.currentTime)
-    startTime.current = video.currentTime;
-    console.log(startTime.current)
-  };
-
   const dislikedTags = useRef([]);
-
-
-  const handlePause = (video) => {
-    const elapsedTime = video.currentTime - startTime.current;
-    console.log("elapsedtime", elapsedTime)
-    viewTime.current = viewTime.current + elapsedTime;
-    // startTime.current = null;
-    try {
-      if (!clipRecorded.current) {
-        props.updateEngagement(clipInfo, elapsedTime, 1);
-        clipRecorded.current = true;
-      } else{
-        props.updateEngagement(clipInfo, elapsedTime, 0);
-      }
-    } catch (err) {
-      console.log(err)
-    }
-
-    console.log("paused");
-    console.log("total view time", viewTime.current);
-  };
-
   const url =
     props.clipInfo.url === null
       ? null
@@ -160,6 +71,71 @@ const ClipRes = (props) => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    prepareShots()
+      .then(() => {
+        // console.log(shots.current);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  const hash = (s) => {
+    return s;
+  };
+
+  const prepareShots = async () => {
+    if (props.db !== null) {
+      try {
+        const shotInfoRef = collection(props.db, "Shot_info");
+        const _hasTags = "text" in props.clipInfo.sources[0].document;
+        if (_hasTags) {
+          const iqHash = props.clipInfo.hash;
+          for (let src of props.clipInfo.sources) {
+            const currdoc = src.document;
+            const shotID = hash(
+              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
+            );
+            const shotRef = doc(shotInfoRef, shotID);
+            getDoc(shotRef).then((shot) => {
+              if (shot.exists()) {
+                shots.current[shotID] = shot.data();
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
+
+  const handleStart = (time) => {
+    startTime.current = time;
+    console.log(`started, starttime: ${startTime.current}`);
+  };
+
+  const handlePause = (time) => {
+    const elapsedTime = time - startTime.current;
+    viewTime.current = viewTime.current + elapsedTime;
+    console.log(
+      `paused, elapsedtime: ${elapsedTime}, total view time: ${viewTime.current}`
+    );
+
+    // startTime.current = null;
+    try {
+      if (!clipRecorded.current) {
+        props.updateEngagement(clipInfo, elapsedTime, 1);
+        clipRecorded.current = true;
+      } else {
+        props.updateEngagement(clipInfo, elapsedTime, 0);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const InitializeVideo = ({ element }) => {
     if (!element || player) {
@@ -180,25 +156,29 @@ const ClipRes = (props) => {
             versionHash: props.clipInfo.hash,
             clipStart: props.clipInfo.start_time / 1000,
             clipEnd: props.clipInfo.end_time / 1000,
-            ignoreTrimming: true
+            ignoreTrimming: true,
           },
         },
         playerOptions: {
           controls: EluvioPlayerParameters.controls.AUTO_HIDE,
-          playerCallback: ({player, videoElement, hlsPlayer, dashPlayer, posterUrl}) => {
-            videoElement.addEventListener("play", () => handlePlay(videoElement));
-            videoElement.addEventListener("pause", () => handlePause(videoElement));
-            videoElement.addEventListener("ended", () => handlePause(videoElement));
-          }
+          playerCallback: ({ videoElement }) => {
+            videoElement.addEventListener("play", () => {
+              handleStart(videoElement.currentTime);
+            });
+            videoElement.addEventListener("pause", () => {
+              handlePause(videoElement.currentTime);
+            });
+            videoElement.addEventListener("seeking", () => {
+              if (!videoElement.paused) {
+                videoElement.pause();
+              }
+            });
+          },
         },
       })
     );
   };
 
- 
-  const playerRef = useRef(null);
-  const [audioTracks, setAudioTracks] = useState(null);
-  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   return (
     <div style={container}>
       <div style={videoContainer}>
@@ -216,23 +196,23 @@ const ClipRes = (props) => {
           {props.clipInfo.meta.public.asset_metadata.title}
         </div>
         <div style={videoPlayerContainer}>
-        {url !== null ? (
-          <div ref={(element) => InitializeVideo({ element })}></div>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "white",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            Playout URL Err
-          </div>
-        )}
+          {url !== null ? (
+            <div ref={(element) => InitializeVideo({ element })}></div>
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: "white",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Playout URL Err
+            </div>
+          )}
         </div>
 
         <div style={videoInfoContainer}>
@@ -246,31 +226,6 @@ const ClipRes = (props) => {
             searchVersion={props.searchVersion}
           ></InfoPad>
         </div>
-
-      {audioTracks && (
-        <div style={audioCtrlContainer}>
-          audio track:
-          <select
-            onChange={(event) => {
-              const audioTrackId = event.target.value;
-              setSelectedAudioTrack(audioTrackId);
-              console.log(`set audio track to ${audioTrackId}`);
-              const hls = playerRef.current.getInternalPlayer("hls");
-              hls.audioTrackController.setAudioTrack(audioTrackId);
-            }}
-            value={selectedAudioTrack}
-            style={{ height: "100%", width: "20%", marginLeft: 5 }}
-          >
-            {audioTracks.map((track) => {
-              return (
-                <option key={`option-${track.id}`} value={track.id}>
-                  {track.name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )}
       </div>
 
       <QAPad
@@ -286,7 +241,8 @@ const ClipRes = (props) => {
         }}
         updatePrevShots={(shotID, i, score) => {
           if (shotID in shots.current) {
-            shots.current[shotID].tags[i].feedback[props.searchID.current] = score;
+            shots.current[shotID].tags[i].feedback[props.searchID.current] =
+              score;
           }
         }}
         initializePrevShots={(shotID, tag) => {
@@ -294,11 +250,10 @@ const ClipRes = (props) => {
         }}
         prevShots={shots.current}
         setShots={(s) => {
-          shots.current = s
+          shots.current = s;
         }}
         prevS={shots}
       ></QAPad>
-
     </div>
   );
 };
