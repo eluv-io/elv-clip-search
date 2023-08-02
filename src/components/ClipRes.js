@@ -66,6 +66,7 @@ const ClipRes = (props) => {
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
   const shots = useRef({});
+  const clipRecorded = useRef(false);
 
   useEffect(() => {
     prepareShots().then(() => {
@@ -111,24 +112,35 @@ const ClipRes = (props) => {
 
   };
 
-  const handlePlay = () => {
-    startTime.current = Date.now();
+  // const handleTimeUpdate = (video) => {
+  //   cumTime.current += 
+  // }
+
+  const handlePlay = (video) => {
+    console.log(video.currentTime)
+    startTime.current = video.currentTime;
+    console.log(startTime.current)
   };
 
   const dislikedTags = useRef([]);
 
 
-  const handlePause = () => {
-    if (startTime.current) {
-      const elapsedTime = (Date.now() - startTime.current) / 1000;
-      viewTime.current = viewTime.current + elapsedTime;
-      startTime.current = null;
-      try {
-      props.updateEngagement(clipInfo, elapsedTime, 0);
-      } catch (err) {
-        console.log(err)
+  const handlePause = (video) => {
+    const elapsedTime = video.currentTime - startTime.current;
+    console.log("elapsedtime", elapsedTime)
+    viewTime.current = viewTime.current + elapsedTime;
+    // startTime.current = null;
+    try {
+      if (!clipRecorded.current) {
+        props.updateEngagement(clipInfo, elapsedTime, 1);
+        clipRecorded.current = true;
+      } else{
+        props.updateEngagement(clipInfo, elapsedTime, 0);
       }
+    } catch (err) {
+      console.log(err)
     }
+
     console.log("paused");
     console.log("total view time", viewTime.current);
   };
@@ -173,12 +185,17 @@ const ClipRes = (props) => {
         },
         playerOptions: {
           controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+          playerCallback: ({player, videoElement, hlsPlayer, dashPlayer, posterUrl}) => {
+            videoElement.addEventListener("play", () => handlePlay(videoElement));
+            videoElement.addEventListener("pause", () => handlePause(videoElement));
+            videoElement.addEventListener("ended", () => handlePause(videoElement));
+          }
         },
       })
     );
   };
 
-
+ 
   const playerRef = useRef(null);
   const [audioTracks, setAudioTracks] = useState(null);
   const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
