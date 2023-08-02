@@ -1,9 +1,8 @@
-import ReactPlayer from "react-player";
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
-
+import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 
 const container = {
   width: "97%",
@@ -20,7 +19,6 @@ const container = {
 
 const videoContainer = {
   width: "80%",
-  height: "95%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -42,15 +40,6 @@ const videoPlayerContainer = {
   justifyContent: "center",
 };
 
-const audioCtrlContainer = {
-  display: " flex",
-  flexDirection: "row",
-  width: "100%",
-  height: "5%",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
 const videoInfoContainer = {
   width: "95%",
   height: "30%",
@@ -61,19 +50,37 @@ const videoInfoContainer = {
 };
 
 const ClipRes = (props) => {
-
   const viewTime = useRef(0);
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
   const shots = useRef({});
+  const clipRecorded = useRef(false);
+  const dislikedTags = useRef([]);
+  const url =
+    props.clipInfo.url === null
+      ? null
+      : `${props.clipInfo.url}&resolve=false&clip_start=${
+          props.clipInfo.start_time / 1000
+        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const [player, setPlayer] = useState(undefined);
 
   useEffect(() => {
-    prepareShots().then(() => {
-      console.log(shots.current)
-    }).catch((err) => {
-      console.log(err)
-    });
-  }, [])
+    return () => {
+      if (player) {
+        player.Destroy();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    prepareShots()
+      .then(() => {
+        // console.log(shots.current);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   const hash = (s) => {
     return s;
@@ -88,7 +95,9 @@ const ClipRes = (props) => {
           const iqHash = props.clipInfo.hash;
           for (let src of props.clipInfo.sources) {
             const currdoc = src.document;
-            const shotID = hash(iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time);
+            const shotID = hash(
+              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
+            );
             const shotRef = doc(shotInfoRef, shotID);
             getDoc(shotRef).then((shot) => {
               if (shot.exists()) {
@@ -100,53 +109,78 @@ const ClipRes = (props) => {
           }
         }
       } catch (err) {
-        console.log(err)
+        console.log(err);
       }
     }
   };
 
-  const handleStart = () => {
+  const handleStart = (time) => {
+    startTime.current = time;
+    console.log(`started, starttime: ${startTime.current}`);
+  };
+
+  const handlePause = (time) => {
+    const elapsedTime = time - startTime.current;
+    viewTime.current = viewTime.current + elapsedTime;
+    console.log(
+      `paused, elapsedtime: ${elapsedTime}, total view time: ${viewTime.current}`
+    );
+
+    // startTime.current = null;
     try {
-    props.updateEngagement(clipInfo, 0, 1);
-    } catch (err) {
-      console.log(err)
-    }
-    console.log("Started");
-
-  };
-
-  const handlePlay = () => {
-    startTime.current = Date.now();
-  };
-
-  const dislikedTags = useRef([]);
-
-
-  const handlePause = () => {
-    if (startTime.current) {
-      const elapsedTime = (Date.now() - startTime.current) / 1000;
-      viewTime.current = viewTime.current + elapsedTime;
-      startTime.current = null;
-      try {
-      props.updateEngagement(clipInfo, elapsedTime, 0);
-      } catch (err) {
-        console.log(err)
+      if (!clipRecorded.current) {
+        props.updateEngagement(clipInfo, elapsedTime, 1);
+        clipRecorded.current = true;
+      } else {
+        props.updateEngagement(clipInfo, elapsedTime, 0);
       }
+    } catch (err) {
+      console.log(err);
     }
-    console.log("paused");
-    console.log("total view time", viewTime.current);
   };
 
-  const url =
-    props.clipInfo.url === null
-      ? null
-      : `${props.clipInfo.url}&resolve=false&clip_start=${
-          props.clipInfo.start_time / 1000
-        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const InitializeVideo = ({ element }) => {
+    if (!element || player) {
+      return;
+    }
 
-  const playerRef = useRef(null);
-  const [audioTracks, setAudioTracks] = useState(null);
-  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
+    setPlayer(
+      new EluvioPlayer(element, {
+        clientOptions: {
+          network:
+            EluvioPlayerParameters.networks[
+              props.network === "main" ? "MAIN" : "DEMO"
+            ],
+          client: props.client,
+        },
+        sourceOptions: {
+          playoutParameters: {
+            versionHash: props.clipInfo.hash,
+            clipStart: props.clipInfo.start_time / 1000,
+            clipEnd: props.clipInfo.end_time / 1000,
+            ignoreTrimming: true,
+          },
+        },
+        playerOptions: {
+          controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+          playerCallback: ({ videoElement }) => {
+            videoElement.addEventListener("play", () => {
+              handleStart(videoElement.currentTime);
+            });
+            videoElement.addEventListener("pause", () => {
+              handlePause(videoElement.currentTime);
+            });
+            videoElement.addEventListener("seeking", () => {
+              if (!videoElement.paused) {
+                videoElement.pause();
+              }
+            });
+          },
+        },
+      })
+    );
+  };
+
   return (
     <div style={container}>
       <div style={videoContainer}>
@@ -164,45 +198,23 @@ const ClipRes = (props) => {
           {props.clipInfo.meta.public.asset_metadata.title}
         </div>
         <div style={videoPlayerContainer}>
-        {url !== null ? (
-          <ReactPlayer
-            url={url}
-            width="100%"
-            height="100%"
-            autoPlay={false}
-            controls={true}
-            config={{
-              capLevelToPlayerSize: true,
-              maxBufferLength: 0,
-            }}
-            onReady={() => {
-              console.log("new player ready");
-              const hls = playerRef.current.getInternalPlayer("hls");
-              const tracks = hls.audioTrackController.tracks;
-              if (tracks !== null && tracks.length > 1) {
-                setAudioTracks(tracks);
-                setSelectedAudioTrack(0);
-              }
-            }}
-            onStart={handleStart}
-            onPlay={handlePlay}
-            onPause={handlePause}
-          ></ReactPlayer>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "white",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            Playout URL Err
-          </div>
-        )}
+          {url !== null ? (
+            <div ref={(element) => InitializeVideo({ element })}></div>
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: "white",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Playout URL Err
+            </div>
+          )}
         </div>
 
         <div style={videoInfoContainer}>
@@ -216,31 +228,6 @@ const ClipRes = (props) => {
             searchVersion={props.searchVersion}
           ></InfoPad>
         </div>
-
-      {audioTracks && (
-        <div style={audioCtrlContainer}>
-          audio track:
-          <select
-            onChange={(event) => {
-              const audioTrackId = event.target.value;
-              setSelectedAudioTrack(audioTrackId);
-              console.log(`set audio track to ${audioTrackId}`);
-              const hls = playerRef.current.getInternalPlayer("hls");
-              hls.audioTrackController.setAudioTrack(audioTrackId);
-            }}
-            value={selectedAudioTrack}
-            style={{ height: "100%", width: "20%", marginLeft: 5 }}
-          >
-            {audioTracks.map((track) => {
-              return (
-                <option key={`option-${track.id}`} value={track.id}>
-                  {track.name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )}
       </div>
 
       <QAPad
@@ -256,7 +243,8 @@ const ClipRes = (props) => {
         }}
         updatePrevShots={(shotID, i, score) => {
           if (shotID in shots.current) {
-            shots.current[shotID].tags[i].feedback[props.searchID.current] = score;
+            shots.current[shotID].tags[i].feedback[props.searchID.current] =
+              score;
           }
         }}
         initializePrevShots={(shotID, tag) => {
@@ -264,11 +252,10 @@ const ClipRes = (props) => {
         }}
         prevShots={shots.current}
         setShots={(s) => {
-          shots.current = s
+          shots.current = s;
         }}
         prevS={shots}
       ></QAPad>
-
     </div>
   );
 };
