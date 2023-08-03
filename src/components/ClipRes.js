@@ -6,7 +6,7 @@ import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 
 const container = {
   width: "97%",
-  height: 800,
+  height: 900,
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
