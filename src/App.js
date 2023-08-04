@@ -275,11 +275,17 @@ const App = () => {
                 Personal_info: {}
               }).then(() => {
                 console.log("User info saved");
+              }).catch((err) => {
+                console.log(err)
               })
             } else {
               console.log("This user already exists");
             }
+          }).catch((err) => {
+            console.log(err)
           });
+        }).catch((err) => {
+          console.log(err)
         })
       }
     } catch (err) {
@@ -327,6 +333,8 @@ const App = () => {
           Search_id: searchID.current
         }).then(() => {
           console.log("Engagement table initialized")
+        }).catch((err) => {
+          console.log(err)
         })
       } catch (err) {
         console.log("Error occured when initializing the engagement table");
@@ -351,6 +359,8 @@ const App = () => {
           }).then(() => {
             console.log(engagement.current)
             console.log("engagement updated!")
+          }).catch((err) => {
+            console.log(err)
           })
         } catch (err) {
           console.log("Error occured when updating the engagement table")
@@ -378,6 +388,8 @@ const App = () => {
           console.log("search history updated with docID", docRef.id);
           searchID.current = docRef.id;
           initializeEngagement();
+        }).catch((err) => {
+          console.log(err)
         })
       } catch (err) {
         console.log("Error occured when storing the search history")
@@ -812,6 +824,8 @@ const App = () => {
             onClick={async () => {
               getRes().then(() => {
                 storeSearchHistory();
+              }).catch((err) => {
+                console.log(err)
               });
             }}
             disabled={loadingSearchRes || loadingPlayoutUrl}

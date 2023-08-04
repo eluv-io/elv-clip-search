@@ -113,6 +113,8 @@ const ClipRes = (props) => {
               if (shot.exists()) {
                 shots.current[shotID] = shot.data();
               }
+            }).catch((err) => {
+              console.log(err)
             });
           }
         }

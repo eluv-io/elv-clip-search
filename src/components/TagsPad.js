@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi";
+import { select } from "./ExtractDes";
+import cloneDeep from 'lodash/cloneDeep';
+import { isString } from "lodash";
 
 const TagsPad = (props) => {
   const tags = useRef({
@@ -13,12 +16,17 @@ const TagsPad = (props) => {
     "Speech to Text": [],
   });
 
+  const gitTags = useRef({});
+  const noGitTags = useRef({});
+
+  const git = useRef({})
+
   const shots = useRef({});
 
   const tagsMap = {
     "Celebrity Detection": "Celebrity",
     "Landmark Recognition": "LandMark",
-    "Logo Detection": "logo",
+    "Logo Detection": "Logo",
     "Object Detection": "Object",
     "Optical Character Recognition": "OCR",
     "Segment Labels": "Segment",
@@ -37,23 +45,40 @@ const TagsPad = (props) => {
 
   const [refresh, setRefresh] = useState(false);
   const [tagsReady, setTagsReady] = useState(false);
+  const [isGit, setIsGit] = useState(false);
+  const [displayGit, setDisplayGit] = useState(false);
   const db = props.db;
 
 
 
   useEffect(() => {
     console.log("parsing tags");
-    try{
-      prepareTags()
-        .then(() => {
-          // props.prevS.current = shots.current
-          console.log("Before clicking", props.prevS.current)
-          setTagsReady(true);
-          setRefresh((v) => !v);
-        })
-      } catch(err) {
+    prepareTags()
+      .then(() => {
+        gitTags.current = cloneDeep(tags.current);
+        git.current = select(git.current);
+        console.log(git.current);
+        tags.current["Object Detection"] = [];
+        for (const s in git.current) {
+          for (const d in git.current[s]) {
+            if (!tags.current["Object Detection"].some(
+              (dic) => dic.status.toLowerCase() === git.current[s][d].status.toLowerCase())
+            )
+            tags.current["Object Detection"].push(git.current[s][d])
+          }
+        }
+        console.log(tags.current, gitTags.current)
+        noGitTags.current = cloneDeep(tags.current);
+        if (noGitTags.current["Object Detection"].length !== gitTags.current["Object Detection"].length) {
+          console.log("I'm setting it now.")
+          setIsGit(true);
+        }
+        console.log(isGit);
+        setTagsReady(true);
+        setRefresh((v) => !v);
+      }).catch((err) => {
         console.log(err)
-      }
+      })
   }, []);
 
   const hash = (s) => {
@@ -93,6 +118,8 @@ const TagsPad = (props) => {
           console.log(err);
         })
       }
+    }).catch((err) => {
+      console.log(err);
     });
   };
 
@@ -102,7 +129,6 @@ const TagsPad = (props) => {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
         const currdoc = src.document;
-        console.log(currdoc)
         const shotStart = currdoc.start_time
         const shotEnd = currdoc.end_time
         const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
@@ -132,15 +158,6 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID.current]
                 }
               }
-              // const start = v.start_time - shotStart
-              // const startmin = Math.floor((start/60000) << 0);
-              // const startsec = ((start % 60000) / 1000).toFixed(0);
-              // const end = v.end_time - shotStart
-              // const endmin = Math.floor((end/60000) << 0);
-              // const endsec = ((end % 60000) / 1000).toFixed(0);
-              // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
-              // console.log(text, timeline)
-              // console.log(v.start_time, v.end_time, shotStart, shotEnd)
               const dic = {
                 track: k,
                 status: text,
@@ -156,20 +173,27 @@ const TagsPad = (props) => {
                 tags.current[k].push(dic);
               }
 
+              if (k === "Object Detection") {
+                if (shotID in git.current) {
+                  git.current[shotID].push(dic);
+                } else {
+                  git.current[shotID] = [];
+                  git.current[shotID].push(dic)
+                }
+              }
+
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
                 feedback: { [props.searchID.current]: dislikeState },
               });
-              // props.initializePrevShots(shotID, {
-              //   status: { track: k, text: text, idx: idx },
-              //   feedback: { [props.searchID]: dislikeState },
-              // })
 
               idx = idx + 1;
             }
           }
         }
         shots.current[shotID] = shot;
+        // console.log(tags.current["Object Detection"])
+        // tags.current["Object Detection"] = select(tags.current["Object Detection"], shotID)
         pushShotToDB(shot);
       }
     }
@@ -223,6 +247,8 @@ const TagsPad = (props) => {
           shots: Object.keys(shots.current),
         }).then(() => {
           console.log("clip stored successfully!");
+        }).catch((err) => {
+          console.log(err)
         });
       } else {
         const tempRank = clip.data().rank;
@@ -237,6 +263,8 @@ const TagsPad = (props) => {
             rank: tempRank,
           }).then(() => {
             console.log("clip rank updated successfully!");
+          }).catch((err) => {
+            console.log(err)
           });
         }
       }
@@ -330,6 +358,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  key={t.idx + t.status}
                 >
                   {t.status}
                   <div>
@@ -358,7 +387,40 @@ const TagsPad = (props) => {
                   </div>
                 </div>
               ))}
-          </div>
+
+              <div>
+                {k === "Object Detection" && isGit ? (
+                  <div>
+                  {displayGit ? (
+                    
+                    <div>
+                      <button onClick={() => {
+                        tags.current = noGitTags.current;
+                        setDisplayGit(false);
+                        }}
+                        >
+                        collapse
+                      </button>
+                    </div>
+
+                  ) : (
+
+                    <div>
+                      <button onClick={() => {
+                        tags.current = gitTags.current;
+                        setDisplayGit(true);
+                        }}
+                        >
+                        show all
+                      </button>
+                    </div>
+                    
+                    )}
+                  </div>
+                  ) : null}
+                </div>
+              </div>
+        
         ) : null;
       })}
     </div>
