@@ -6,7 +6,7 @@ import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 
 const container = {
   width: "97%",
-  height: 800,
+  height: 900,
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
@@ -19,6 +19,7 @@ const container = {
 
 const videoContainer = {
   width: "80%",
+  height: "95%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -30,10 +31,19 @@ const videoContainer = {
   borderRadius: 10,
 };
 
+const videoTitleContainer = {
+  width: "100%",
+  height: "5%",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: "bold",
+};
+
 const videoPlayerContainer = {
   width: "95%",
-  height: "70%",
-  marginTop: "2%",
+  height: "68%",
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
@@ -42,7 +52,7 @@ const videoPlayerContainer = {
 
 const videoInfoContainer = {
   width: "95%",
-  height: "30%",
+  height: "27%",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -162,6 +172,8 @@ const ClipRes = (props) => {
         playerOptions: {
           controls: EluvioPlayerParameters.controls.AUTO_HIDE,
           playerCallback: ({ videoElement }) => {
+            videoElement.style.height = "100%";
+            videoElement.style.width = "100%";
             videoElement.addEventListener("play", () => {
               handleStart(videoElement.currentTime);
             });
@@ -182,17 +194,7 @@ const ClipRes = (props) => {
   return (
     <div style={container}>
       <div style={videoContainer}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: "5%",
-            fontWeight: "bold",
-          }}
-        >
+        <div style={videoTitleContainer}>
           {props.clipInfo.meta.public.asset_metadata.title}
         </div>
         <div style={videoPlayerContainer}>
@@ -201,9 +203,9 @@ const ClipRes = (props) => {
           ) : (
             <div
               style={{
-                width: "100%",
+                width: "auto",
                 height: "100%",
-                backgroundColor: "white",
+                backgroundColor: "transparent",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
