@@ -118,8 +118,8 @@ export const createSearchUrl = async ({
           fuzzySearchPhrase === ""
             ? `(${search})`
             : search === ""
-            ? `(${fuzzySearchPhrase})`
-            : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
+            ? fuzzySearchPhrase
+            : `((${fuzzySearchPhrase}) AND ${search})`,
         select: "start_time,end_time,text,/public/asset_metadata/title",
         start: 0,
         limit: 160,
@@ -137,6 +137,11 @@ export const createSearchUrl = async ({
       } else {
         // only  set the max-total when we are using fuzzy search
         queryParams.max_total = 160;
+      }
+      // for the two pass approach,
+      // if we do not have the exact match filters, we should enable semantic=true
+      if (search === "") {
+        queryParams.semantic = true;
       }
       const url = await client.Rep({
         libraryId,

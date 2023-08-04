@@ -103,7 +103,7 @@ const FuzzySearchBox = (props) => {
             });
             props.handleSubmitClick({
               fields: fields,
-              text: `(${text.trim()})`,
+              text: text.trim(),
             });
           } else {
             props.handleSubmitClick({ fields: [], text: "" });
@@ -145,7 +145,7 @@ const FuzzySearchBox = (props) => {
           const fields = options.filter((item, index) => {
             return checkedState[index];
           });
-          props.handleSubmitClick({ fields: fields, text: `(${text.trim()})` });
+          props.handleSubmitClick({ fields: fields, text: text.trim() });
         } else {
           props.handleSubmitClick({ fields: [], text: "" });
         }
