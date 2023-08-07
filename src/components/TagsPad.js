@@ -5,6 +5,7 @@ import {
   BiArrowToTop,
   BiDislike,
   BiLike,
+  BiSolidRightDownArrowCircle,
 } from "react-icons/bi";
 
 const TagsPad = (props) => {
@@ -41,7 +42,7 @@ const TagsPad = (props) => {
   });
 
   const tagsTimeLine = useRef({});
-
+  const displayTimeLine = useRef({});
   const [refresh, setRefresh] = useState(false);
   const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
@@ -143,7 +144,12 @@ const TagsPad = (props) => {
               const textLowerCase = text.toLowerCase();
               if (textLowerCase in tagsTimeLine.current) {
                 tagsTimeLine.current[textLowerCase].push({
-                  start: Math.max(0, v.start_time - props.clipInfo.start_time),
+                  start: Math.max(
+                    0,
+                    Math.floor(
+                      (v.start_time - props.clipInfo.start_time) / 1000
+                    )
+                  ),
                   end: v.end_time - props.clipInfo.start_time,
                 });
               } else {
@@ -152,7 +158,9 @@ const TagsPad = (props) => {
                   {
                     start: Math.max(
                       0,
-                      v.start_time - props.clipInfo.start_time
+                      Math.floor(
+                        (v.start_time - props.clipInfo.start_time) / 1000
+                      )
                     ),
                     end: v.end_time - props.clipInfo.start_time,
                   },
@@ -169,6 +177,10 @@ const TagsPad = (props) => {
         }
         shots.current[shotID] = shot;
         pushShotToDB(shot);
+      }
+
+      for (let k in tagsTimeLine.current) {
+        displayTimeLine.current[k] = false;
       }
     }
   };
@@ -313,40 +325,89 @@ const TagsPad = (props) => {
               tags.current[k].map((t) => (
                 <div
                   style={{
-                    width: "90%",
                     display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingLeft: "5%",
-                    backgroundColor: "transparent",
-                    borderRadius: 10,
-                    marginBottom: 3,
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    width: "100%",
                   }}
                 >
-                  {t.status}
-                  <div>
+                  <div
+                    style={{
+                      width: "90%",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingLeft: "5%",
+                      backgroundColor: "transparent",
+                      borderRadius: 10,
+                      marginBottom: 3,
+                    }}
+                  >
                     <button
                       style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, 1)}
+                      onClick={() => {
+                        displayTimeLine.current[t.status.toLowerCase()] =
+                          !displayTimeLine.current[t.status.toLowerCase()];
+                        setRefresh((e) => !e);
+                      }}
                     >
-                      <BiLike
-                        style={{
-                          color: t.dislike === 1 ? "#EAA14F" : "black",
-                        }}
-                      />
+                      {t.status}
                     </button>
+                    <div>
+                      <button
+                        style={{
+                          border: "none",
+                          backgroundColor: "transparent",
+                        }}
+                        onClick={() => collect(tags.current[k], t, 1)}
+                      >
+                        <BiLike
+                          style={{
+                            color: t.dislike === 1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
 
-                    <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, -1)}
-                    >
-                      <BiDislike
+                      <button
                         style={{
-                          color: t.dislike === -1 ? "#EAA14F" : "black",
+                          border: "none",
+                          backgroundColor: "transparent",
                         }}
-                      />
-                    </button>
+                        onClick={() => collect(tags.current[k], t, -1)}
+                      >
+                        <BiDislike
+                          style={{
+                            color: t.dislike === -1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+                    </div>
                   </div>
+                  {displayTimeLine.current[t.status.toLowerCase()] ? (
+                    <div
+                      style={{
+                        width: "90%",
+                        paddingLeft: "7%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                      }}
+                    >
+                      {tagsTimeLine.current[t.status.toLowerCase()].map((e) => (
+                        <button
+                          style={{
+                            border: "none",
+                            marginRight: 10,
+                            borderRadius: 10,
+                          }}
+                        >
+                          {e.start}s
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))}
           </div>
