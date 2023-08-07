@@ -100,13 +100,13 @@ const ClipRes = (props) => {
     if (props.db !== null) {
       try {
         const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "text" in props.clipInfo.sources[0].document;
+        const _hasTags = "f_start_time" in props.clipInfo.sources[0].fields && "f_end_time" in props.clipInfo.sources[0].fields;
         if (_hasTags) {
           const iqHash = props.clipInfo.hash;
           for (let src of props.clipInfo.sources) {
-            const currdoc = src.document;
+            const currdoc = src.fields;
             const shotID = hash(
-              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
+              iqHash + "_" + currdoc.f_start_time + "-" + currdoc.f_end_time
             );
             const shotRef = doc(shotInfoRef, shotID);
             getDoc(shotRef).then((shot) => {

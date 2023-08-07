@@ -4,35 +4,35 @@ import { BiArrowFromTop, BiArrowToTop, BiDislike, BiLike } from "react-icons/bi"
 
 const TagsPad = (props) => {
   const tags = useRef({
-    "Celebrity Detection": [],
-    "Landmark Recognition": [],
-    "Logo Detection": [],
-    "Object Detection": [],
-    "Optical Character Recognition": [],
-    "Segment Labels": [],
-    "Speech to Text": [],
+    "f_celebrity": [],
+    "f_landmark": [],
+    "f_logo": [],
+    "f_object": [],
+    "f_characters": [],
+    "f_segment": [],
+    "f_speech_to_text": [],
   });
 
   const shots = useRef({});
 
   const tagsMap = {
-    "Celebrity Detection": "Celebrity",
-    "Landmark Recognition": "LandMark",
-    "Logo Detection": "logo",
-    "Object Detection": "Object",
-    "Optical Character Recognition": "OCR",
-    "Segment Labels": "Segment",
-    "Speech to Text": "STT",
+    "f_celebrity": "Celebrity",
+    "f_landmark": "LandMark",
+    "f_logo": "logo",
+    "f_object": "Object",
+    "f_characters": "OCR",
+    "f_segment": "Segment",
+    "f_speech_to_text": "STT",
   };
 
   const [show, setShow] = useState({
-    "Celebrity Detection": true,
-    "Landmark Recognition": true,
-    "Logo Detection": true,
-    "Object Detection": true,
-    "Optical Character Recognition": true,
-    "Segment Labels": true,
-    "Speech to Text": true,
+    "f_celebrity": true,
+    "f_landmark": true,
+    "f_logo": true,
+    "f_object": true,
+    "f_characters": true,
+    "f_segment": true,
+    "f_speech_to_text": true,
   });
 
   const [refresh, setRefresh] = useState(false);
@@ -97,14 +97,14 @@ const TagsPad = (props) => {
   };
 
   const prepareTags = async () => {
-    const _hasTags = "text" in props.clipInfo.sources[0].document;
+    const _hasTags = "f_start_time" in props.clipInfo.sources[0].fields && "f_end_time" in props.clipInfo.sources[0].fields;
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
-        const currdoc = src.document;
+        const currdoc = src.fields;
         console.log(currdoc)
-        const shotStart = currdoc.start_time
-        const shotEnd = currdoc.end_time
+        const shotStart = currdoc.f_start_time
+        const shotEnd = currdoc.f_end_time
         const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
         const shot = {
           iqHash: iqHash,
@@ -118,55 +118,57 @@ const TagsPad = (props) => {
         // since tags in shot is saved as a list, can use this index directly target at that tag
         let idx = 0;
         for (let k in tags.current) {
-          for (let v of currdoc.text[k]) {
-            for (let text of v.text) {
-              let dislikeState = 0;
-              // if (shotID in props.prevShots && props.prevShots[shotID].tags.length !== 0) {
-              if (shotID in props.prevS.current) {
-                // console.log(props.prevShots[shotID].tags)
-                const prevDislike = props.prevS.current[shotID].tags[idx].feedback
-                // console.log("prevDislike", prevDislike)
-                // console.log(props.searchID)
-                if (props.searchID.current in prevDislike) {
-                  // console.log(prevDislike[props.searchID])
-                  dislikeState = prevDislike[props.searchID.current]
-                }
+          if (!(k in currdoc)) {
+            continue
+          }
+          for (let i in currdoc[k]) {
+            let text = currdoc[k][i]
+            let dislikeState = 0;
+            // if (shotID in props.prevShots && props.prevShots[shotID].tags.length !== 0) {
+            if (shotID in props.prevS.current) {
+              // console.log(props.prevShots[shotID].tags)
+              const prevDislike = props.prevS.current[shotID].tags[idx].feedback
+              // console.log("prevDislike", prevDislike)
+              // console.log(props.searchID)
+              if (props.searchID.current in prevDislike) {
+                // console.log(prevDislike[props.searchID])
+                dislikeState = prevDislike[props.searchID.current]
               }
-              // const start = v.start_time - shotStart
-              // const startmin = Math.floor((start/60000) << 0);
-              // const startsec = ((start % 60000) / 1000).toFixed(0);
-              // const end = v.end_time - shotStart
-              // const endmin = Math.floor((end/60000) << 0);
-              // const endsec = ((end % 60000) / 1000).toFixed(0);
-              // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
-              // console.log(text, timeline)
-              // console.log(v.start_time, v.end_time, shotStart, shotEnd)
-              const dic = {
-                track: k,
-                status: text,
-                dislike: dislikeState,
-                shotID: shotID,
-                tagIdx: idx,
-              };
-              if (
-                !tags.current[k].some(
-                  (dictionary) => dictionary.status.toLowerCase() === dic.status.toLowerCase()
-                )
-              ) {
-                tags.current[k].push(dic);
-              }
-
-              shot.tags.push({
-                status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID.current]: dislikeState },
-              });
-              // props.initializePrevShots(shotID, {
-              //   status: { track: k, text: text, idx: idx },
-              //   feedback: { [props.searchID]: dislikeState },
-              // })
-
-              idx = idx + 1;
             }
+            // const start = v.start_time - shotStart
+            // const startmin = Math.floor((start/60000) << 0);
+            // const startsec = ((start % 60000) / 1000).toFixed(0);
+            // const end = v.end_time - shotStart
+            // const endmin = Math.floor((end/60000) << 0);
+            // const endsec = ((end % 60000) / 1000).toFixed(0);
+            // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
+            // console.log(text, timeline)
+            // console.log(v.start_time, v.end_time, shotStart, shotEnd)
+            const dic = {
+              track: k,
+              status: text,
+              dislike: dislikeState,
+              shotID: shotID,
+              tagIdx: idx,
+            };
+            if (
+              !tags.current[k].some(
+                (dictionary) => dictionary.status.toLowerCase() === dic.status.toLowerCase()
+              )
+            ) {
+              tags.current[k].push(dic);
+            }
+
+            shot.tags.push({
+              status: { track: k, text: text, idx: idx },
+              feedback: { [props.searchID.current]: dislikeState },
+            });
+            // props.initializePrevShots(shotID, {
+            //   status: { track: k, text: text, idx: idx },
+            //   feedback: { [props.searchID]: dislikeState },
+            // })
+
+            idx = idx + 1;
           }
         }
         shots.current[shotID] = shot;
