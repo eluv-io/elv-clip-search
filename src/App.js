@@ -114,6 +114,7 @@ const clipResContainer = {
   alignItems: "center",
   justifyContent: "center",
   width: "100%",
+  marginTop: 30,
 };
 
 const clipResInfoContainer = {
@@ -139,9 +140,9 @@ const clipResShowMethodButton = {
   justifyContent: "center",
   alignContent: "center",
   backgroundColor: "whitesmoke",
-  width: "30%",
-  padding: 10,
-  borderRadius: 10,
+  flex: 1,
+  padding: 5,
+  border: "inset",
 };
 
 const clipResTotal = {
@@ -160,7 +161,7 @@ const clipResTitleSelector = {
   width: "50%",
   border: "none",
   padding: 10,
-  borderRadius: 10,
+  borderRadius: 5,
 };
 
 const clipResShowContainer = {
@@ -213,6 +214,7 @@ const App = () => {
   const [searchTerms, setSearchTerms] = useState([]);
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
+  const [showSearchUrl, setShowSearchUrl] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -304,6 +306,8 @@ const App = () => {
     setErr(false);
     setTotalContent(0);
     setShowTopk(false);
+    setShowSearchBox(false);
+    setShowSearchUrl(false);
   };
 
   const initializeEngagement = () => {
@@ -633,7 +637,7 @@ const App = () => {
   const searchIndexInputBlock = (
     <InputBox
       text="Search Index"
-      disabled={loadingSearchRes || loadingPlayoutUrl}
+      disabled={loadingSearchRes || loadingPlayoutUrl || loadingTopkPage}
       handleSubmitClick={async (txt) => {
         setUrl("");
         resetLoadStatus();
@@ -727,7 +731,9 @@ const App = () => {
             </div>
             <SearchBox
               text="Search term"
-              disabled={loadingSearchRes || loadingPlayoutUrl}
+              disabled={
+                loadingSearchRes || loadingPlayoutUrl || loadingTopkPage
+              }
               filteredSearchFields={filteredSearchFields.current}
               searchVersion="1.0"
               handleSubmitClick={(txt) => {
@@ -756,7 +762,9 @@ const App = () => {
               </div>
               <FuzzySearchBox
                 text="Search Phrase"
-                disabled={loadingSearchRes || loadingPlayoutUrl}
+                disabled={
+                  loadingSearchRes || loadingPlayoutUrl || loadingTopkPage
+                }
                 filteredSearchFields={filteredSearchFields.current}
                 handleSubmitClick={({ text, fields }) => {
                   resetLoadStatus();
@@ -802,7 +810,9 @@ const App = () => {
             >
               <SearchBox
                 filteredSearchFields={filteredSearchFields.current}
-                disabled={loadingSearchRes || loadingPlayoutUrl}
+                disabled={
+                  loadingSearchRes || loadingPlayoutUrl || loadingTopkPage
+                }
                 searchVersion="2.0"
                 handleSubmitClick={(txt) => {
                   resetLoadStatus();
@@ -856,14 +866,15 @@ const App = () => {
                 storeSearchHistory();
               });
             }}
-            disabled={loadingSearchRes || loadingPlayoutUrl}
+            disabled={loadingSearchRes || loadingPlayoutUrl || loadingTopkPage}
           >
             Let's go
           </button>
         </div>
       )}
 
-      {haveSearchUrl && (
+      {((haveSearchUrl && !haveSearchRes) ||
+        (haveSearchRes && totalContent == 0)) && (
         <div style={curlResContainer}>
           <div style={curlRes}>
             <div style={{ flex: 1 }}>
@@ -884,15 +895,29 @@ const App = () => {
       ) : haveSearchRes ? (
         totalContent > 0 ? (
           <div style={clipResContainer}>
-            {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
-            {searchVersion.current === "v2" ? (
-              <div style={clipResShowMethodContainer}>
+            {/* control button group */}
+            <div style={clipResShowMethodContainer}>
+              <button
+                style={{
+                  ...clipResShowMethodButton,
+                  border: showSearchUrl ? "solid" : "inset",
+                  borderTopLeftRadius: 5,
+                  borderBottomLeftRadius: 5,
+                }}
+                onClick={() => {
+                  setShowSearchUrl(true);
+                }}
+              >
+                Show Search Url
+              </button>
+              {searchVersion.current === "v2" && (
                 <button
                   style={{
                     ...clipResShowMethodButton,
-                    ...(!showTopk && { border: "none" }),
+                    border: showTopk && !showSearchUrl ? "solid" : "inset",
                   }}
                   onClick={() => {
+                    setShowSearchUrl(false);
                     if (!showTopk) {
                       setShowTopk(true);
                       jumpToPageInTopk(0);
@@ -901,45 +926,27 @@ const App = () => {
                 >
                   Show Top {topkCnt.current}
                 </button>
-                <button
-                  style={{
-                    ...clipResShowMethodButton,
-                    ...(showTopk && { border: "none" }),
-                  }}
-                  onClick={() => {
-                    if (showTopk) {
-                      setShowTopk(false);
-                      jumpToContent(currentContent);
-                    }
-                  }}
-                >
-                  Show {totalContent} returned results
-                </button>
-              </div>
-            ) : (
-              <div style={clipResInfoContainer}>
-                <div style={clipResTotal}>total results {totalContent}</div>
-                <select
-                  style={clipResTitleSelector}
-                  value={currentContent}
-                  onChange={(event) => {
-                    setCurrentContent(event.target.value);
-                    jumpToContent(event.target.value);
-                  }}
-                >
-                  {Object.keys(contents.current).map((k) => {
-                    return (
-                      <option value={k} key={k}>
-                        {contentsIdNameMap.current[k]}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
-
-            {/* need to display the movie selector is search version is V2 and grouping by movir title */}
-            {!showTopk && searchVersion.current === "v2" && (
+              )}
+              <button
+                style={{
+                  ...clipResShowMethodButton,
+                  border: !showTopk && !showSearchUrl ? "solid" : "inset",
+                  borderTopRightRadius: 5,
+                  borderBottomRightRadius: 5,
+                }}
+                onClick={() => {
+                  setShowSearchUrl(false);
+                  if (showTopk) {
+                    setShowTopk(false);
+                    jumpToContent(currentContent);
+                  }
+                }}
+              >
+                Show {totalContent} returned results
+              </button>
+            </div>
+            {/* movie selector in show all mode*/}
+            {!showTopk && !showSearchUrl && (
               <div
                 style={{
                   ...clipResInfoContainer,
@@ -967,53 +974,71 @@ const App = () => {
                 </select>
               </div>
             )}
-
-            <div style={clipResShowContainer}>
-              {/* if have multiplr pages, we need to display the navigation bar */}
-              {!showTopk && numPages.current > 1 && (
-                <PaginationBar
-                  pageCount={numPages.current}
-                  onPageChangeHandler={(data) => {
-                    const pageIndex = data.selected + 1;
-                    jumpToPageInAll(pageIndex);
+            {/* display the contents */}
+            {showSearchUrl ? (
+              <div style={clipResShowContainer}>
+                <textarea
+                  style={{
+                    width: "95%",
+                    height: 400,
+                    padding: 10,
+                    marginBottom: 20,
+                    marginTop: 20,
+                    borderStyle: "None",
+                    borderRadius: 10,
                   }}
-                />
-              )}
-              {showTopk && topkPages.current > 1 && (
-                <PaginationBar
-                  pageCount={topkPages.current}
-                  onPageChangeHandler={async (data) => {
-                    const pageIndex = data.selected;
-                    jumpToPageInTopk(pageIndex);
-                  }}
-                />
-              )}
-              {havePlayoutUrl ? (
-                displayingContents.map((clip) => {
-                  return (
-                    <ClipRes
-                      clipInfo={clip}
-                      key={clip.id + clip.start_time}
-                      client={getClient()}
-                      network={network.current}
-                      clientadd={clientAdd.current}
-                      searchID={searchID}
-                      contents={contents.current}
-                      db={db.current}
-                      searchVersion={searchVersion.current}
-                      engagement={engagement.current}
-                      updateEngagement={updateEngagement}
-                    ></ClipRes>
-                  );
-                })
-              ) : loadingPlayoutUrl || loadingTopkPage ? (
-                <div style={loadingUrlContainer}>Loading playout URL</div>
-              ) : err ? (
-                <div style={hint}>
-                  <p>{errMsg}</p>
-                </div>
-              ) : null}
-            </div>
+                  value={url}
+                  readOnly
+                ></textarea>
+              </div>
+            ) : (
+              <div style={clipResShowContainer}>
+                {/* if have multiplr pages, we need to display the navigation bar */}
+                {!showTopk && numPages.current > 1 && (
+                  <PaginationBar
+                    pageCount={numPages.current}
+                    onPageChangeHandler={(data) => {
+                      const pageIndex = data.selected + 1;
+                      jumpToPageInAll(pageIndex);
+                    }}
+                  />
+                )}
+                {showTopk && topkPages.current > 1 && (
+                  <PaginationBar
+                    pageCount={topkPages.current}
+                    onPageChangeHandler={async (data) => {
+                      const pageIndex = data.selected;
+                      jumpToPageInTopk(pageIndex);
+                    }}
+                  />
+                )}
+                {havePlayoutUrl ? (
+                  displayingContents.map((clip) => {
+                    return (
+                      <ClipRes
+                        clipInfo={clip}
+                        key={clip.id + clip.start_time}
+                        client={getClient()}
+                        network={network.current}
+                        clientadd={clientAdd.current}
+                        searchID={searchID}
+                        contents={contents.current}
+                        db={db.current}
+                        searchVersion={searchVersion.current}
+                        engagement={engagement.current}
+                        updateEngagement={updateEngagement}
+                      ></ClipRes>
+                    );
+                  })
+                ) : loadingPlayoutUrl || loadingTopkPage ? (
+                  <div style={loadingUrlContainer}>Loading playout URL</div>
+                ) : err ? (
+                  <div style={hint}>
+                    <p>{errMsg}</p>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         ) : (
           <div style={hint}>
