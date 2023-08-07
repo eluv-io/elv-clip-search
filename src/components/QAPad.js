@@ -55,12 +55,6 @@ const QAPad = (props) => {
             clipInfo={props.clipInfo}
             db={props.db}
             searchID={props.searchID}
-            dislikedTags={props.dislikedTags}
-            dislikeTagHook={props.dislikeTagHook}
-            updatePrevShots={props.updatePrevShots}
-            initializePrevShots={props.initializePrevShots}
-            prevShots={props.prevShots}
-            setShots={props.setShots}
             prevS={props.prevS}
           ></TagsPad>
         </div>

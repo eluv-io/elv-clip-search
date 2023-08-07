@@ -233,27 +233,7 @@ const ClipRes = (props) => {
       <QAPad
         clipInfo={props.clipInfo}
         db={props.db}
-        clientadd={props.clientadd}
         searchID={props.searchID}
-        viewTime={viewTime.current}
-        contents={props.contents}
-        dislikedTags={dislikedTags.current}
-        dislikeTagHook={(id) => {
-          dislikedTags.current.push(id);
-        }}
-        updatePrevShots={(shotID, i, score) => {
-          if (shotID in shots.current) {
-            shots.current[shotID].tags[i].feedback[props.searchID.current] =
-              score;
-          }
-        }}
-        initializePrevShots={(shotID, tag) => {
-          shots.current[shotID].tags.push(tag);
-        }}
-        prevShots={shots.current}
-        setShots={(s) => {
-          shots.current = s;
-        }}
         prevS={shots}
       ></QAPad>
     </div>
