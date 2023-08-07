@@ -212,7 +212,7 @@ const App = () => {
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
   const [displayingContents, setDisplayingContents] = useState([]);
-  const [showSearchBox, setShowSearchBox] = useState(true);
+  const [showSearchBox, setShowSearchBox] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -795,7 +795,11 @@ const App = () => {
               </button>
             </div>
 
-            <div className="row mt-3" id="searchBox">
+            <div
+              className="row mt-3"
+              id="searchBox"
+              style={{ display: "none" }}
+            >
               <SearchBox
                 filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
