@@ -306,7 +306,6 @@ const App = () => {
     setErr(false);
     setTotalContent(0);
     setShowTopk(false);
-    setShowSearchBox(false);
     setShowSearchUrl(false);
   };
 
