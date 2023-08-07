@@ -65,7 +65,6 @@ const ClipRes = (props) => {
   const clipInfo = props.clipInfo;
   const shots = useRef({});
   const clipRecorded = useRef(false);
-  const dislikedTags = useRef([]);
   const url =
     props.clipInfo.url === null
       ? null
@@ -73,6 +72,7 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
+  const videoElementRef = useRef(undefined);
 
   useEffect(() => {
     return () => {
@@ -172,6 +172,7 @@ const ClipRes = (props) => {
         playerOptions: {
           controls: EluvioPlayerParameters.controls.AUTO_HIDE,
           playerCallback: ({ videoElement }) => {
+            videoElementRef.current = videoElement;
             videoElement.style.height = "100%";
             videoElement.style.width = "100%";
             videoElement.addEventListener("play", () => {
@@ -235,6 +236,7 @@ const ClipRes = (props) => {
         db={props.db}
         searchID={props.searchID}
         prevS={shots}
+        videoElementRef={videoElementRef}
       ></QAPad>
     </div>
   );

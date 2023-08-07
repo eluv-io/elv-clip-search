@@ -402,6 +402,13 @@ const TagsPad = (props) => {
                             marginRight: 10,
                             borderRadius: 10,
                           }}
+                          onClick={() => {
+                            if (props.videoElementRef.current) {
+                              props.videoElementRef.current.pause();
+                              props.videoElementRef.current.currentTime =
+                                e.start;
+                            }
+                          }}
                         >
                           {e.start}s
                         </button>
