@@ -40,6 +40,8 @@ const TagsPad = (props) => {
     "Speech to Text": true,
   });
 
+  const tagsTimeLine = useRef({});
+
   const [refresh, setRefresh] = useState(false);
   const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
@@ -128,19 +130,9 @@ const TagsPad = (props) => {
                 const prevDislike =
                   props.prevS.current[shotID].tags[idx].feedback;
                 if (props.searchID.current in prevDislike) {
-                  // console.log(prevDislike[props.searchID])
                   dislikeState = prevDislike[props.searchID.current];
                 }
               }
-              // const start = v.start_time - shotStart
-              // const startmin = Math.floor((start/60000) << 0);
-              // const startsec = ((start % 60000) / 1000).toFixed(0);
-              // const end = v.end_time - shotStart
-              // const endmin = Math.floor((end/60000) << 0);
-              // const endsec = ((end % 60000) / 1000).toFixed(0);
-              // const timeline = `${startmin}:${(startsec < 10 ? '0' : '')}${startsec} - ${endmin}:${(endsec < 10 ? '0' : '')}${endsec}`
-              // console.log(text, timeline)
-              // console.log(v.start_time, v.end_time, shotStart, shotEnd)
               const dic = {
                 track: k,
                 status: text,
@@ -148,13 +140,23 @@ const TagsPad = (props) => {
                 shotID: shotID,
                 tagIdx: idx,
               };
-              if (
-                !tags.current[k].some(
-                  (dictionary) =>
-                    dictionary.status.toLowerCase() === dic.status.toLowerCase()
-                )
-              ) {
+              const textLowerCase = text.toLowerCase();
+              if (textLowerCase in tagsTimeLine.current) {
+                tagsTimeLine.current[textLowerCase].push({
+                  start: Math.max(0, v.start_time - props.clipInfo.start_time),
+                  end: v.end_time - props.clipInfo.start_time,
+                });
+              } else {
                 tags.current[k].push(dic);
+                tagsTimeLine.current[textLowerCase] = [
+                  {
+                    start: Math.max(
+                      0,
+                      v.start_time - props.clipInfo.start_time
+                    ),
+                    end: v.end_time - props.clipInfo.start_time,
+                  },
+                ];
               }
 
               shot.tags.push({
