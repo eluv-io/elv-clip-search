@@ -678,8 +678,10 @@ const App = () => {
               setShowFuzzy(true);
               searchVersion.current = "v2";
             } else {
-              setShowFuzzy(false);
-              searchVersion.current = "v1";
+              setErr(true);
+              setErrMsg(
+                "Only v2 indices are supported"
+              );
             }
             filteredSearchFields.current = Object.keys(
               searchObjMeta.config.indexer.arguments.fields
