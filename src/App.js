@@ -12,9 +12,15 @@ import { parseSearchRes, createSearchUrl } from "./utils";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
 import {
-  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc,
-} from 'firebase/firestore' ;
-
+  getFirestore,
+  collection,
+  addDoc,
+  Timestamp,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 const title = {
   display: "flex",
@@ -189,7 +195,8 @@ const App = () => {
   const TOPK = 20;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
-    "characters",
+    // delete for MGM
+    // "characters",
     "display_title",
     "logo",
     "object",
@@ -203,8 +210,9 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
-  const [searchTerms, setSearchTerms] = useState([])
+  const [searchTerms, setSearchTerms] = useState([]);
   const [displayingContents, setDisplayingContents] = useState([]);
+  const [showSearchBox, setShowSearchBox] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -259,10 +267,9 @@ const App = () => {
     getClient();
     try {
       if (db.current != null) {
-
         client.current.CurrentAccountAddress().then((val) => {
           clientAdd.current = val;
-          const userRef = collection(db.current, 'User');
+          const userRef = collection(db.current, "User");
           const clientRef = doc(userRef, clientAdd.current);
           getDoc(clientRef).then((thisClient) => {
             if (!thisClient.exists()) {
@@ -272,22 +279,20 @@ const App = () => {
                 Email_add: null,
                 Creation_time: null,
                 Updated_time: null,
-                Personal_info: {}
+                Personal_info: {},
               }).then(() => {
                 console.log("User info saved");
-              })
+              });
             } else {
               console.log("This user already exists");
             }
           });
-        })
+        });
       }
     } catch (err) {
       console.log("Error occured when storing the user info");
-      console.error(err)
+      console.error(err);
     }
-
-
   }, []);
 
   const resetLoadStatus = () => {
@@ -309,9 +314,12 @@ const App = () => {
         const clips_per_page = currContents[content].clips[page];
         for (let key in clips_per_page) {
           const clip = clips_per_page[key];
-          if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clip.rank <= 20)) {
+          if (
+            searchVersion.current === "v1" ||
+            (searchVersion.current === "v2" && clip.rank <= 20)
+          ) {
             const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
-            engagement.current[clipID] = {numView: 0, watchedTime: 0};
+            engagement.current[clipID] = { numView: 0, watchedTime: 0 };
           }
         }
       }
@@ -320,52 +328,65 @@ const App = () => {
     if (db.current !== null) {
       try {
         const engTblRef = collection(db.current, "Engagement");
-        const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
+        const engRef = doc(
+          engTblRef,
+          clientAdd.current + "_" + searchID.current
+        );
         setDoc(engRef, {
           engagement: engagement.current,
           User_id: clientAdd.current,
-          Search_id: searchID.current
+          Search_id: searchID.current,
         }).then(() => {
-          console.log("Engagement table initialized")
-        })
+          console.log("Engagement table initialized");
+        });
       } catch (err) {
         console.log("Error occured when initializing the engagement table");
         console.log(err);
       }
     }
-  }
+  };
 
   const updateEngagement = (clipInfo, watchedTime, numView) => {
-    if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
+    if (
+      searchVersion.current === "v1" ||
+      (searchVersion.current === "v2" && clipInfo.rank <= 20)
+    ) {
       const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime;
+      const newWatchedTime =
+        watchedTime + engagement.current[clipID].watchedTime;
       const newNumView = numView + engagement.current[clipID].numView;
-      console.log(newNumView)
-      engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
+      console.log(newNumView);
+      engagement.current[clipID] = {
+        numView: newNumView,
+        watchedTime: newWatchedTime,
+      };
       if (db.current !== null) {
         try {
           const engTblRef = collection(db.current, "Engagement");
-          const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
+          const engRef = doc(
+            engTblRef,
+            clientAdd.current + "_" + searchID.current
+          );
           updateDoc(engRef, {
-            engagement: engagement.current
+            engagement: engagement.current,
           }).then(() => {
-            console.log(engagement.current)
-            console.log("engagement updated!")
-          })
+            console.log(engagement.current);
+            console.log("engagement updated!");
+          });
         } catch (err) {
-          console.log("Error occured when updating the engagement table")
+          console.log("Error occured when updating the engagement table");
           console.log(err);
         }
       }
     } else {
       console.log("only keep track of the top 20 clips for v2");
     }
-  }
+  };
 
   const storeSearchHistory = () => {
     if (db !== null) {
       try {
-        console.log(searchTerms)
+        console.log(searchTerms);
         const colRef = collection(db.current, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
         addDoc(colRef, {
@@ -378,10 +399,10 @@ const App = () => {
           console.log("search history updated with docID", docRef.id);
           searchID.current = docRef.id;
           initializeEngagement();
-        })
+        });
       } catch (err) {
-        console.log("Error occured when storing the search history")
-        console.log(err)
+        console.log("Error occured when storing the search history");
+        console.log(err);
       }
     }
   };
@@ -746,19 +767,40 @@ const App = () => {
                 statusHandler={resetLoadStatus}
               />
             </div>
-            <div className="row mt-3">
-              <div
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 10,
+                height: 40,
+                width: "100%",
+              }}
+            >
+              <button
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  border: "none",
+                  borderRadius: 10,
+                  height: "90%",
+                  width: 150,
+                }}
+                onClick={() => {
+                  document.getElementById("searchBox").style.display =
+                    showSearchBox ? "none" : "block";
+                  setShowSearchBox((x) => !x);
                 }}
               >
-                More Filters
-              </div>
+                {showSearchBox ? "Hide Filters" : "More filters"}
+              </button>
+            </div>
+
+            <div
+              className="row mt-3"
+              id="searchBox"
+              style={{ display: "none" }}
+            >
               <SearchBox
-                text="Search term"
                 filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
                 searchVersion="2.0"
