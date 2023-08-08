@@ -12,7 +12,7 @@ const body = {
 const left = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "10%",
   height: "100%",
@@ -65,7 +65,7 @@ const checker = {
 const right = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "5%",
   height: "100%",
