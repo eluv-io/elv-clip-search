@@ -82,20 +82,24 @@ const Feedback = (props) => {
           limit(1)
         );
 
-        getDocs(q).then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            otherreasons.current = data.other_reasons;
-            setReason(data.reason);
-            for (let option of options) {
-              if (option.label === data.reason) {
-                setReasonId(option.value);
-                console.log(option.value, option.label);
+        getDocs(q)
+          .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              otherreasons.current = data.other_reasons;
+              setReason(data.reason);
+              for (let option of options) {
+                if (option.label === data.reason) {
+                  setReasonId(option.value);
+                  console.log(option.value, option.label);
+                }
               }
-            }
-            setRating(data.rating);
+              setRating(data.rating);
+            });
+          })
+          .catch((err) => {
+            console.log(err);
           });
-        });
       } catch (err) {
         console.log("Error occured when fetching previous feedbacks");
         console.log(err);
