@@ -94,6 +94,29 @@ class DB {
       }
     }
   }
+
+  async saveShot({ shot }) {
+    if (this.db !== null) {
+      try {
+        const shotDocRef = doc(this.db, "Shot_info", shot.shotID);
+        const shorDoc = await getDoc(shotRef);
+        const payload = {
+          start: shot.start,
+          end: shot.end,
+          iqHash: shot.iqHash,
+          "iqHash_start-end": shot.shotID,
+          tags: shot.tags,
+        };
+        if (shorDoc.exists()) {
+          await updateDoc(shotDocRef, payload);
+        } else {
+          await setDoc(shotDocRef, payload);
+        }
+      } catch (err) {
+        console.log(`Save shot info err for ${shot.shotID}`);
+      }
+    }
+  }
 }
 
 export default DB;
