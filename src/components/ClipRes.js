@@ -64,7 +64,7 @@ const ClipRes = (props) => {
   const startTime = useRef(null);
   const clipInfo = props.clipInfo;
   const shots = useRef({});
-  const clipRecorded = useRef(false);
+  const viewed = useRef(false);
   const url =
     props.clipInfo.url === null
       ? null
@@ -127,22 +127,34 @@ const ClipRes = (props) => {
   };
 
   const handlePause = (time) => {
-    const elapsedTime = time - startTime.current;
-    viewTime.current = viewTime.current + elapsedTime;
-    console.log(
-      `paused, elapsedtime: ${elapsedTime}, total view time: ${viewTime.current}`
-    );
-
-    // startTime.current = null;
-    try {
-      if (!clipRecorded.current) {
-        props.updateEngagement(clipInfo, elapsedTime, 1);
-        clipRecorded.current = true;
-      } else {
-        props.updateEngagement(clipInfo, elapsedTime, 0);
+    if (
+      props.searchID !== null &&
+      props.dbClient !== null &&
+      (props.searchVersion === "v1" ||
+        (props.searchVersion === "v2" && props.clipInfo.rank <= 20))
+    ) {
+      const clipId = `${props.clipInfo.hash}_${props.clipInfo.start}-${props.clipInfo.end}`;
+      // if already played, we won't count it again
+      let numView = 0;
+      if (!viewed.current) {
+        numView = 1;
+        viewed.current = true;
       }
-    } catch (err) {
-      console.log(err);
+      // get the elapsed time since last time we click play
+      const elapsedTime = time - startTime.current;
+      const newWatchedTime =
+        elapsedTime + props.engagement.current[clipId].watchedTime;
+      const newNumView = numView + props.engagement.current[clipId].numView;
+      props.engagement.current[clipId] = {
+        numView: newNumView,
+        watchedTime: newWatchedTime,
+      };
+      props.dbClient.setEngagement({
+        searchId: props.searchID,
+        clientAddr: props.clientadd,
+        engagement: props.engagement.current,
+        init: false,
+      });
     }
   };
 
@@ -220,6 +232,7 @@ const ClipRes = (props) => {
           <InfoPad
             clipInfo={props.clipInfo}
             db={props.db}
+            dbClient={props.dbClient}
             clientadd={props.clientadd}
             searchID={props.searchID}
             viewTime={viewTime.current}

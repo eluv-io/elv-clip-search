@@ -298,44 +298,6 @@ const App = () => {
     setShowTopk(false);
   };
 
-  // TODO pay attention that we need to update the engagement Ref as well
-  const updateEngagement = (clipInfo, watchedTime, numView) => {
-    if (
-      searchVersion.current === "v1" ||
-      (searchVersion.current === "v2" && clipInfo.rank <= 20)
-    ) {
-      const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime =
-        watchedTime + engagement.current[clipID].watchedTime;
-      const newNumView = numView + engagement.current[clipID].numView;
-      console.log(newNumView);
-      engagement.current[clipID] = {
-        numView: newNumView,
-        watchedTime: newWatchedTime,
-      };
-      if (db.current !== null) {
-        try {
-          const engTblRef = collection(db.current, "Engagement");
-          const engRef = doc(
-            engTblRef,
-            clientAddr.current + "_" + searchID.current
-          );
-          updateDoc(engRef, {
-            engagement: engagement.current,
-          }).then(() => {
-            console.log(engagement.current);
-            console.log("engagement updated!");
-          });
-        } catch (err) {
-          console.log("Error occured when updating the engagement table");
-          console.log(err);
-        }
-      }
-    } else {
-      console.log("only keep track of the top 20 clips for v2");
-    }
-  };
-
   const getClient = () => {
     if (client.current == null) {
       const _client = new FrameClient({
@@ -875,13 +837,12 @@ const App = () => {
                       client={getClient()}
                       network={network.current}
                       clientadd={clientAddr.current}
-                      searchID={searchID}
+                      searchID={searchID.current}
                       contents={contents.current}
-                      db={db.current}
                       searchVersion={searchVersion.current}
-                      engagement={engagement.current}
-                      updateEngagement={updateEngagement}
-                      dbClient={dbClient}
+                      engagement={engagement}
+                      db={db.current}
+                      dbClient={dbClient.current}
                     ></ClipRes>
                   );
                 })
