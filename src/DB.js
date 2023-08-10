@@ -7,6 +7,7 @@ import {
   Timestamp,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
@@ -35,7 +36,7 @@ class DB {
           });
         }
       } catch (err) {
-        console.log("Save user into DB err");
+        console.log("Err: Save user into DB failed");
       }
     }
   }
@@ -62,7 +63,7 @@ class DB {
 
         console.log(`Engagement table saved`);
       } catch (err) {
-        console.log("Error occured when initializing the engagement table");
+        console.log("Err: Initialize the engagement table failed");
         console.log(err);
       }
     }
@@ -73,11 +74,11 @@ class DB {
     fuzzysearchPhrase,
     fuzzySearchFields,
     searchKeywords,
+    now,
   }) {
     if (db !== null) {
       try {
         const colRef = collection(this.db, "Search_history");
-        const now = Timestamp.now().toDate().toUTCString();
         const docRef = await addDoc(colRef, {
           client: clientAddr,
           search_time: now,
@@ -88,7 +89,7 @@ class DB {
         console.log(`search history updated with docID ${docRef.id}`);
         return docRef.id;
       } catch (err) {
-        console.log("Error occured when storing the search history");
+        console.log("Err: Store the search history failed");
         console.log(err);
         return null;
       }
@@ -113,7 +114,53 @@ class DB {
           await setDoc(shotDocRef, payload);
         }
       } catch (err) {
-        console.log(`Save shot info err for ${shot.shotID}`);
+        console.log(`Err: Save shot info for ${shot.shotID} failed`);
+      }
+    }
+  }
+
+  async getFeedback({ clientAddr, clipHash, searchId }) {
+    if (this.db !== null) {
+      try {
+        const userRef = collection(this.db, "Feedback", clientAddr, "Data");
+        const q = query(
+          userRef,
+          where("clipHash", "==", clipHash),
+          where("search_id", "==", searchId),
+          orderBy("feedback_time", "desc"),
+          limit(1)
+        );
+        const res = await getDocs(q);
+        return res;
+      } catch (err) {
+        console.log(
+          `Err: Get feedback for client ${clientAddr} on clip ${clipHash} in search ${searchId} failed`
+        );
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  async saveFeedback(clientAddr, clipHash, searchId, now) {
+    if (this.db !== null) {
+      try {
+        const userRef = collection(this.db, "Feedback", clientAddr, "Data");
+        const docRef = doc(userRef, now);
+        await setDoc(docRef, {
+          client: clientAddr,
+          feedback_time: new Date(now),
+          rating: score,
+          clipHash: clipHash,
+          reason: reason,
+          other_reasons: otherreasons.current,
+          search_id: searchId,
+        });
+        console.log("Feedback collected successfully!");
+      } catch (err) {
+        console.log("Error occured when storing the feedback");
+        console.log(err);
       }
     }
   }
