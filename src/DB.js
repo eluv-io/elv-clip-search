@@ -83,15 +83,6 @@ class DB {
       try {
         const colRef = collection(this.db, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
-        console.log(
-          JSON.stringify({
-            client: clientAddr,
-            search_time: now,
-            fuzzySearchPhrase: fuzzySearchPhrase,
-            fuzzySearchFields: fuzzySearchFields,
-            searchKeywords: searchKeywords,
-          })
-        );
         const docRef = await addDoc(colRef, {
           client: clientAddr,
           search_time: now,
@@ -222,14 +213,14 @@ class DB {
     }
   }
 
-  async setFeedback(
+  async setFeedback({
     clientAddr,
     clipHash,
     searchId,
     score,
     reason,
-    otherReasons
-  ) {
+    otherReasons,
+  }) {
     if (this.db !== null) {
       try {
         const userRef = collection(this.db, "Feedback", clientAddr, "Data");

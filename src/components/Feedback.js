@@ -50,8 +50,7 @@ const Feedback = (props) => {
   const hasReason = useRef(false);
   const [rating, setRating] = useState(0);
   const hasRating = useRef(false);
-  const prevOtherReason = useRef(null);
-
+  const prevOtherReason = useRef("");
   const clipInfo = props.clipInfo;
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
@@ -74,7 +73,6 @@ const Feedback = (props) => {
             for (let option of options) {
               if (option.label === data.reason) {
                 setReasonId(option.value);
-                console.log(option.value, option.label);
               }
             }
             setRating(data.rating);
@@ -110,7 +108,6 @@ const Feedback = (props) => {
   const collectOption = (event) => {
     const selectedValue = parseInt(event.target.value);
     var label;
-    console.log(selectedValue);
     if (selectedValue !== 0) {
       label = options.find((option) => option.value === selectedValue).label;
     }
@@ -169,8 +166,6 @@ const Feedback = (props) => {
 
   return (
     <div style={feedback}>
-      {/* <div>rate me</div> */}
-
       <div className="rating" style={starStyle.rating}>
         {[1, 2, 3, 4, 5].map((num) => (
           <div
