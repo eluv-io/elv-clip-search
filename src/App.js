@@ -8,7 +8,7 @@ import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
-
+import { BsSearch } from "react-icons/bs";
 import DB from "./DB";
 
 const title = {
@@ -675,7 +675,7 @@ const App = () => {
             onClick={getRes}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
-            Let's go
+            <BsSearch />
           </button>
         </div>
       )}
