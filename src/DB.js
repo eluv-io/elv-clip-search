@@ -10,6 +10,10 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 
 class DB {
@@ -26,7 +30,7 @@ class DB {
         if (userDocSnap.exists()) {
           console.log("User already exists");
         } else {
-          await setDoc(clientRef, {
+          await setDoc(userDocRef, {
             Client_address: clientAddr,
             Wallet_id: null,
             Email_add: null,
@@ -74,11 +78,11 @@ class DB {
     fuzzysearchPhrase,
     fuzzySearchFields,
     searchKeywords,
-    now,
   }) {
-    if (db !== null) {
+    if (this.db !== null) {
       try {
         const colRef = collection(this.db, "Search_history");
+        const now = Timestamp.now().toDate().toUTCString();
         const docRef = await addDoc(colRef, {
           client: clientAddr,
           search_time: now,
@@ -100,7 +104,7 @@ class DB {
     if (this.db !== null) {
       try {
         const shotDocRef = doc(this.db, "Shot_info", shot.shotID);
-        const shorDoc = await getDoc(shotRef);
+        const shotDoc = await getDoc(shotDocRef);
         const payload = {
           start: shot.start,
           end: shot.end,
@@ -108,7 +112,7 @@ class DB {
           "iqHash_start-end": shot.shotID,
           tags: shot.tags,
         };
-        if (shorDoc.exists()) {
+        if (shotDoc.exists()) {
           await updateDoc(shotDocRef, payload);
         } else {
           await setDoc(shotDocRef, payload);
@@ -192,10 +196,21 @@ class DB {
     }
   }
 
-  async setFeedback(clientAddr, clipHash, searchId, now) {
+  async setFeedback(
+    clientAddr,
+    clipHash,
+    searchId,
+    score,
+    reason,
+    otherReasons
+  ) {
     if (this.db !== null) {
       try {
         const userRef = collection(this.db, "Feedback", clientAddr, "Data");
+        const now = Timestamp.now()
+          .toDate()
+          .toString()
+          .replace(/\([^()]*\)/g, "");
         const docRef = doc(userRef, now);
         await setDoc(docRef, {
           client: clientAddr,
@@ -203,7 +218,7 @@ class DB {
           rating: score,
           clipHash: clipHash,
           reason: reason,
-          other_reasons: otherreasons.current,
+          other_reasons: otherReasons,
           search_id: searchId,
         });
         console.log("Feedback collected successfully!");

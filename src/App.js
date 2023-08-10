@@ -11,6 +11,9 @@ import { parseSearchRes, createSearchUrl } from "./utils";
 
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
+
+import DB from "./DB";
+
 import {
   getFirestore,
   collection,

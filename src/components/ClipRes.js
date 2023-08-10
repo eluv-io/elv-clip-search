@@ -65,7 +65,6 @@ const ClipRes = (props) => {
   const clipInfo = props.clipInfo;
   const shots = useRef({});
   const clipRecorded = useRef(false);
-  const dislikedTags = useRef([]);
   const url =
     props.clipInfo.url === null
       ? null

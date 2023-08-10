@@ -40,7 +40,7 @@ const TagsPad = (props) => {
     "Speech to Text": true,
   });
 
-  const [_, setRefresh] = useState(false);
+  const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
 
