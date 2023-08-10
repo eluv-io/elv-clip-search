@@ -250,7 +250,8 @@ const App = () => {
   const filteredSearchFields = useRef([]);
 
   const db = useRef(null);
-  const clientAdd = useRef(null);
+  const dbClient = useRef(null);
+  const clientAddr = useRef(null);
   const searchID = useRef(null);
 
   const engagement = useRef({});
@@ -258,6 +259,7 @@ const App = () => {
   //initialize the DB and store the useradd
   // TODO
   useEffect(() => {
+    // backup
     try {
       initializeApp(firebaseConfig);
       db.current = getFirestore();
@@ -266,32 +268,19 @@ const App = () => {
       console.log(err);
     }
 
-    getClient();
     try {
-      if (db.current != null) {
-        client.current.CurrentAccountAddress().then((val) => {
-          clientAdd.current = val;
-          const userRef = collection(db.current, "User");
-          const clientRef = doc(userRef, clientAdd.current);
-          // save user
-          getDoc(clientRef).then((thisClient) => {
-            if (!thisClient.exists()) {
-              setDoc(clientRef, {
-                Client_address: clientAdd.current,
-                Wallet_id: null,
-                Email_add: null,
-                Creation_time: null,
-                Updated_time: null,
-                Personal_info: {},
-              }).then(() => {
-                console.log("User info saved");
-              });
-            } else {
-              console.log("This user already exists");
-            }
-          });
+      const _dbClient = getDBClient();
+      if (_dbClient == null) return;
+      getClient()
+        .CurrentAccountAddress()
+        .then(async (addr) => {
+          clientAddr.current = addr;
+          await _dbClient.setUser({ clientAddr: addr });
+        })
+        .catch((err) => {
+          console.log(`Err: Get client account address failed`);
+          console.log(err);
         });
-      }
     } catch (err) {
       console.log("Error occured when storing the user info");
       console.error(err);
@@ -316,11 +305,11 @@ const App = () => {
         const engTblRef = collection(db.current, "Engagement");
         const engRef = doc(
           engTblRef,
-          clientAdd.current + "_" + searchID.current
+          clientAddr.current + "_" + searchID.current
         );
         setDoc(engRef, {
           engagement: engagement.current,
-          User_id: clientAdd.current,
+          User_id: clientAddr.current,
           Search_id: searchID.current,
         }).then(() => {
           console.log("Engagement table initialized");
@@ -352,7 +341,7 @@ const App = () => {
           const engTblRef = collection(db.current, "Engagement");
           const engRef = doc(
             engTblRef,
-            clientAdd.current + "_" + searchID.current
+            clientAddr.current + "_" + searchID.current
           );
           updateDoc(engRef, {
             engagement: engagement.current,
@@ -377,7 +366,7 @@ const App = () => {
         const colRef = collection(db.current, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
         addDoc(colRef, {
-          client: clientAdd.current,
+          client: clientAddr.current,
           search_time: now,
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchField,
@@ -403,6 +392,21 @@ const App = () => {
       return _client;
     } else {
       return client.current;
+    }
+  };
+
+  const getDBClient = () => {
+    if (dbClient.current == null) {
+      try {
+        const _dbClient = new DB();
+        dbClient.current = _dbClient;
+        return _dbClient;
+      } catch (err) {
+        console.log(`Err: Creating the DB client failed`);
+        return null;
+      }
+    } else {
+      return dbClient.current;
     }
   };
 
@@ -986,7 +990,7 @@ const App = () => {
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientadd={clientAdd.current}
+                      clientadd={clientAddr.current}
                       searchID={searchID}
                       contents={contents.current}
                       db={db.current}

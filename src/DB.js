@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 
 class DB {
-  constructor(firebaseConfig) {
+  constructor() {
     const app = initializeApp(firebaseConfig);
     this.db = getFirestore(app);
   }
