@@ -70,7 +70,7 @@ const Feedback = (props) => {
   const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
 
   useEffect(() => {
-    if (props.dbClient !== null && props.searchID !== null) {
+    if (props.dbClient !== null && props.searchId !== null) {
       props.dbClient
         .getFeedback({
           clientAddr: props.clientAddr,
@@ -79,7 +79,7 @@ const Feedback = (props) => {
         })
         .then((results) => {
           results.forEach((res) => {
-            const data = doc.data();
+            const data = res.data();
             otherreasons.current = data.other_reasons;
             setReason(data.reason);
             for (let option of options) {
@@ -92,6 +92,10 @@ const Feedback = (props) => {
           });
         })
         .catch((err) => {});
+    } else {
+      console.log(
+        "No database client, or searchId is None. Won't load previous feedback"
+      );
     }
   }, []);
 
