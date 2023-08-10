@@ -250,15 +250,6 @@ const App = () => {
   //initialize the DB and store the useradd
   // TODO
   useEffect(() => {
-    // backup
-    try {
-      initializeApp(firebaseConfig);
-      db.current = getFirestore();
-    } catch (err) {
-      console.log("Error occured when initializing the DB");
-      console.log(err);
-    }
-
     try {
       const _dbClient = getDBClient();
       if (_dbClient == null) return;
@@ -832,7 +823,6 @@ const App = () => {
                       contents={contents.current}
                       searchVersion={searchVersion.current}
                       engagement={engagement}
-                      db={db.current}
                       dbClient={dbClient.current}
                     ></ClipRes>
                   );

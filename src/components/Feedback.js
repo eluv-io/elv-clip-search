@@ -52,7 +52,6 @@ const Feedback = (props) => {
   const hasRating = useRef(false);
   const prevOtherReason = useRef(null);
 
-  const db = props.db;
   const clipInfo = props.clipInfo;
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
@@ -160,7 +159,6 @@ const Feedback = (props) => {
       const textElement = document.getElementById(
         `reason_input${props.clipInfo.start}`
       );
-      console.log(textElement);
       if (textElement !== null) {
         textElement.style.display = "none";
       }

@@ -165,7 +165,6 @@ const InfoPad = (props) => {
           }}
         >
           <Feedback
-            db={props.db}
             dbClient={props.dbClient}
             clientAddr={props.clientAddr}
             searchId={props.searchId}

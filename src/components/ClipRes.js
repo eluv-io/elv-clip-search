@@ -62,7 +62,7 @@ const videoInfoContainer = {
 const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
-  const shots = useRef({});
+  const shotsMemo = useRef(null);
   const viewed = useRef(false);
   const url =
     props.clipInfo.url === null
@@ -81,44 +81,14 @@ const ClipRes = (props) => {
   }, []);
 
   useEffect(() => {
-    prepareShots()
-      .then(() => {
-        // console.log(shots.current);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
-
-  const hash = (s) => {
-    return s;
-  };
-
-  const prepareShots = async () => {
-    if (props.db !== null) {
-      try {
-        const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "text" in props.clipInfo.sources[0].document;
-        if (_hasTags) {
-          const iqHash = props.clipInfo.hash;
-          for (let src of props.clipInfo.sources) {
-            const currdoc = src.document;
-            const shotID = hash(
-              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
-            );
-            const shotRef = doc(shotInfoRef, shotID);
-            getDoc(shotRef).then((shot) => {
-              if (shot.exists()) {
-                shots.current[shotID] = shot.data();
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.log(err);
+    if ("text" in props.clipInfo.sources[0].document) {
+      for (let src of props.clipInfo.sources) {
+        const currdoc = src.document;
+        const shotId = `${props.clipInfo.hash}_${currdoc.start_time}-${currdoc.end_time}`;
+        shotsMemo.current[shotId] = null;
       }
     }
-  };
+  }, []);
 
   const handleStart = (time) => {
     startTime.current = time;
@@ -230,7 +200,6 @@ const ClipRes = (props) => {
         <div style={videoInfoContainer}>
           <InfoPad
             clipInfo={props.clipInfo}
-            db={props.db}
             dbClient={props.dbClient}
             clientAddr={props.clientAddr}
             searchId={props.searchId}
@@ -243,9 +212,9 @@ const ClipRes = (props) => {
 
       <QAPad
         clipInfo={props.clipInfo}
-        db={props.db}
         searchID={props.searchID}
-        prevS={shots}
+        shotsMemo={shotsMemo}
+        dbClient={props.dbClient}
       ></QAPad>
     </div>
   );

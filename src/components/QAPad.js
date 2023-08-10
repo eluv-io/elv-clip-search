@@ -53,9 +53,9 @@ const QAPad = (props) => {
         <div style={tagsContainer}>
           <TagsPad
             clipInfo={props.clipInfo}
-            db={props.db}
             searchID={props.searchID}
             prevS={props.shots}
+            dbClient={props.dbClient}
           ></TagsPad>
         </div>
       </div>

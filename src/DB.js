@@ -112,13 +112,13 @@ class DB {
   async setShot({ shot }) {
     if (this.db !== null) {
       try {
-        const shotDocRef = doc(this.db, "Shot_info", shot.shotID);
+        const shotDocRef = doc(this.db, "Shot_info", shot.shotId);
         const shotDoc = await getDoc(shotDocRef);
         const payload = {
           start: shot.start,
           end: shot.end,
           iqHash: shot.iqHash,
-          "iqHash_start-end": shot.shotID,
+          "iqHash_start-end": shot.shotId,
           tags: shot.tags,
         };
         if (shotDoc.exists()) {
@@ -127,8 +127,25 @@ class DB {
           await setDoc(shotDocRef, payload);
         }
       } catch (err) {
-        console.log(`Err: Save shot info for ${shot.shotID} failed`);
+        console.log(`Err: Save shot info for ${shot.shotId} failed`);
       }
+    }
+  }
+
+  async getShot({ shotId }) {
+    if (this.db !== null) {
+      try {
+        const shotRef = doc(this.db, "Shot_info", shotId);
+        const shot = await getDoc(shotRef);
+        if (shot.exists()) {
+          return shot.data();
+        } else return null;
+      } catch (err) {
+        console.log(`Err: Get Shot ${shotId} failed`);
+        return null;
+      }
+    } else {
+      return null;
     }
   }
 
