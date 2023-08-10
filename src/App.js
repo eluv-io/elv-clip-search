@@ -14,16 +14,7 @@ import firebaseConfig from "./configuration";
 
 import DB from "./DB";
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  Timestamp,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 
 const title = {
   display: "flex",

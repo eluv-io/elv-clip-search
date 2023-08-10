@@ -1,15 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  collection,
-  doc,
-  setDoc,
-  Timestamp,
-  where,
-  query,
-  getDocs,
-  orderBy,
-  limit,
-} from "firebase/firestore";
+import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
 const feedback = {
@@ -99,7 +89,7 @@ const Feedback = (props) => {
     }
   }, []);
 
-  const handleRateChange = (num) => {
+  const handleRateChange = async (num) => {
     const selectedRating = num;
     hasRating.current = true;
     const active = [];
@@ -107,7 +97,7 @@ const Feedback = (props) => {
       active.push(i);
     }
     setRating(selectedRating);
-    submit(num);
+    await submit(num);
     const submissionElement = document.getElementById(
       `submissiontxt${props.clipInfo.start}`
     );
@@ -127,7 +117,6 @@ const Feedback = (props) => {
     }
     setReason(label);
     setReasonId(selectedValue);
-    // setReasonId(selectedValue);
     if (selectedValue === 4) {
       setWantinput(true);
     } else {
@@ -144,14 +133,7 @@ const Feedback = (props) => {
     warningElement.style.display = "none";
   };
 
-  const collectOtherReason = (event) => {
-    const textareaData = document.getElementById(
-      `reason_input${props.clipInfo.start}`
-    ).value;
-    otherreasons.current = textareaData;
-  };
-
-  const submit = (score) => {
+  const submit = async (score) => {
     //storing the feedback
     const warningElement = document.getElementById(
       `warning${props.clipInfo.start}`
@@ -165,32 +147,20 @@ const Feedback = (props) => {
       if (warningElement.style.display === "flex") {
         warningElement.style.display = "none";
       }
-      const now = Timestamp.now()
-        .toDate()
-        .toString()
-        .replace(/\([^()]*\)/g, "");
-
-      if (db !== null) {
-        try {
-          const userRef = collection(db, "Feedback", props.clientAddr, "Data");
-          const docRef = doc(userRef, now);
-          setDoc(docRef, {
-            client: props.clientAddr,
-            feedback_time: new Date(now),
-            rating: score,
-            clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
-            reason: reason,
-            other_reasons: otherreasons.current,
-            search_id: props.searchId,
-          }).then(() => {
-            console.log("Feedback collected successfully!");
-          });
-        } catch (err) {
-          console.log("Error occured when storing the feedback");
-          console.log(err);
-        }
+      if (props.dbClient !== null && props.searchId !== null) {
+        await props.dbClient.setFeedback({
+          clientAddr: props.clientAddr,
+          clipHash: clipHash,
+          searchId: props.searchId,
+          score: score,
+          reason: reason,
+          otherReasons: otherreasons.current,
+        });
       }
-      const textElement = document.getElementById("reason_input");
+      const textElement = document.getElementById(
+        `reason_input${props.clipInfo.start}`
+      );
+      console.log(textElement);
       if (textElement !== null) {
         textElement.style.display = "none";
       }
@@ -240,7 +210,7 @@ const Feedback = (props) => {
           </select>
         </div>
 
-        {wantinput ? (
+        {wantinput && (
           <textarea
             id={`reason_input${props.clipInfo.start}`}
             name="freeform"
@@ -248,10 +218,12 @@ const Feedback = (props) => {
             cols="30"
             placeholder="Tell us your thoughts..."
             value={prevOtherReason.current}
-            onChange={(event) => collectOtherReason(event.target.value)}
+            onChange={(event) => {
+              otherreasons.current = event.target.value;
+            }}
             style={{ width: "100%" }}
           ></textarea>
-        ) : null}
+        )}
       </div>
 
       <div

@@ -232,7 +232,7 @@ class DB {
         });
         console.log("Feedback collected successfully!");
       } catch (err) {
-        console.log("Error occured when storing the feedback");
+        console.log("Err: Store the feedback failed");
         console.log(err);
       }
     }
