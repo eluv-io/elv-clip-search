@@ -119,6 +119,55 @@ class DB {
     }
   }
 
+  async saveClip({
+    searchId,
+    contentHash,
+    clipStart,
+    clipEnd,
+    clipRank,
+    shotIds,
+  }) {
+    if (this.db !== null) {
+      try {
+        const clipDocRef = doc(
+          this.db,
+          "Clip_info",
+          contentHash + "_" + clipStart + "-" + clipEnd
+        );
+        const clip = await getDoc(clipDocRef);
+        if (!clip.exists()) {
+          await setDoc(clipDocRef, {
+            contentHash: contentHash,
+            start_time: clipStart,
+            end_time: clipEnd,
+            rank: [{ searchId: searchId, rank: clipRank }],
+            shots: shotIds,
+          });
+          console.log("Clip stored successfully!");
+        } else {
+          const tempRank = clip.data().rank;
+          if (
+            !(
+              tempRank[tempRank.length - 1].rank === clipRank &&
+              tempRank[tempRank.length - 1].searchID === searchId
+            )
+          ) {
+            tempRank.push({ searchId, rank: clipRank });
+            await updateDoc(clipDocRef, {
+              rank: tempRank,
+            });
+            console.log("Clip updated successfully!");
+          }
+        }
+      } catch (err) {
+        console.log(
+          `Err: Save clip info for ${contentHash}, [${clipStart} : ${clipEnd}] failed`
+        );
+        console.log(err);
+      }
+    }
+  }
+
   async getFeedback({ clientAddr, clipHash, searchId }) {
     if (this.db !== null) {
       try {
