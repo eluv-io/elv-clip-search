@@ -9,12 +9,7 @@ import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
 
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "./configuration";
-
 import DB from "./DB";
-
-import { getFirestore } from "firebase/firestore";
 
 const title = {
   display: "flex",

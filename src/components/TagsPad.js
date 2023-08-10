@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import {
   BiArrowFromTop,
   BiArrowToTop,

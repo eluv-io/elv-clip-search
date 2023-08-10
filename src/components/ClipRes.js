@@ -1,7 +1,6 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
-import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 
 const container = {

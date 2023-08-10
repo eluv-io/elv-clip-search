@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
 import { BiStar, BiSolidStar } from "react-icons/bi";
 
 const feedback = {
