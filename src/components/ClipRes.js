@@ -1,7 +1,6 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
-import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
 
 const container = {
@@ -62,9 +61,8 @@ const videoInfoContainer = {
 const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
-  const clipInfo = props.clipInfo;
-  const shots = useRef({});
-  const clipRecorded = useRef(false);
+  const shotsMemo = useRef({});
+  const viewed = useRef(false);
   const url =
     props.clipInfo.url === null
       ? null
@@ -82,44 +80,14 @@ const ClipRes = (props) => {
   }, []);
 
   useEffect(() => {
-    prepareShots()
-      .then(() => {
-        // console.log(shots.current);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
-
-  const hash = (s) => {
-    return s;
-  };
-
-  const prepareShots = async () => {
-    if (props.db !== null) {
-      try {
-        const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "text" in props.clipInfo.sources[0].document;
-        if (_hasTags) {
-          const iqHash = props.clipInfo.hash;
-          for (let src of props.clipInfo.sources) {
-            const currdoc = src.document;
-            const shotID = hash(
-              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
-            );
-            const shotRef = doc(shotInfoRef, shotID);
-            getDoc(shotRef).then((shot) => {
-              if (shot.exists()) {
-                shots.current[shotID] = shot.data();
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.log(err);
+    if ("text" in props.clipInfo.sources[0].document) {
+      for (let src of props.clipInfo.sources) {
+        const currdoc = src.document;
+        const shotId = `${props.clipInfo.hash}_${currdoc.start_time}-${currdoc.end_time}`;
+        shotsMemo.current[shotId] = null;
       }
     }
-  };
+  }, []);
 
   const handleStart = (time) => {
     startTime.current = time;
@@ -127,22 +95,34 @@ const ClipRes = (props) => {
   };
 
   const handlePause = (time) => {
-    const elapsedTime = time - startTime.current;
-    viewTime.current = viewTime.current + elapsedTime;
-    console.log(
-      `paused, elapsedtime: ${elapsedTime}, total view time: ${viewTime.current}`
-    );
-
-    // startTime.current = null;
-    try {
-      if (!clipRecorded.current) {
-        props.updateEngagement(clipInfo, elapsedTime, 1);
-        clipRecorded.current = true;
-      } else {
-        props.updateEngagement(clipInfo, elapsedTime, 0);
+    if (
+      props.searchId !== null &&
+      props.dbClient !== null &&
+      (props.searchVersion === "v1" ||
+        (props.searchVersion === "v2" && props.clipInfo.rank <= 20))
+    ) {
+      const clipId = `${props.clipInfo.hash}_${props.clipInfo.start}-${props.clipInfo.end}`;
+      // if already played, we won't count it again
+      let numView = 0;
+      if (!viewed.current) {
+        numView = 1;
+        viewed.current = true;
       }
-    } catch (err) {
-      console.log(err);
+      // get the elapsed time since last time we click play
+      const elapsedTime = time - startTime.current;
+      const newWatchedTime =
+        elapsedTime + props.engagement.current[clipId].watchedTime;
+      const newNumView = numView + props.engagement.current[clipId].numView;
+      props.engagement.current[clipId] = {
+        numView: newNumView,
+        watchedTime: newWatchedTime,
+      };
+      props.dbClient.setEngagement({
+        searchId: props.searchId,
+        clientAddr: props.clientAddr,
+        engagement: props.engagement.current,
+        init: false,
+      });
     }
   };
 
@@ -219,9 +199,9 @@ const ClipRes = (props) => {
         <div style={videoInfoContainer}>
           <InfoPad
             clipInfo={props.clipInfo}
-            db={props.db}
-            clientadd={props.clientadd}
-            searchID={props.searchID}
+            dbClient={props.dbClient}
+            clientAddr={props.clientAddr}
+            searchId={props.searchId}
             viewTime={viewTime.current}
             contents={props.contents}
             searchVersion={props.searchVersion}
@@ -231,9 +211,9 @@ const ClipRes = (props) => {
 
       <QAPad
         clipInfo={props.clipInfo}
-        db={props.db}
-        searchID={props.searchID}
-        prevS={shots}
+        searchId={props.searchId}
+        shotsMemo={shotsMemo}
+        dbClient={props.dbClient}
       ></QAPad>
     </div>
   );

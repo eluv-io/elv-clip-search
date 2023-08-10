@@ -115,15 +115,6 @@ class DB {
       try {
         const colRef = collection(this.db, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
-        console.log(
-          JSON.stringify({
-            client: clientAddr,
-            search_time: now,
-            fuzzySearchPhrase: fuzzySearchPhrase,
-            fuzzySearchFields: fuzzySearchFields,
-            searchKeywords: searchKeywords,
-          })
-        );
         const docRef = await addDoc(colRef, {
           client: clientAddr,
           search_time: now,
@@ -144,13 +135,13 @@ class DB {
   async setShot({ shot }) {
     if (this.db !== null) {
       try {
-        const shotDocRef = doc(this.db, "Shot_info", shot.shotID);
+        const shotDocRef = doc(this.db, "Shot_info", shot.shotId);
         const shotDoc = await getDoc(shotDocRef);
         const payload = {
           start: shot.start,
           end: shot.end,
           iqHash: shot.iqHash,
-          "iqHash_start-end": shot.shotID,
+          "iqHash_start-end": shot.shotId,
           tags: shot.tags,
         };
         if (shotDoc.exists()) {
@@ -159,8 +150,25 @@ class DB {
           await setDoc(shotDocRef, payload);
         }
       } catch (err) {
-        console.log(`Err: Save shot info for ${shot.shotID} failed`);
+        console.log(`Err: Save shot info for ${shot.shotId} failed`);
       }
+    }
+  }
+
+  async getShot({ shotId }) {
+    if (this.db !== null) {
+      try {
+        const shotRef = doc(this.db, "Shot_info", shotId);
+        const shot = await getDoc(shotRef);
+        if (shot.exists()) {
+          return shot.data();
+        } else return null;
+      } catch (err) {
+        console.log(`Err: Get Shot ${shotId} failed`);
+        return null;
+      }
+    } else {
+      return null;
     }
   }
 
@@ -237,14 +245,14 @@ class DB {
     }
   }
 
-  async setFeedback(
+  async setFeedback({
     clientAddr,
     clipHash,
     searchId,
     score,
     reason,
-    otherReasons
-  ) {
+    otherReasons,
+  }) {
     if (this.db !== null) {
       try {
         const userRef = collection(this.db, "Feedback", clientAddr, "Data");
@@ -264,7 +272,7 @@ class DB {
         });
         console.log("Feedback collected successfully!");
       } catch (err) {
-        console.log("Error occured when storing the feedback");
+        console.log("Err: Store the feedback failed");
         console.log(err);
       }
     }

@@ -12,7 +12,7 @@ const body = {
 const left = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "10%",
   height: "100%",
@@ -47,11 +47,8 @@ const selecter = {
   height: "90%",
   marginTop: 5,
   borderRadius: 5,
-  // borderWidth: 1,
   paddingTop: 5,
   paddingBottom: 5,
-  // borderColor: "grey",
-  // borderStyle: "ridge",
 };
 
 const checker = {
@@ -65,7 +62,7 @@ const checker = {
 const right = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "5%",
   height: "100%",
@@ -128,6 +125,15 @@ const FuzzySearchBox = (props) => {
                   index === _index ? !status : status
                 );
                 setCheckedState(updatedCheckedState);
+                if (text.trim() !== "") {
+                  const fields = options.filter((item, index) => {
+                    return updatedCheckedState[index];
+                  });
+                  props.handleSubmitClick({
+                    fields: fields,
+                    text: text.trim(),
+                  });
+                }
               }}
             />
             <span style={{ fontSize: 13 }}>{item.slice(2)}</span>

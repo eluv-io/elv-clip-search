@@ -8,19 +8,8 @@ import ClipRes from "./components/ClipRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
-
+import { BsSearch } from "react-icons/bs";
 import DB from "./DB";
-
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  Timestamp,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
 
 const title = {
   display: "flex",
@@ -225,6 +214,7 @@ const App = () => {
   const [haveSearchRes, setHaveSearchRes] = useState(false);
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
+  const [processingDB, setProcessingDB] = useState(false);
 
   // other helpful status
   const [err, setErr] = useState(false);
@@ -246,24 +236,15 @@ const App = () => {
   const [currentContent, setCurrentContent] = useState("");
   const filteredSearchFields = useRef([]);
 
-  const db = useRef(null);
   const dbClient = useRef(null);
   const clientAddr = useRef(null);
-  const searchID = useRef(null);
+  const searchId = useRef(null);
 
   const engagement = useRef({});
 
   //initialize the DB and store the useradd
   // TODO
   useEffect(() => {
-    // backup
-    try {
-      db.current = DB;
-    } catch (err) {
-      console.log("Error occured when initializing the DB");
-      console.log(err);
-    }
-
     try {
       const _dbClient = getDBClient();
       if (_dbClient == null) return;
@@ -292,44 +273,7 @@ const App = () => {
     setErr(false);
     setTotalContent(0);
     setShowTopk(false);
-  };
-
-  // TODO pay attention that we need to update the engagement Ref as well
-  const updateEngagement = (clipInfo, watchedTime, numView) => {
-    if (
-      searchVersion.current === "v1" ||
-      (searchVersion.current === "v2" && clipInfo.rank <= 20)
-    ) {
-      const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime =
-        watchedTime + engagement.current[clipID].watchedTime;
-      const newNumView = numView + engagement.current[clipID].numView;
-      console.log(newNumView);
-      engagement.current[clipID] = {
-        numView: newNumView,
-        watchedTime: newWatchedTime,
-      };
-      if (db.current !== null) {
-        try {
-          const engTblRef = collection(db.current, "Engagement");
-          const engRef = doc(
-            engTblRef,
-            clientAddr.current + "_" + searchID.current
-          );
-          updateDoc(engRef, {
-            engagement: engagement.current,
-          }).then(() => {
-            console.log(engagement.current);
-            console.log("engagement updated!");
-          });
-        } catch (err) {
-          console.log("Error occured when updating the engagement table");
-          console.log(err);
-        }
-      }
-    } else {
-      console.log("only keep track of the top 20 clips for v2");
-    }
+    setProcessingDB(false);
   };
 
   const getClient = () => {
@@ -490,29 +434,33 @@ const App = () => {
         }
         // process about DB: set search History and send engagement data
         // could have err, but it would not affect whole page. the page can still work
-        try {
-          if (dbClient.current == null || clientAddr.current == null) return;
-          const searchId = await dbClient.current.setSearchHistory({
-            clientAddr: clientAddr.current,
-            fuzzySearchFields: fuzzySearchField,
-            fuzzySearchPhrase: fuzzySearchPhrase,
-            searchKeywords: searchTerms,
-          });
-          if (searchId !== null) {
-            searchID.current = searchId;
-            await dbClient.current.setEngagement({
-              searchId: searchId,
+        if (dbClient.current !== null || clientAddr.current !== null) {
+          setProcessingDB(true);
+          try {
+            const _searchId = await dbClient.current.setSearchHistory({
               clientAddr: clientAddr.current,
-              engagement: engagement.current,
-              init: true,
+              fuzzySearchFields: fuzzySearchField,
+              fuzzySearchPhrase: fuzzySearchPhrase,
+              searchKeywords: searchTerms,
             });
-          } else {
-            console.log(
-              "Save search History failed, will not save enegement data"
-            );
+            if (_searchId !== null) {
+              searchId.current = _searchId;
+              await dbClient.current.setEngagement({
+                searchId: _searchId,
+                clientAddr: clientAddr.current,
+                engagement: engagement.current,
+                init: true,
+              });
+            } else {
+              console.log(
+                "Save search History failed, will not save enegement data"
+              );
+            }
+          } catch (err) {
+            console.log("Err: Set search history and engagement data err");
+          } finally {
+            setProcessingDB(false);
           }
-        } catch (err) {
-          console.log("Err: Set search history and engagement data err");
         }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
@@ -700,42 +648,44 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion && (
-        <div style={inputCheckContainer}>
-          <div style={inputInfoContainer}>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Index:</div>
-              <div style={{ flex: 3 }}>{objId}</div>
-            </div>
-            {showFuzzy && (
+      {!(haveSearchRes || loadingSearchRes) &&
+        haveSearchVersion &&
+        !haveSearchUrl && (
+          <div style={inputCheckContainer}>
+            <div style={inputInfoContainer}>
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                <div style={{ flex: 1 }}>Search Index:</div>
+                <div style={{ flex: 3 }}>{objId}</div>
               </div>
-            )}
-            {showFuzzy && (
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                </div>
+              )}
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                </div>
+              )}
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                <div style={{ flex: 1 }}>
+                  {showFuzzy ? "More Filters:" : "Search Phrase"}
+                </div>
+                <div style={{ flex: 3 }}>{search}</div>
               </div>
-            )}
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>
-                {showFuzzy ? "More Filters:" : "Search Phrase"}
-              </div>
-              <div style={{ flex: 3 }}>{search}</div>
             </div>
+            <button
+              type="button"
+              style={button}
+              onClick={getRes}
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+            >
+              <BsSearch />
+            </button>
           </div>
-          <button
-            type="button"
-            style={button}
-            onClick={getRes}
-            disabled={loadingSearchRes || loadingPlayoutUrl}
-          >
-            Let's go
-          </button>
-        </div>
-      )}
+        )}
 
       {haveSearchUrl && (
         <div style={curlResContainer}>
@@ -870,14 +820,12 @@ const App = () => {
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientadd={clientAddr.current}
-                      searchID={searchID}
+                      clientAddr={clientAddr.current}
+                      searchId={searchId.current}
                       contents={contents.current}
-                      db={db.current}
                       searchVersion={searchVersion.current}
-                      engagement={engagement.current}
-                      updateEngagement={updateEngagement}
-                      dbClient={dbClient}
+                      engagement={engagement}
+                      dbClient={dbClient.current}
                     ></ClipRes>
                   );
                 })
@@ -898,6 +846,10 @@ const App = () => {
       ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
+        </div>
+      ) : processingDB ? (
+        <div style={hint}>
+          <p>Clips are coming ... </p>
         </div>
       ) : null}
     </div>
