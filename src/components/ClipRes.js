@@ -62,7 +62,6 @@ const videoInfoContainer = {
 const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
-  const clipInfo = props.clipInfo;
   const shots = useRef({});
   const viewed = useRef(false);
   const url =
@@ -128,7 +127,7 @@ const ClipRes = (props) => {
 
   const handlePause = (time) => {
     if (
-      props.searchID !== null &&
+      props.searchId !== null &&
       props.dbClient !== null &&
       (props.searchVersion === "v1" ||
         (props.searchVersion === "v2" && props.clipInfo.rank <= 20))
@@ -150,8 +149,8 @@ const ClipRes = (props) => {
         watchedTime: newWatchedTime,
       };
       props.dbClient.setEngagement({
-        searchId: props.searchID,
-        clientAddr: props.clientadd,
+        searchId: props.searchId,
+        clientAddr: props.clientAddr,
         engagement: props.engagement.current,
         init: false,
       });
@@ -233,8 +232,8 @@ const ClipRes = (props) => {
             clipInfo={props.clipInfo}
             db={props.db}
             dbClient={props.dbClient}
-            clientadd={props.clientadd}
-            searchID={props.searchID}
+            clientAddr={props.clientAddr}
+            searchId={props.searchId}
             viewTime={viewTime.current}
             contents={props.contents}
             searchVersion={props.searchVersion}

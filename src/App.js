@@ -252,7 +252,7 @@ const App = () => {
   const db = useRef(null);
   const dbClient = useRef(null);
   const clientAddr = useRef(null);
-  const searchID = useRef(null);
+  const searchId = useRef(null);
 
   const engagement = useRef({});
 
@@ -458,16 +458,16 @@ const App = () => {
         // could have err, but it would not affect whole page. the page can still work
         try {
           if (dbClient.current == null || clientAddr.current == null) return;
-          const searchId = await dbClient.current.setSearchHistory({
+          const _searchId = await dbClient.current.setSearchHistory({
             clientAddr: clientAddr.current,
             fuzzySearchFields: fuzzySearchField,
             fuzzySearchPhrase: fuzzySearchPhrase,
             searchKeywords: searchTerms,
           });
-          if (searchId !== null) {
-            searchID.current = searchId;
+          if (_searchId !== null) {
+            searchId.current = _searchId;
             await dbClient.current.setEngagement({
-              searchId: searchId,
+              searchId: _searchId,
               clientAddr: clientAddr.current,
               engagement: engagement.current,
               init: true,
@@ -836,8 +836,8 @@ const App = () => {
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientadd={clientAddr.current}
-                      searchID={searchID.current}
+                      clientAddr={clientAddr.current}
+                      searchId={searchId.current}
                       contents={contents.current}
                       searchVersion={searchVersion.current}
                       engagement={engagement}

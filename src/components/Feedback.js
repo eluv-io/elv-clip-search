@@ -63,7 +63,6 @@ const Feedback = (props) => {
   const prevOtherReason = useRef(null);
 
   const db = props.db;
-  const clientadd = props.clientadd;
   const clipInfo = props.clipInfo;
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
@@ -71,40 +70,28 @@ const Feedback = (props) => {
   const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
 
   useEffect(() => {
-    if (db !== null) {
-      try {
-        const userRef = collection(db, "Feedback", clientadd, "Data");
-        const q = query(
-          userRef,
-          where("clipHash", "==", clipHash),
-          where("search_id", "==", props.searchID.current),
-          orderBy("feedback_time", "desc"),
-          limit(1)
-        );
-
-        getDocs(q)
-          .then((querySnapshot) => {
-            console.log(querySnapshot);
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              otherreasons.current = data.other_reasons;
-              setReason(data.reason);
-              for (let option of options) {
-                if (option.label === data.reason) {
-                  setReasonId(option.value);
-                  console.log(option.value, option.label);
-                }
+    if (props.dbClient !== null && props.searchID !== null) {
+      props.dbClient
+        .getFeedback({
+          clientAddr: props.clientAddr,
+          clipHash: clipHash,
+          searchId: props.searchId,
+        })
+        .then((results) => {
+          results.forEach((res) => {
+            const data = doc.data();
+            otherreasons.current = data.other_reasons;
+            setReason(data.reason);
+            for (let option of options) {
+              if (option.label === data.reason) {
+                setReasonId(option.value);
+                console.log(option.value, option.label);
               }
-              setRating(data.rating);
-            });
-          })
-          .catch((err) => {
-            console.log(err);
+            }
+            setRating(data.rating);
           });
-      } catch (err) {
-        console.log("Error occured when fetching previous feedbacks");
-        console.log(err);
-      }
+        })
+        .catch((err) => {});
     }
   }, []);
 
@@ -181,16 +168,16 @@ const Feedback = (props) => {
 
       if (db !== null) {
         try {
-          const userRef = collection(db, "Feedback", clientadd, "Data");
+          const userRef = collection(db, "Feedback", props.clientAddr, "Data");
           const docRef = doc(userRef, now);
           setDoc(docRef, {
-            client: clientadd,
+            client: props.clientAddr,
             feedback_time: new Date(now),
             rating: score,
             clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
             reason: reason,
             other_reasons: otherreasons.current,
-            search_id: props.searchID.current,
+            search_id: props.searchId,
           }).then(() => {
             console.log("Feedback collected successfully!");
           });
