@@ -150,9 +150,7 @@ const InfoPad = (props) => {
               }}
               readOnly
               value={props.clipInfo.url}
-            >
-              
-            </textarea>
+            ></textarea>
           </div>
         </div>
       ) : (

@@ -12,9 +12,15 @@ import { parseSearchRes, createSearchUrl } from "./utils";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./configuration";
 import {
-  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc,
-} from 'firebase/firestore' ;
-
+  getFirestore,
+  collection,
+  addDoc,
+  Timestamp,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 const title = {
   display: "flex",
@@ -203,7 +209,7 @@ const App = () => {
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
-  const [searchTerms, setSearchTerms] = useState([])
+  const [searchTerms, setSearchTerms] = useState([]);
   const [displayingContents, setDisplayingContents] = useState([]);
 
   // for help the topk showing method to rescue the BM25 matching results
@@ -247,6 +253,7 @@ const App = () => {
   const engagement = useRef({});
 
   //initialize the DB and store the useradd
+  // TODO
   useEffect(() => {
     try {
       initializeApp(firebaseConfig);
@@ -259,11 +266,11 @@ const App = () => {
     getClient();
     try {
       if (db.current != null) {
-
         client.current.CurrentAccountAddress().then((val) => {
           clientAdd.current = val;
-          const userRef = collection(db.current, 'User');
+          const userRef = collection(db.current, "User");
           const clientRef = doc(userRef, clientAdd.current);
+          // save user
           getDoc(clientRef).then((thisClient) => {
             if (!thisClient.exists()) {
               setDoc(clientRef, {
@@ -272,22 +279,20 @@ const App = () => {
                 Email_add: null,
                 Creation_time: null,
                 Updated_time: null,
-                Personal_info: {}
+                Personal_info: {},
               }).then(() => {
                 console.log("User info saved");
-              })
+              });
             } else {
               console.log("This user already exists");
             }
           });
-        })
+        });
       }
     } catch (err) {
       console.log("Error occured when storing the user info");
-      console.error(err)
+      console.error(err);
     }
-
-
   }, []);
 
   const resetLoadStatus = () => {
@@ -301,71 +306,71 @@ const App = () => {
     setShowTopk(false);
   };
 
+  // TODO
   const initializeEngagement = () => {
-    engagement.current = {};
-    const currContents = contents.current;
-    for (let content in currContents) {
-      for (let page in currContents[content].clips) {
-        const clips_per_page = currContents[content].clips[page];
-        for (let key in clips_per_page) {
-          const clip = clips_per_page[key];
-          if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clip.rank <= 20)) {
-            const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
-            engagement.current[clipID] = {numView: 0, watchedTime: 0};
-          }
-        }
-      }
-    }
-
     if (db.current !== null) {
       try {
         const engTblRef = collection(db.current, "Engagement");
-        const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
+        const engRef = doc(
+          engTblRef,
+          clientAdd.current + "_" + searchID.current
+        );
         setDoc(engRef, {
           engagement: engagement.current,
           User_id: clientAdd.current,
-          Search_id: searchID.current
+          Search_id: searchID.current,
         }).then(() => {
-          console.log("Engagement table initialized")
-        })
+          console.log("Engagement table initialized");
+        });
       } catch (err) {
         console.log("Error occured when initializing the engagement table");
         console.log(err);
       }
     }
-  }
+  };
 
+  // TODO pay attention that we need to update the engagement Ref as well
   const updateEngagement = (clipInfo, watchedTime, numView) => {
-    if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
+    if (
+      searchVersion.current === "v1" ||
+      (searchVersion.current === "v2" && clipInfo.rank <= 20)
+    ) {
       const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime;
+      const newWatchedTime =
+        watchedTime + engagement.current[clipID].watchedTime;
       const newNumView = numView + engagement.current[clipID].numView;
-      console.log(newNumView)
-      engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
+      console.log(newNumView);
+      engagement.current[clipID] = {
+        numView: newNumView,
+        watchedTime: newWatchedTime,
+      };
       if (db.current !== null) {
         try {
           const engTblRef = collection(db.current, "Engagement");
-          const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
+          const engRef = doc(
+            engTblRef,
+            clientAdd.current + "_" + searchID.current
+          );
           updateDoc(engRef, {
-            engagement: engagement.current
+            engagement: engagement.current,
           }).then(() => {
-            console.log(engagement.current)
-            console.log("engagement updated!")
-          })
+            console.log(engagement.current);
+            console.log("engagement updated!");
+          });
         } catch (err) {
-          console.log("Error occured when updating the engagement table")
+          console.log("Error occured when updating the engagement table");
           console.log(err);
         }
       }
     } else {
       console.log("only keep track of the top 20 clips for v2");
     }
-  }
+  };
 
   const storeSearchHistory = () => {
     if (db !== null) {
       try {
-        console.log(searchTerms)
+        console.log(searchTerms);
         const colRef = collection(db.current, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
         addDoc(colRef, {
@@ -378,10 +383,10 @@ const App = () => {
           console.log("search history updated with docID", docRef.id);
           searchID.current = docRef.id;
           initializeEngagement();
-        })
+        });
       } catch (err) {
-        console.log("Error occured when storing the search history")
-        console.log(err)
+        console.log("Error occured when storing the search history");
+        console.log(err);
       }
     }
   };
@@ -593,6 +598,30 @@ const App = () => {
           setErrMsg(
             "Parse the query result err, might because search engine change the result format"
           );
+          return;
+        }
+        // initial the emgage dic
+        try {
+          engagement.current = {};
+          for (let content in contents.current) {
+            for (let page in contents.current[content].clips) {
+              const clips_per_page = contents.current[content].clips[page];
+              for (let clip of clips_per_page) {
+                if (
+                  searchVersion.current === "v1" ||
+                  (searchVersion.current === "v2" && clip.rank <= 20)
+                ) {
+                  const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
+                  engagement.current[clipID] = { numView: 0, watchedTime: 0 };
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.log(err);
+          setLoadingSearchRes(false);
+          setErr(true);
+          setErrMsg("Initial the engagememt data err");
           return;
         }
         // try to load and show the first contents infomation
