@@ -134,9 +134,10 @@ const TagsPad = (props) => {
   };
 
   const collect = async (lst, t, score) => {
-    console.log("You disliked me");
+    console.log("Processing tags review");
     const shotId = t.shotId;
     const currTags = props.shotsMemo.current[shotId].tags;
+    console.log(currTags);
     const allIndices = currTags.reduce((indices, dic, idx) => {
       if (dic.status.text === t.status) {
         indices.push(idx);
@@ -144,11 +145,8 @@ const TagsPad = (props) => {
       return indices;
     }, []);
     allIndices.forEach((i) => {
-      props.shotsMemo.current[shotId].tags[i].feedback[props.searchID.current] =
-        score;
+      props.shotsMemo.current[shotId].tags[i].feedback[props.searchId] = score;
     });
-    props.shotsMemo.current = props.shotsMemo.current;
-    console.log("After clicking", props.shotsMemo.current);
 
     const idx = lst.findIndex((dic) => dic.status === t.status);
     lst[idx].dislike = score;
@@ -156,6 +154,7 @@ const TagsPad = (props) => {
     try {
       if (props.dbClient.current !== null) {
         await props.dbClient.setShot({ shot: props.shotsMemo.current[shotId] });
+        console.log("Shot saved");
       }
     } catch (err) {
       console.log(err);
@@ -176,6 +175,7 @@ const TagsPad = (props) => {
           clipRank,
           shotIds: Object.keys(props.shotsMemo.current),
         });
+        console.log("clip updated");
       }
     } catch (err) {
       console.log(err);
