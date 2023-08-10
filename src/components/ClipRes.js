@@ -62,7 +62,7 @@ const videoInfoContainer = {
 const ClipRes = (props) => {
   const viewTime = useRef(0);
   const startTime = useRef(null);
-  const shotsMemo = useRef(null);
+  const shotsMemo = useRef({});
   const viewed = useRef(false);
   const url =
     props.clipInfo.url === null
@@ -212,7 +212,7 @@ const ClipRes = (props) => {
 
       <QAPad
         clipInfo={props.clipInfo}
-        searchID={props.searchID}
+        searchId={props.searchId}
         shotsMemo={shotsMemo}
         dbClient={props.dbClient}
       ></QAPad>

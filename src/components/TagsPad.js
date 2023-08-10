@@ -44,10 +44,8 @@ const TagsPad = (props) => {
   const [tagsReady, setTagsReady] = useState(false);
 
   useEffect(() => {
-    console.log("parsing tags");
     try {
       prepareTags().then(() => {
-        console.log("Before clicking", props.shotsMemo.current);
         setTagsReady(true);
       });
     } catch (err) {
@@ -56,6 +54,7 @@ const TagsPad = (props) => {
   }, []);
 
   const prepareTags = async () => {
+    console.log("parsing tags");
     if ("text" in props.clipInfo.sources[0].document) {
       const contentHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
@@ -70,6 +69,7 @@ const TagsPad = (props) => {
           shotId: shotId,
           tags: [],
         };
+
         let needToPush = false;
         // try to see  if we have  this shot in Memo, if not, try to load from DB.
         // the shot from DB could be null as well
