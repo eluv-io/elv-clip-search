@@ -214,6 +214,7 @@ const App = () => {
   const [haveSearchRes, setHaveSearchRes] = useState(false);
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
+  const [processingDB, setProcessingDB] = useState(false);
 
   // other helpful status
   const [err, setErr] = useState(false);
@@ -235,7 +236,6 @@ const App = () => {
   const [currentContent, setCurrentContent] = useState("");
   const filteredSearchFields = useRef([]);
 
-  const db = useRef(null);
   const dbClient = useRef(null);
   const clientAddr = useRef(null);
   const searchId = useRef(null);
@@ -273,6 +273,7 @@ const App = () => {
     setErr(false);
     setTotalContent(0);
     setShowTopk(false);
+    setProcessingDB(false);
   };
 
   const getClient = () => {
@@ -433,29 +434,33 @@ const App = () => {
         }
         // process about DB: set search History and send engagement data
         // could have err, but it would not affect whole page. the page can still work
-        try {
-          if (dbClient.current == null || clientAddr.current == null) return;
-          const _searchId = await dbClient.current.setSearchHistory({
-            clientAddr: clientAddr.current,
-            fuzzySearchFields: fuzzySearchField,
-            fuzzySearchPhrase: fuzzySearchPhrase,
-            searchKeywords: searchTerms,
-          });
-          if (_searchId !== null) {
-            searchId.current = _searchId;
-            await dbClient.current.setEngagement({
-              searchId: _searchId,
+        if (dbClient.current !== null || clientAddr.current !== null) {
+          setProcessingDB(true);
+          try {
+            const _searchId = await dbClient.current.setSearchHistory({
               clientAddr: clientAddr.current,
-              engagement: engagement.current,
-              init: true,
+              fuzzySearchFields: fuzzySearchField,
+              fuzzySearchPhrase: fuzzySearchPhrase,
+              searchKeywords: searchTerms,
             });
-          } else {
-            console.log(
-              "Save search History failed, will not save enegement data"
-            );
+            if (_searchId !== null) {
+              searchId.current = _searchId;
+              await dbClient.current.setEngagement({
+                searchId: _searchId,
+                clientAddr: clientAddr.current,
+                engagement: engagement.current,
+                init: true,
+              });
+            } else {
+              console.log(
+                "Save search History failed, will not save enegement data"
+              );
+            }
+          } catch (err) {
+            console.log("Err: Set search history and engagement data err");
+          } finally {
+            setProcessingDB(false);
           }
-        } catch (err) {
-          console.log("Err: Set search history and engagement data err");
         }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
@@ -643,42 +648,44 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion && (
-        <div style={inputCheckContainer}>
-          <div style={inputInfoContainer}>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Index:</div>
-              <div style={{ flex: 3 }}>{objId}</div>
-            </div>
-            {showFuzzy && (
+      {!(haveSearchRes || loadingSearchRes) &&
+        haveSearchVersion &&
+        !haveSearchUrl && (
+          <div style={inputCheckContainer}>
+            <div style={inputInfoContainer}>
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                <div style={{ flex: 1 }}>Search Index:</div>
+                <div style={{ flex: 3 }}>{objId}</div>
               </div>
-            )}
-            {showFuzzy && (
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                </div>
+              )}
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                </div>
+              )}
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                <div style={{ flex: 1 }}>
+                  {showFuzzy ? "More Filters:" : "Search Phrase"}
+                </div>
+                <div style={{ flex: 3 }}>{search}</div>
               </div>
-            )}
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>
-                {showFuzzy ? "More Filters:" : "Search Phrase"}
-              </div>
-              <div style={{ flex: 3 }}>{search}</div>
             </div>
+            <button
+              type="button"
+              style={button}
+              onClick={getRes}
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+            >
+              <BsSearch />
+            </button>
           </div>
-          <button
-            type="button"
-            style={button}
-            onClick={getRes}
-            disabled={loadingSearchRes || loadingPlayoutUrl}
-          >
-            <BsSearch />
-          </button>
-        </div>
-      )}
+        )}
 
       {haveSearchUrl && (
         <div style={curlResContainer}>
@@ -839,6 +846,10 @@ const App = () => {
       ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
+        </div>
+      ) : processingDB ? (
+        <div style={hint}>
+          <p>Clips are coming ... </p>
         </div>
       ) : null}
     </div>
