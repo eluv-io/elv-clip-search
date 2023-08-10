@@ -1,4 +1,4 @@
-import firebaseConfig from "./configuration";
+import firebaseConfig from "./firebaseConfiguration";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
@@ -14,12 +14,44 @@ import {
   where,
   orderBy,
   limit,
+  connectFirestoreEmulator,
 } from "firebase/firestore";
 
+const useEmulator = true;
 class DB {
   constructor() {
-    const app = initializeApp(firebaseConfig);
-    this.db = getFirestore(app);
+    if (useEmulator) {
+      const emulatorConfig = {
+        apiKey: "",
+        authDomain: "",
+        databaseURL: "https://elv-clip-search-default-rtdb.firebaseio.com",
+        projectId: "elv-clip-search",
+        storageBucket: "",
+        messagingSenderId: "426199348320",
+        appId: "",
+        measurementId: "",
+      };
+      const app = initializeApp(emulatorConfig);
+      this.db = getFirestore(app);
+      connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
+    } else {
+      console.error(
+        "In developing environment, please follow instructions in src/firebase/emulator.md to set up local DB emulator."
+      );
+      this.db = null;
+    }
+    if (
+      !useEmulator &&
+      firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.projectId
+    ) {
+      const app = initializeApp(firebaseConfig);
+      this.db = getFirestore(app);
+    } else {
+      console.error("Production Firebase configuration is missing!");
+      this.db = null;
+    }
   }
 
   async setUser({ clientAddr }) {

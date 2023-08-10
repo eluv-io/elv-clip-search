@@ -9,9 +9,6 @@ import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
 
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "./configuration";
-
 import DB from "./DB";
 
 import {
@@ -261,8 +258,7 @@ const App = () => {
   useEffect(() => {
     // backup
     try {
-      initializeApp(firebaseConfig);
-      db.current = getFirestore();
+      db.current = DB;
     } catch (err) {
       console.log("Error occured when initializing the DB");
       console.log(err);

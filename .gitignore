@@ -2,6 +2,9 @@
 **firebaseConfiguration**
 src/configuration.js
 
+# ignore firebase log
+**/**debug.log
+
 # dependencies
 /node_modules
 /.pnp
