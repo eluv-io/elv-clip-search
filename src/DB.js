@@ -18,7 +18,7 @@ class DB {
     this.db = getFirestore(app);
   }
 
-  async saveUser({ clientAddr }) {
+  async setUser({ clientAddr }) {
     if (this.db !== null) {
       try {
         const userDocRef = doc(this.db, "User", clientAddr);
@@ -41,7 +41,7 @@ class DB {
     }
   }
 
-  async saveEngagement({ searchId, clientAddr, engagement, init = false }) {
+  async setEngagement({ searchId, clientAddr, engagement, init = false }) {
     if (this.db !== null) {
       try {
         const engDocRef = doc(
@@ -69,7 +69,7 @@ class DB {
     }
   }
 
-  async saveSearchHistory({
+  async setSearchHistory({
     clientAddr,
     fuzzysearchPhrase,
     fuzzySearchFields,
@@ -96,7 +96,7 @@ class DB {
     }
   }
 
-  async saveShot({ shot }) {
+  async setShot({ shot }) {
     if (this.db !== null) {
       try {
         const shotDocRef = doc(this.db, "Shot_info", shot.shotID);
@@ -119,7 +119,7 @@ class DB {
     }
   }
 
-  async saveClip({
+  async setClip({
     searchId,
     contentHash,
     clipStart,
@@ -192,7 +192,7 @@ class DB {
     }
   }
 
-  async saveFeedback(clientAddr, clipHash, searchId, now) {
+  async setFeedback(clientAddr, clipHash, searchId, now) {
     if (this.db !== null) {
       try {
         const userRef = collection(this.db, "Feedback", clientAddr, "Data");
