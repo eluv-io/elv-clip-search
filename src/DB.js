@@ -45,7 +45,7 @@ class DB {
     }
   }
 
-  async setEngagement({ searchId, clientAddr, engagement, init = false }) {
+  async setEngagement({ searchId, clientAddr, engagement, init }) {
     if (this.db !== null) {
       try {
         const engDocRef = doc(
@@ -67,7 +67,7 @@ class DB {
 
         console.log(`Engagement table saved`);
       } catch (err) {
-        console.log("Err: Initialize the engagement table failed");
+        console.log("Err: Set the engagement table failed");
         console.log(err);
       }
     }
@@ -75,7 +75,7 @@ class DB {
 
   async setSearchHistory({
     clientAddr,
-    fuzzysearchPhrase,
+    fuzzySearchPhrase,
     fuzzySearchFields,
     searchKeywords,
   }) {
@@ -83,10 +83,19 @@ class DB {
       try {
         const colRef = collection(this.db, "Search_history");
         const now = Timestamp.now().toDate().toUTCString();
+        console.log(
+          JSON.stringify({
+            client: clientAddr,
+            search_time: now,
+            fuzzySearchPhrase: fuzzySearchPhrase,
+            fuzzySearchFields: fuzzySearchFields,
+            searchKeywords: searchKeywords,
+          })
+        );
         const docRef = await addDoc(colRef, {
           client: clientAddr,
           search_time: now,
-          fuzzySearchPhrase: fuzzysearchPhrase,
+          fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchFields,
           searchKeywords: searchKeywords,
         });

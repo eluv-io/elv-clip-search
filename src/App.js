@@ -298,29 +298,6 @@ const App = () => {
     setShowTopk(false);
   };
 
-  // TODO
-  const initializeEngagement = () => {
-    if (db.current !== null) {
-      try {
-        const engTblRef = collection(db.current, "Engagement");
-        const engRef = doc(
-          engTblRef,
-          clientAddr.current + "_" + searchID.current
-        );
-        setDoc(engRef, {
-          engagement: engagement.current,
-          User_id: clientAddr.current,
-          Search_id: searchID.current,
-        }).then(() => {
-          console.log("Engagement table initialized");
-        });
-      } catch (err) {
-        console.log("Error occured when initializing the engagement table");
-        console.log(err);
-      }
-    }
-  };
-
   // TODO pay attention that we need to update the engagement Ref as well
   const updateEngagement = (clipInfo, watchedTime, numView) => {
     if (
@@ -359,30 +336,6 @@ const App = () => {
     }
   };
 
-  const storeSearchHistory = () => {
-    if (db !== null) {
-      try {
-        console.log(searchTerms);
-        const colRef = collection(db.current, "Search_history");
-        const now = Timestamp.now().toDate().toUTCString();
-        addDoc(colRef, {
-          client: clientAddr.current,
-          search_time: now,
-          fuzzySearchPhrase: fuzzySearchPhrase,
-          fuzzySearchFields: fuzzySearchField,
-          searchKeywords: searchTerms,
-        }).then((docRef) => {
-          console.log("search history updated with docID", docRef.id);
-          searchID.current = docRef.id;
-          initializeEngagement();
-        });
-      } catch (err) {
-        console.log("Error occured when storing the search history");
-        console.log(err);
-      }
-    }
-  };
-
   const getClient = () => {
     if (client.current == null) {
       const _client = new FrameClient({
@@ -416,104 +369,12 @@ const App = () => {
   };
 
   const jumpToPageInTopk = (pageIndex) => {
-    // setLoadingTopkPage(true);
-    // setHavePlayoutUrl(false);
-    // try {
-    //   for (let i = 0; i < topk.current[pageIndex].length; i++) {
-    //     if (!topk.current[pageIndex][i].processed) {
-    //       const objectId = topk.current[pageIndex][i].id;
-    //       if (objectId in playoutUrlMemo.current) {
-    //         topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
-    //       } else {
-    //         const videoUrl = await getPlayoutUrl({
-    //           client: client.current,
-    //           objectId,
-    //         });
-    //         topk.current[pageIndex][i].url = videoUrl;
-    //         if (videoUrl !== null) {
-    //           playoutUrlMemo.current[objectId] = videoUrl;
-    //         }
-    //       }
-    //       if (topk.current[pageIndex][i].url !== null) {
-    //         topk.current[pageIndex][i].processed = true;
-    //       }
-    //     }
-    //   }
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(true);
-    //   setDisplayingContents(topk.current[pageIndex]);
-    // } catch (err) {
-    //   console.log(err);
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(false);
-    //   setDisplayingContents([]);
-    //   setErr(true);
-    //   setErrMsg("Loading playout url for contents on this page went wrong");
-    // }
-
-    // after replacing the player, we do not need to load the url explicitly
     setLoadingTopkPage(false);
     setHavePlayoutUrl(true);
     setDisplayingContents(topk.current[pageIndex]);
   };
 
   const jumpToContent = (objectId) => {
-    // try {
-    //   // loading playout url for each clip res
-    //   setHavePlayoutUrl(false);
-    //   setLoadingPlayoutUrl(true);
-    //   currentPage.current = 1;
-    //   const clips_per_content = contents.current;
-    //   if (clips_per_content[objectId].processed) {
-    //     // if it is processed, just return that
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   } else {
-    //     // get the possible offerings
-    //     let videoUrl = "";
-    //     if (objectId in playoutUrlMemo.current) {
-    //       videoUrl = playoutUrlMemo.current[objectId];
-    //     } else {
-    //       videoUrl = await getPlayoutUrl({
-    //         client: client.current,
-    //         objectId,
-    //       });
-    //       if (videoUrl !== null) {
-    //         playoutUrlMemo.current[objectId] = videoUrl;
-    //       }
-    //     }
-    //     for (let pageIndex in clips_per_content[objectId].clips) {
-    //       for (let item of clips_per_content[objectId].clips[pageIndex]) {
-    //         item.url = videoUrl;
-    //       }
-    //     }
-    //     if (videoUrl !== null) {
-    //       clips_per_content[objectId].processed = true;
-    //     }
-    //     contents.current = clips_per_content;
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   }
-    // } catch (err) {
-    //   console.log(`Error message : ${err.message} - `, err.code);
-    //   setLoadingPlayoutUrl(false);
-    //   setHavePlayoutUrl(false);
-    //   setErrMsg("Playout URL error");
-    //   setErr(true);
-    //   return null;
-    // }
-
-    // after replacing the player, we do not need to load the url explicitly
     currentPage.current = 1;
     numPages.current = Object.keys(contents.current[objectId].clips).length;
     setLoadingPlayoutUrl(false);
@@ -567,6 +428,7 @@ const App = () => {
           );
           return;
         }
+        // try to update DB
         // try to parse
         let firstContentToDisplay = "";
         try {
@@ -597,7 +459,6 @@ const App = () => {
               : 0;
           // update the loading status
           setLoadingSearchRes(false);
-          setHaveSearchRes(true);
         } catch (err) {
           console.log(err);
           setLoadingSearchRes(false);
@@ -631,11 +492,38 @@ const App = () => {
           setErrMsg("Initial the engagememt data err");
           return;
         }
+        // process about DB: set search History and send engagement data
+        // could have err, but it would not affect whole page. the page can still work
+        try {
+          if (dbClient.current == null || clientAddr.current == null) return;
+          const searchId = await dbClient.current.setSearchHistory({
+            clientAddr: clientAddr.current,
+            fuzzySearchFields: fuzzySearchField,
+            fuzzySearchPhrase: fuzzySearchPhrase,
+            searchKeywords: searchTerms,
+          });
+          if (searchId !== null) {
+            searchID.current = searchId;
+            await dbClient.current.setEngagement({
+              searchId: searchId,
+              clientAddr: clientAddr.current,
+              engagement: engagement.current,
+              init: true,
+            });
+          } else {
+            console.log(
+              "Save search History failed, will not save enegement data"
+            );
+          }
+        } catch (err) {
+          console.log("Err: Set search history and engagement data err");
+        }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
-          // there are err handling things inside this function
           jumpToContent(firstContentToDisplay);
         }
+        // finally set have search res to be True
+        setHaveSearchRes(true);
       } else {
         // create search url err
         setLoadingSearchRes(false);
@@ -845,11 +733,7 @@ const App = () => {
           <button
             type="button"
             style={button}
-            onClick={async () => {
-              getRes().then(() => {
-                storeSearchHistory();
-              });
-            }}
+            onClick={getRes}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
             Let's go
@@ -997,6 +881,7 @@ const App = () => {
                       searchVersion={searchVersion.current}
                       engagement={engagement.current}
                       updateEngagement={updateEngagement}
+                      dbClient={dbClient}
                     ></ClipRes>
                   );
                 })
