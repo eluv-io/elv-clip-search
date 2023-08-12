@@ -1,4 +1,4 @@
-import firebaseConfig from "./firebaseConfiguration";
+import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
@@ -17,9 +17,9 @@ import {
   connectFirestoreEmulator,
 } from "firebase/firestore";
 
-const useEmulator = true;
 class DB {
   constructor() {
+    let app;
     if (useEmulator) {
       const emulatorConfig = {
         apiKey: "",
@@ -31,25 +31,20 @@ class DB {
         appId: "",
         measurementId: "",
       };
-      const app = initializeApp(emulatorConfig);
+      app = initializeApp(emulatorConfig);
       this.db = getFirestore(app);
       connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
-    } else {
-      console.error(
-        "In developing environment, please follow instructions in src/firebase/emulator.md to set up local DB emulator."
-      );
-      this.db = null;
-    }
-    if (
-      !useEmulator &&
+    } else if (
       firebaseConfig.apiKey &&
       firebaseConfig.authDomain &&
       firebaseConfig.projectId
     ) {
-      const app = initializeApp(firebaseConfig);
+      app = initializeApp(firebaseConfig);
       this.db = getFirestore(app);
     } else {
-      console.error("Production Firebase configuration is missing!");
+      console.error(
+        "Either set up the local DB emulator for the development environment as per src/firebase/emulator.md or ensure that the production Firebase configuration is present."
+      );
       this.db = null;
     }
   }
