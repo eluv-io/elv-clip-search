@@ -195,6 +195,7 @@ const loadingUrlContainer = {
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
+  const TOPK_BY_DEFAULT = true;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
     // delete for MGM
@@ -236,7 +237,7 @@ const App = () => {
   const [errMsg, setErrMsg] = useState("");
   const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
   const [haveSearchVersion, setHaveSearchVersion] = useState(false);
-  const [showTopk, setShowTopk] = useState(false);
+  const [showTopk, setShowTopk] = useState(TOPK_BY_DEFAULT);
 
   // processed info
   const network = useRef("main");
@@ -305,7 +306,7 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
-    setShowTopk(false);
+    setShowTopk(TOPK_BY_DEFAULT);
   };
 
   const initializeEngagement = () => {
@@ -621,7 +622,11 @@ const App = () => {
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
           // there are err handling things inside this function
-          jumpToContent(firstContentToDisplay);
+          if (showTopk) {
+            jumpToPageInTopk(0);
+          } else {
+            jumpToContent(firstContentToDisplay);
+          }
         }
       } else {
         // create search url err
