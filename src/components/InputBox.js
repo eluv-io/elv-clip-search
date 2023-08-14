@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { BiSave } from "react-icons/bi";
-
 const body = {
   display: "flex",
   flexDirection: "row",
@@ -83,7 +81,7 @@ const InputBox = (props) => {
           }}
           disabled={props.disabled}
         >
-          <BiSave />
+          ADD
         </button>
       </div>
     </div>

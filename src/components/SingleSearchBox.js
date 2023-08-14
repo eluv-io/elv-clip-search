@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { BiSave, BiTrash } from "react-icons/bi";
 
 const body = {
   display: "flex",
@@ -160,7 +159,7 @@ const SingleSearchBox = (props) => {
       }}
       disabled={props.disabled}
     >
-      <BiTrash />
+      X
     </button>
   ) : (
     <button
@@ -176,7 +175,7 @@ const SingleSearchBox = (props) => {
       }}
       disabled={props.disabled}
     >
-      <BiSave />
+      ADD
     </button>
   );
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BiSave } from "react-icons/bi";
+
 const body = {
   display: "flex",
   flexDirection: "row",
@@ -163,7 +163,7 @@ const FuzzySearchBox = (props) => {
       }}
       disabled={props.disabled}
     >
-      <BiSave />
+      ADD
     </button>
   );
   return (
