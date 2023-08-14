@@ -54,7 +54,7 @@ const starStyle = {
 
 const Feedback = (props) => {
   const [wantinput, setWantinput] = useState(false);
-  const otherreasons = useRef("");
+  const [otherReasons, setOtherReasons] = useState("");
   const [reason, setReason] = useState("");
   const [reasonId, setReasonId] = useState(0);
   const hasReason = useRef(false);
@@ -86,7 +86,7 @@ const Feedback = (props) => {
           .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
               const data = doc.data();
-              otherreasons.current = data.other_reasons;
+              setOtherReasons(data.other_reasons);
               setReason(data.reason);
               for (let option of options) {
                 if (option.label === data.reason) {
@@ -152,13 +152,6 @@ const Feedback = (props) => {
     warningElement.style.display = "none";
   };
 
-  const collectOtherReason = (event) => {
-    const textareaData = document.getElementById(
-      `reason_input${props.clipInfo.start}`
-    ).value;
-    otherreasons.current = textareaData;
-  };
-
   const submit = (score) => {
     //storing the feedback
     const warningElement = document.getElementById(
@@ -188,7 +181,7 @@ const Feedback = (props) => {
             rating: score,
             clipHash: contentHash + "_" + clipStart + "-" + clipEnd,
             reason: reason,
-            other_reasons: otherreasons.current,
+            other_reasons: otherReasons,
             search_id: props.searchID.current,
           }).then(() => {
             console.log("Feedback collected successfully!");
@@ -198,11 +191,6 @@ const Feedback = (props) => {
           console.log(err);
         }
       }
-      const textElement = document.getElementById("reason_input");
-      if (textElement !== null) {
-        textElement.style.display = "none";
-      }
-
       submissionElement.style.display = "flex";
     }
   };
@@ -230,7 +218,6 @@ const Feedback = (props) => {
         ))}
       </div>
 
-      <div>How do you like the search result?</div>
       <div style={{ display: "flex", width: "100%", flexDirection: "column" }}>
         <div
           style={{ display: "flex", width: "100%", flexDirection: "column" }}
@@ -255,8 +242,10 @@ const Feedback = (props) => {
             rows="2"
             cols="30"
             placeholder="Tell us your thoughts..."
-            value={prevOtherReason.current}
-            onChange={(event) => collectOtherReason(event.target.value)}
+            value={otherReasons}
+            onChange={(event) => {
+              setOtherReasons(event.target.value);
+            }}
             style={{ width: "100%" }}
           ></textarea>
         ) : null}
