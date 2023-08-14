@@ -305,7 +305,11 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
-    setShowTopk(TOPK_BY_DEFAULT);
+    if (searchVersion.current == "v1") {
+      setShowTopk(false);
+    } else {
+      setShowTopk(TOPK_BY_DEFAULT);
+    }
   };
 
   const initializeEngagement = () => {
@@ -594,7 +598,9 @@ const App = () => {
               setShowFuzzy(true);
               searchVersion.current = "v2";
             } else {
-              throw new Error("Only v2 indices are supported");
+              setShowFuzzy(false);
+              setShowTopk(false);
+              searchVersion.current = "v1";
             }
             filteredSearchFields.current = Object.keys(
               searchObjMeta.config.indexer.arguments.fields
