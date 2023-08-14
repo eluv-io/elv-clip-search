@@ -22,8 +22,6 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-import { BsSearch } from "react-icons/bs";
-
 const title = {
   display: "flex",
   flexDirection: "row",
@@ -862,7 +860,7 @@ const App = () => {
             }}
             disabled={loadingSearchRes || loadingPlayoutUrl}
           >
-            <BsSearch />
+            Let's go
           </button>
         </div>
       )}
