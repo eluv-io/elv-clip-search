@@ -123,6 +123,7 @@ const FuzzySearchBox = (props) => {
               style={{ marginRight: 5 }}
               type="checkbox"
               checked={checkedState[index]}
+              disabled={props.disabled}
               onChange={() => {
                 const updatedCheckedState = checkedState.map((status, _index) =>
                   index === _index ? !status : status
