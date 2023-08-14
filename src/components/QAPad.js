@@ -62,6 +62,7 @@ const QAPad = (props) => {
             prevShots={props.prevShots}
             setShots={props.setShots}
             prevS={props.prevS}
+            searchVersion={props.searchVersion}
           ></TagsPad>
         </div>
       </div>

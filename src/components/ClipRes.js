@@ -100,7 +100,9 @@ const ClipRes = (props) => {
     if (props.db !== null) {
       try {
         const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "f_start_time" in props.clipInfo.sources[0].fields && "f_end_time" in props.clipInfo.sources[0].fields;
+        const _hasTags =
+          "f_start_time" in props.clipInfo.sources[0].fields &&
+          "f_end_time" in props.clipInfo.sources[0].fields;
         if (_hasTags) {
           const iqHash = props.clipInfo.hash;
           for (let src of props.clipInfo.sources) {
@@ -235,6 +237,7 @@ const ClipRes = (props) => {
         db={props.db}
         clientadd={props.clientadd}
         searchID={props.searchID}
+        searchVersion={props.searchVersion}
         viewTime={viewTime.current}
         contents={props.contents}
         dislikedTags={dislikedTags.current}
