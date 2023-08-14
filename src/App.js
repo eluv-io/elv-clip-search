@@ -9,10 +9,10 @@ import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
 
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "./configuration";
+// import { initializeApp } from "firebase/app";
+// import firebaseConfig from "./configuration";
 import {
-  getFirestore,
+  // getFirestore,
   collection,
   addDoc,
   Timestamp,
@@ -305,7 +305,7 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
-    if (searchVersion.current == "v1") {
+    if (searchVersion.current === "v1") {
       setShowTopk(false);
     } else {
       setShowTopk(TOPK_BY_DEFAULT);

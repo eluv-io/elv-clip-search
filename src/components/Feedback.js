@@ -60,7 +60,6 @@ const Feedback = (props) => {
   const hasReason = useRef(false);
   const [rating, setRating] = useState(0);
   const hasRating = useRef(false);
-  const prevOtherReason = useRef(null);
 
   const db = props.db;
   const clientadd = props.clientadd;
