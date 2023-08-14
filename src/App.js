@@ -426,41 +426,6 @@ const App = () => {
   };
 
   const jumpToPageInTopk = (pageIndex) => {
-    // setLoadingTopkPage(true);
-    // setHavePlayoutUrl(false);
-    // try {
-    //   for (let i = 0; i < topk.current[pageIndex].length; i++) {
-    //     if (!topk.current[pageIndex][i].processed) {
-    //       const objectId = topk.current[pageIndex][i].id;
-    //       if (objectId in playoutUrlMemo.current) {
-    //         topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
-    //       } else {
-    //         const videoUrl = await getPlayoutUrl({
-    //           client: client.current,
-    //           objectId,
-    //         });
-    //         topk.current[pageIndex][i].url = videoUrl;
-    //         if (videoUrl !== null) {
-    //           playoutUrlMemo.current[objectId] = videoUrl;
-    //         }
-    //       }
-    //       if (topk.current[pageIndex][i].url !== null) {
-    //         topk.current[pageIndex][i].processed = true;
-    //       }
-    //     }
-    //   }
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(true);
-    //   setDisplayingContents(topk.current[pageIndex]);
-    // } catch (err) {
-    //   console.log(err);
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(false);
-    //   setDisplayingContents([]);
-    //   setErr(true);
-    //   setErrMsg("Loading playout url for contents on this page went wrong");
-    // }
-
     // after replacing the player, we do not need to load the url explicitly
     setLoadingTopkPage(false);
     setHavePlayoutUrl(true);
@@ -468,61 +433,6 @@ const App = () => {
   };
 
   const jumpToContent = (objectId) => {
-    // try {
-    //   // loading playout url for each clip res
-    //   setHavePlayoutUrl(false);
-    //   setLoadingPlayoutUrl(true);
-    //   currentPage.current = 1;
-    //   const clips_per_content = contents.current;
-    //   if (clips_per_content[objectId].processed) {
-    //     // if it is processed, just return that
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   } else {
-    //     // get the possible offerings
-    //     let videoUrl = "";
-    //     if (objectId in playoutUrlMemo.current) {
-    //       videoUrl = playoutUrlMemo.current[objectId];
-    //     } else {
-    //       videoUrl = await getPlayoutUrl({
-    //         client: client.current,
-    //         objectId,
-    //       });
-    //       if (videoUrl !== null) {
-    //         playoutUrlMemo.current[objectId] = videoUrl;
-    //       }
-    //     }
-    //     for (let pageIndex in clips_per_content[objectId].clips) {
-    //       for (let item of clips_per_content[objectId].clips[pageIndex]) {
-    //         item.url = videoUrl;
-    //       }
-    //     }
-    //     if (videoUrl !== null) {
-    //       clips_per_content[objectId].processed = true;
-    //     }
-    //     contents.current = clips_per_content;
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   }
-    // } catch (err) {
-    //   console.log(`Error message : ${err.message} - `, err.code);
-    //   setLoadingPlayoutUrl(false);
-    //   setHavePlayoutUrl(false);
-    //   setErrMsg("Playout URL error");
-    //   setErr(true);
-    //   return null;
-    // }
-
     // after replacing the player, we do not need to load the url explicitly
     currentPage.current = 1;
     numPages.current = Object.keys(contents.current[objectId].clips).length;
