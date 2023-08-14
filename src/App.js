@@ -257,13 +257,14 @@ const App = () => {
 
   //initialize the DB and store the useradd
   useEffect(() => {
-    try {
-      initializeApp(firebaseConfig);
-      db.current = getFirestore();
-    } catch (err) {
-      console.log("Error occured when initializing the DB");
-      console.log(err);
-    }
+    // disable firebase store in this branch
+    // try {
+    //   initializeApp(firebaseConfig);
+    //   db.current = getFirestore();
+    // } catch (err) {
+    //   console.log("Error occured when initializing the DB");
+    //   console.log(err);
+    // }
 
     getClient();
     try {
