@@ -123,12 +123,11 @@ export const createSearchUrl = async ({
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        semantic: true,
         display_fields: "all",
         clips: true,
         scored: true,
         clips_include_source_tags: true,
-        clips_max_duration: 55
+        clips_max_duration: 55,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
