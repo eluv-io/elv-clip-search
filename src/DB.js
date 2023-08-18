@@ -15,6 +15,7 @@ import {
   orderBy,
   limit,
   connectFirestoreEmulator,
+  serverTimestamp,
 } from "firebase/firestore";
 
 class DB {
@@ -52,19 +53,20 @@ class DB {
   async setUser({ clientAddr }) {
     if (this.db !== null) {
       try {
-        const userDocRef = doc(this.db, "User", clientAddr);
+        const userDocRef = doc(this.db, "user", clientAddr);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           console.log("User already exists");
+          await updateDoc(userDocRef, { userLoginTime: serverTimestamp() });
         } else {
           await setDoc(userDocRef, {
-            Client_address: clientAddr,
-            Wallet_id: null,
-            Email_add: null,
-            Creation_time: null,
-            Updated_time: null,
-            Personal_info: {},
+            walletAddress: clientAddr,
+            emailAddress: null,
+            userCreateTime: null,
+            userLoginTime: serverTimestamp(), //last login time
+            userInformation: {},
           });
+          console.log("New user added");
         }
       } catch (err) {
         console.log("Err: Save user into DB failed");
@@ -105,22 +107,26 @@ class DB {
     fuzzySearchPhrase,
     fuzzySearchFields,
     searchKeywords,
+    searchObjId,
+    tenantID,
   }) {
     if (this.db !== null) {
       try {
-        const colRef = collection(this.db, "Search_history");
+        const colRef = collection(this.db, "searchHistory");
         const now = Timestamp.now().toDate().toUTCString();
         const docRef = await addDoc(colRef, {
-          client: clientAddr,
-          search_time: now,
+          walletAddress: clientAddr,
+          searchTime: now,
+          searchIndex: searchObjId,
+          tenantAddress: tenantID,
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchFields,
           searchKeywords: searchKeywords,
         });
-        console.log(`search history updated with docID ${docRef.id}`);
+        console.log(`DB: Search history updated with docID ${docRef.id}`);
         return docRef.id;
       } catch (err) {
-        console.log("Err: Store the search history failed");
+        console.log("Error: Failed to Store the search history");
         console.log(err);
         return null;
       }

@@ -197,6 +197,7 @@ const App = () => {
   const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
+  const [tenId, setTenId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
   const [displayingContents, setDisplayingContents] = useState([]);
@@ -242,26 +243,26 @@ const App = () => {
 
   const engagement = useRef({});
 
-  //initialize the DB and store the useradd
-  // TODO
+  //initialize the DB and store the wallet_address and tenancy
   useEffect(() => {
-    try {
-      const _dbClient = getDBClient();
-      if (_dbClient == null) return;
-      getClient()
-        .CurrentAccountAddress()
-        .then(async (addr) => {
-          clientAddr.current = addr;
-          await _dbClient.setUser({ clientAddr: addr });
-        })
-        .catch((err) => {
-          console.log(`Err: Get client account address failed`);
-          console.log(err);
-        });
-    } catch (err) {
-      console.log("Error occured when storing the user info");
-      console.error(err);
-    }
+    const storeUserInfo = async () => {
+      try {
+        const _dbClient = getDBClient();
+        if (_dbClient == null) return;
+
+        const addr = await getClient().CurrentAccountAddress();
+        clientAddr.current = addr;
+        await _dbClient.setUser({ clientAddr: addr });
+      } catch (err) {
+        if (err.message.include("wallet")) {
+          console.log(`Error: getting user wallet address failed`);
+        } else {
+          console.log("Error occured when storing the user info");
+        }
+        console.error(err);
+      }
+    };
+    storeUserInfo();
   }, []);
 
   const resetLoadStatus = () => {
@@ -295,7 +296,7 @@ const App = () => {
         dbClient.current = _dbClient;
         return _dbClient;
       } catch (err) {
-        console.log(`Err: Creating the DB client failed`);
+        console.log(`Error occurred when creating the DB client failed`);
         return null;
       }
     } else {
@@ -442,6 +443,8 @@ const App = () => {
               fuzzySearchFields: fuzzySearchField,
               fuzzySearchPhrase: fuzzySearchPhrase,
               searchKeywords: searchTerms,
+              searchObjId: objId,
+              tenantID: tenId,
             });
             if (_searchId !== null) {
               searchId.current = _searchId;
@@ -513,6 +516,7 @@ const App = () => {
           setErr(true);
           setErrMsg("Invalid search index Id");
         }
+
         if (libId !== "") {
           try {
             setLibId(libId);
@@ -546,6 +550,15 @@ const App = () => {
             setErrMsg(
               "Permission Error, check you account and the input index please"
             );
+          }
+          try {
+            let fetchedTenId = "";
+            fetchedTenId = await client.ContentObjectTenantId({
+              [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+            });
+            setTenId(fetchedTenId);
+          } catch (err) {
+            console.log("Error: TenantID is not available");
           }
         }
       }}
