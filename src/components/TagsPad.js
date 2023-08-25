@@ -190,30 +190,13 @@ const TagsPad = (props) => {
                 shotID: shotID,
                 tagIdx: idx,
               };
-              const textLowerCase = text.toLowerCase();
-              if (textLowerCase in tagsTimeLine.current) {
-                tagsTimeLine.current[textLowerCase].push({
-                  start: Math.max(
-                    0,
-                    Math.floor(
-                      (v.start_time - props.clipInfo.start_time) / 1000
-                    )
-                  ),
-                  end: v.end_time - props.clipInfo.start_time,
-                });
-              } else {
+              if (
+                !tags.current[k].some(
+                  (dictionary) =>
+                    dictionary.status.toLowerCase() === tag.status.toLowerCase()
+                )
+              ) {
                 tags.current[k].push(tag);
-                tagsTimeLine.current[textLowerCase] = [
-                  {
-                    start: Math.max(
-                      0,
-                      Math.floor(
-                        (v.start_time - props.clipInfo.start_time) / 1000
-                      )
-                    ),
-                    end: v.end_time - props.clipInfo.start_time,
-                  },
-                ];
               }
 
               shot.tags.push({
@@ -243,14 +226,30 @@ const TagsPad = (props) => {
                   shotID: shotID,
                   tagIdx: idx,
                 };
-                if (
-                  !tags.current[k].some(
-                    (dictionary) =>
-                      dictionary.status.toLowerCase() ===
-                      tag.status.toLowerCase()
-                  )
-                ) {
+                const textLowerCase = text.toLowerCase();
+                if (textLowerCase in tagsTimeLine.current) {
+                  tagsTimeLine.current[textLowerCase].push({
+                    start: Math.max(
+                      0,
+                      Math.floor(
+                        (v.start_time - props.clipInfo.start_time) / 1000
+                      )
+                    ),
+                    end: v.end_time - props.clipInfo.start_time,
+                  });
+                } else {
                   tags.current[k].push(tag);
+                  tagsTimeLine.current[textLowerCase] = [
+                    {
+                      start: Math.max(
+                        0,
+                        Math.floor(
+                          (v.start_time - props.clipInfo.start_time) / 1000
+                        )
+                      ),
+                      end: v.end_time - props.clipInfo.start_time,
+                    },
+                  ];
                 }
 
                 shot.tags.push({
@@ -438,9 +437,12 @@ const TagsPad = (props) => {
                     <button
                       style={{ border: "none", backgroundColor: "transparent" }}
                       onClick={() => {
-                        displayTimeLine.current[t.status.toLowerCase()] =
-                          !displayTimeLine.current[t.status.toLowerCase()];
-                        setRefresh((e) => !e);
+                        const _text = t.status.toLowerCase();
+                        if (_text in tagsTimeLine.current) {
+                          displayTimeLine.current[_text] =
+                            !displayTimeLine.current[_text];
+                          setRefresh((e) => !e);
+                        }
                       }}
                     >
                       {t.status}

@@ -239,6 +239,7 @@ const ClipRes = (props) => {
         searchID={props.searchID}
         prevS={shots}
         videoElementRef={videoElementRef}
+        searchVersion={props.searchVersion}
       ></QAPad>
     </div>
   );
