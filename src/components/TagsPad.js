@@ -9,41 +9,76 @@ import {
 } from "react-icons/bi";
 
 const TagsPad = (props) => {
-  const tags = useRef({
-    "Celebrity Detection": [],
-    "Landmark Recognition": [],
-    "Logo Detection": [],
-    "Object Detection": [],
-    "Optical Character Recognition": [],
-    "Segment Labels": [],
-    "Speech to Text": [],
-  });
+  const tags = useRef(
+    props.searchVersion === "v2"
+      ? {
+          f_celebrity: [],
+          f_landmark: [],
+          f_logo: [],
+          f_object: [],
+          f_characters: [],
+          f_segment: [],
+          f_speech_to_text: [],
+        }
+      : {
+          "Celebrity Detection": [],
+          "Landmark Recognition": [],
+          "Logo Detection": [],
+          "Object Detection": [],
+          "Optical Character Recognition": [],
+          "Segment Labels": [],
+          "Speech to Text": [],
+        }
+  );
 
   const shots = useRef({});
 
-  const tagsMap = {
-    "Celebrity Detection": "Celebrity",
-    "Landmark Recognition": "LandMark",
-    "Logo Detection": "logo",
-    "Object Detection": "Object",
-    "Optical Character Recognition": "OCR",
-    "Segment Labels": "Segment",
-    "Speech to Text": "STT",
-  };
+  const tagsMap =
+    props.searchVersion === "v2"
+      ? {
+          f_celebrity: "Celebrity",
+          f_landmark: "LandMark",
+          f_logo: "Logo",
+          f_object: "Object",
+          f_characters: "OCR",
+          f_segment: "Segment",
+          f_speech_to_text: "STT",
+        }
+      : {
+          "Celebrity Detection": "Celebrity",
+          "Landmark Recognition": "LandMark",
+          "Logo Detection": "Logo",
+          "Object Detection": "Object",
+          "Optical Character Recognition": "OCR",
+          "Segment Labels": "Segment",
+          "Speech to Text": "STT",
+        };
 
-  const [show, setShow] = useState({
-    "Celebrity Detection": true,
-    "Landmark Recognition": true,
-    "Logo Detection": true,
-    "Object Detection": true,
-    "Optical Character Recognition": true,
-    "Segment Labels": true,
-    "Speech to Text": true,
-  });
+  const [show, setShow] = useState(
+    props.searchVersion === "v2"
+      ? {
+          f_celebrity: true,
+          f_landmark: true,
+          f_logo: true,
+          f_object: true,
+          f_characters: true,
+          f_segment: true,
+          f_speech_to_text: true,
+        }
+      : {
+          "Celebrity Detection": true,
+          "Landmark Recognition": true,
+          "Logo Detection": true,
+          "Object Detection": true,
+          "Optical Character Recognition": true,
+          "Segment Labels": true,
+          "Speech to Text": true,
+        }
+  );
 
   const tagsTimeLine = useRef({});
   const displayTimeLine = useRef({});
-  const [refresh, setRefresh] = useState(false);
+  const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
   const db = props.db;
 
@@ -51,8 +86,8 @@ const TagsPad = (props) => {
     console.log("parsing tags");
     try {
       prepareTags().then(() => {
+        console.log("Before clicking", props.prevS.current);
         setTagsReady(true);
-        setRefresh((v) => !v);
       });
     } catch (err) {
       console.log(err);
@@ -64,10 +99,10 @@ const TagsPad = (props) => {
   };
 
   const pushShotToDB = (shot) => {
-    console.log("pushing shot into DB ...... ");
     if (db === null) {
       return;
     }
+    console.log("pushing shot into DB ...... ");
     const shotInfoRef = collection(db, "Shot_info");
     const shotRef = doc(shotInfoRef, shot.shotID);
     getDoc(shotRef).then((s) => {
@@ -104,13 +139,23 @@ const TagsPad = (props) => {
   };
 
   const prepareTags = async () => {
-    const _hasTags = "text" in props.clipInfo.sources[0].document;
+    const _hasTags =
+      props.searchVersion === "v2"
+        ? "f_start_time" in props.clipInfo.sources[0].fields &&
+          "f_end_time" in props.clipInfo.sources[0].fields
+        : "text" in props.clipInfo.sources[0].document;
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
-        const currdoc = src.document;
-        const shotStart = currdoc.start_time;
-        const shotEnd = currdoc.end_time;
+        const currdoc =
+          props.searchVersion === "v2" ? src.fields : src.document;
+        console.log(currdoc);
+        const shotStart =
+          props.searchVersion === "v2"
+            ? currdoc.f_start_time
+            : currdoc.start_time;
+        const shotEnd =
+          props.searchVersion === "v2" ? currdoc.f_end_time : currdoc.end_time;
         const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
         const shot = {
           iqHash: iqHash,
@@ -122,10 +167,14 @@ const TagsPad = (props) => {
 
         // tag index inside one shot
         // since tags in shot is saved as a list, can use this index directly target at that tag
-        let idx = 0;
-        for (let k in tags.current) {
-          for (let v of currdoc.text[k]) {
-            for (let text of v.text) {
+        if (props.searchVersion === "v2") {
+          let idx = 0;
+          for (let k in tags.current) {
+            if (!(k in currdoc)) {
+              continue;
+            }
+            for (let i in currdoc[k]) {
+              let text = currdoc[k][i];
               let dislikeState = 0;
               if (shotID in props.prevS.current) {
                 const prevDislike =
@@ -134,7 +183,7 @@ const TagsPad = (props) => {
                   dislikeState = prevDislike[props.searchID.current];
                 }
               }
-              const dic = {
+              const tag = {
                 track: k,
                 status: text,
                 dislike: dislikeState,
@@ -153,7 +202,7 @@ const TagsPad = (props) => {
                   end: v.end_time - props.clipInfo.start_time,
                 });
               } else {
-                tags.current[k].push(dic);
+                tags.current[k].push(tag);
                 tagsTimeLine.current[textLowerCase] = [
                   {
                     start: Math.max(
@@ -174,7 +223,47 @@ const TagsPad = (props) => {
               idx = idx + 1;
             }
           }
+        } else {
+          let idx = 0;
+          for (let k in tags.current) {
+            for (let v of currdoc.text[k]) {
+              for (let text of v.text) {
+                let dislikeState = 0;
+                if (shotID in props.prevS.current) {
+                  const prevDislike =
+                    props.prevS.current[shotID].tags[idx].feedback;
+                  if (props.searchID.current in prevDislike) {
+                    dislikeState = prevDislike[props.searchID.current];
+                  }
+                }
+                const tag = {
+                  track: k,
+                  status: text,
+                  dislike: dislikeState,
+                  shotID: shotID,
+                  tagIdx: idx,
+                };
+                if (
+                  !tags.current[k].some(
+                    (dictionary) =>
+                      dictionary.status.toLowerCase() ===
+                      tag.status.toLowerCase()
+                  )
+                ) {
+                  tags.current[k].push(tag);
+                }
+
+                shot.tags.push({
+                  status: { track: k, text: text, idx: idx },
+                  feedback: { [props.searchID.current]: dislikeState },
+                });
+
+                idx = idx + 1;
+              }
+            }
+          }
         }
+
         shots.current[shotID] = shot;
         pushShotToDB(shot);
       }
@@ -186,7 +275,7 @@ const TagsPad = (props) => {
   };
 
   const collect = async (lst, t, score) => {
-    console.log("You disliked me");
+    console.log("Reviewed tag");
     const shotID = t.shotID;
     const currTags = shots.current[shotID].tags;
     const allIndices = currTags.reduce((indices, dic, idx) => {
@@ -203,49 +292,51 @@ const TagsPad = (props) => {
     const idx = lst.findIndex((dic) => dic.status === t.status);
     lst[idx].dislike = score;
     setRefresh((v) => !v);
-    pushShotToDB(shots.current[shotID]);
 
-    const clipInfo = props.clipInfo;
-    const clipRank = clipInfo.rank;
-    const clipStart = clipInfo.start;
-    const clipEnd = clipInfo.end;
-    const contentHash = clipInfo.hash;
+    if (db !== null) {
+      pushShotToDB(shots.current[shotID]);
 
-    try {
-      const clipInfoRef = collection(db, "Clip_info");
-      const clipRef = doc(
-        clipInfoRef,
-        contentHash + "_" + clipStart + "-" + clipEnd
-      );
-      const clip = await getDoc(clipRef);
-      if (!clip.exists()) {
-        setDoc(clipRef, {
-          contentHash: contentHash,
-          start_time: clipStart,
-          end_time: clipEnd,
-          rank: [{ searchID: props.searchID.current, rank: clipRank }],
-          shots: Object.keys(shots.current),
-        }).then(() => {
-          console.log("clip stored successfully!");
-        });
-      } else {
-        const tempRank = clip.data().rank;
-        if (
-          !(
-            tempRank[tempRank.length - 1].rank === clipRank &&
-            tempRank[tempRank.length - 1].searchID === props.searchID.current
-          )
-        ) {
-          tempRank.push({ searchID: props.searchID.current, rank: clipRank });
-          updateDoc(clipRef, {
-            rank: tempRank,
+      const clipInfo = props.clipInfo;
+      const clipRank = clipInfo.rank;
+      const clipStart = clipInfo.start;
+      const clipEnd = clipInfo.end;
+      const contentHash = clipInfo.hash;
+      try {
+        const clipInfoRef = collection(db, "Clip_info");
+        const clipRef = doc(
+          clipInfoRef,
+          contentHash + "_" + clipStart + "-" + clipEnd
+        );
+        const clip = await getDoc(clipRef);
+        if (!clip.exists()) {
+          setDoc(clipRef, {
+            contentHash: contentHash,
+            start_time: clipStart,
+            end_time: clipEnd,
+            rank: [{ searchID: props.searchID.current, rank: clipRank }],
+            shots: Object.keys(shots.current),
           }).then(() => {
-            console.log("clip rank updated successfully!");
+            console.log("clip stored successfully!");
           });
+        } else {
+          const tempRank = clip.data().rank;
+          if (
+            !(
+              tempRank[tempRank.length - 1].rank === clipRank &&
+              tempRank[tempRank.length - 1].searchID === props.searchID.current
+            )
+          ) {
+            tempRank.push({ searchID: props.searchID.current, rank: clipRank });
+            updateDoc(clipRef, {
+              rank: tempRank,
+            }).then(() => {
+              console.log("clip rank updated successfully!");
+            });
+          }
         }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
     }
   };
 
