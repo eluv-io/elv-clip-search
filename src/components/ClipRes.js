@@ -3,7 +3,6 @@ import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
-
 const container = {
   width: "97%",
   height: 900,
@@ -153,44 +152,51 @@ const ClipRes = (props) => {
     if (!element || player) {
       return;
     }
-
-    setPlayer(
-      new EluvioPlayer(element, {
-        clientOptions: {
-          network:
-            EluvioPlayerParameters.networks[
-              props.network === "main" ? "MAIN" : "DEMO"
-            ],
-          client: props.client,
+    const _player = new EluvioPlayer(element, {
+      clientOptions: {
+        network:
+          EluvioPlayerParameters.networks[
+            props.network === "main" ? "MAIN" : "DEMO"
+          ],
+        client: props.client,
+      },
+      sourceOptions: {
+        playoutParameters: {
+          versionHash: props.clipInfo.hash,
+          clipStart: props.clipInfo.start_time / 1000,
+          clipEnd: props.clipInfo.end_time / 1000,
+          ignoreTrimming: true,
         },
-        sourceOptions: {
-          playoutParameters: {
-            versionHash: props.clipInfo.hash,
-            clipStart: props.clipInfo.start_time / 1000,
-            clipEnd: props.clipInfo.end_time / 1000,
-            ignoreTrimming: true,
-          },
-        },
-        playerOptions: {
-          controls: EluvioPlayerParameters.controls.AUTO_HIDE,
-          playerCallback: ({ videoElement }) => {
-            videoElement.style.height = "100%";
-            videoElement.style.width = "100%";
-            videoElement.addEventListener("play", () => {
-              handleStart(videoElement.currentTime);
-            });
-            videoElement.addEventListener("pause", () => {
-              handlePause(videoElement.currentTime);
-            });
-            videoElement.addEventListener("seeking", () => {
-              if (!videoElement.paused) {
-                videoElement.pause();
-              }
-            });
-          },
-        },
-      })
-    );
+      },
+      playerOptions:
+        props.searchVersion === "v2" &&
+        props.clipInfo.start === "0s" &&
+        props.clipInfo.end === "0s"
+          ? {
+              posterUrl:
+                "https://www.google.com.hk/imgres?imgurl=https%3A%2F%2Frepository-images.githubusercontent.com%2F37153337%2F9d0a6780-394a-11eb-9fd1-6296a684b124&tbnid=DsvLYLjZwvq-iM&vet=12ahUKEwihhYizsYOBAxWFmicCHY55Ai8QMygCegQIARBJ..i&imgrefurl=https%3A%2F%2Fgithub.com%2Ftopics%2Freact-ui&docid=M1moFgs7SxjabM&w=1200&h=665&q=react&ved=2ahUKEwihhYizsYOBAxWFmicCHY55Ai8QMygCegQIARBJ",
+            }
+          : {
+              controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+              playerCallback: ({ videoElement }) => {
+                videoElement.style.height = "100%";
+                videoElement.style.width = "100%";
+                videoElement.addEventListener("play", () => {
+                  handleStart(videoElement.currentTime);
+                });
+                videoElement.addEventListener("pause", () => {
+                  handlePause(videoElement.currentTime);
+                });
+                videoElement.addEventListener("seeking", () => {
+                  if (!videoElement.paused) {
+                    videoElement.pause();
+                  }
+                });
+              },
+            },
+    });
+    console.log(_player);
+    setPlayer(_player);
   };
 
   return (
