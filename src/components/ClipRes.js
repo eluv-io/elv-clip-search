@@ -65,6 +65,9 @@ const ClipRes = (props) => {
   const shots = useRef({});
   const clipRecorded = useRef(false);
   const dislikedTags = useRef([]);
+  const [imgUrl, setImgUrl] = useState("");
+  const [loadingImgUrl, setLoadingImgUrl] = useState(false);
+  const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url =
     props.clipInfo.url === null
       ? null
@@ -72,6 +75,32 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
+
+  useEffect(() => {
+    if (Object.keys(props.clipInfo.meta).length === 0) {
+      console.log("Loading Img Url");
+      setLoadingImgUrl(true);
+      setLoadingImgUrlErr(false);
+      setImgUrl("");
+      props.client
+        .ContentObjectImageUrl({
+          libraryId: props.clipInfo.qlib_id,
+          objectId: props.clipInfo.id,
+          imagePath: `${props.clipInfo.sources[0].prefix}/file`,
+        })
+        .then((url) => {
+          setLoadingImgUrl(false);
+          setLoadingImgUrlErr(false);
+          console.log(url);
+          setImgUrl(url);
+        })
+        .catch((err) => {
+          setLoadingImgUrl(false);
+          setLoadingImgUrlErr(true);
+          console.log(err);
+        });
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -168,32 +197,24 @@ const ClipRes = (props) => {
           ignoreTrimming: true,
         },
       },
-      playerOptions:
-        props.searchVersion === "v2" &&
-        props.clipInfo.start === "0s" &&
-        props.clipInfo.end === "0s"
-          ? {
-              posterUrl:
-                "https://www.google.com.hk/imgres?imgurl=https%3A%2F%2Frepository-images.githubusercontent.com%2F37153337%2F9d0a6780-394a-11eb-9fd1-6296a684b124&tbnid=DsvLYLjZwvq-iM&vet=12ahUKEwihhYizsYOBAxWFmicCHY55Ai8QMygCegQIARBJ..i&imgrefurl=https%3A%2F%2Fgithub.com%2Ftopics%2Freact-ui&docid=M1moFgs7SxjabM&w=1200&h=665&q=react&ved=2ahUKEwihhYizsYOBAxWFmicCHY55Ai8QMygCegQIARBJ",
+      playerOptions: {
+        controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+        playerCallback: ({ videoElement }) => {
+          videoElement.style.height = "100%";
+          videoElement.style.width = "100%";
+          videoElement.addEventListener("play", () => {
+            handleStart(videoElement.currentTime);
+          });
+          videoElement.addEventListener("pause", () => {
+            handlePause(videoElement.currentTime);
+          });
+          videoElement.addEventListener("seeking", () => {
+            if (!videoElement.paused) {
+              videoElement.pause();
             }
-          : {
-              controls: EluvioPlayerParameters.controls.AUTO_HIDE,
-              playerCallback: ({ videoElement }) => {
-                videoElement.style.height = "100%";
-                videoElement.style.width = "100%";
-                videoElement.addEventListener("play", () => {
-                  handleStart(videoElement.currentTime);
-                });
-                videoElement.addEventListener("pause", () => {
-                  handlePause(videoElement.currentTime);
-                });
-                videoElement.addEventListener("seeking", () => {
-                  if (!videoElement.paused) {
-                    videoElement.pause();
-                  }
-                });
-              },
-            },
+          });
+        },
+      },
     });
     console.log(_player);
     setPlayer(_player);
@@ -203,11 +224,44 @@ const ClipRes = (props) => {
     <div style={container}>
       <div style={videoContainer}>
         <div style={videoTitleContainer}>
-          {props.clipInfo.meta.public.asset_metadata.title}
+          {"public" in props.clipInfo.meta
+            ? props.clipInfo.meta.public.asset_metadata.title
+            : props.clipInfo.sources[0]["prefix"].split("/")[1]}
         </div>
         <div style={videoPlayerContainer}>
           {url !== null ? (
-            <div ref={(element) => InitializeVideo({ element })}></div>
+            "public" in props.clipInfo.meta ? (
+              <div ref={(element) => InitializeVideo({ element })}></div>
+            ) : (
+              <div
+                style={{
+                  width: "auto",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {loadingImgUrl ? (
+                  "Loading Img Url"
+                ) : loadingImgUrlErr ? (
+                  "loading Img Url err"
+                ) : (
+                  <img
+                    style={{
+                      width: "auto",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    src={imgUrl}
+                  ></img>
+                )}
+              </div>
+            )
           ) : (
             <div
               style={{

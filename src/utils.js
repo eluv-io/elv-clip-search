@@ -43,7 +43,9 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
       idNameMap[item["id"]] =
-        item.meta.public.asset_metadata.title.split(",")[0];
+        "public" in item.meta
+          ? item.meta.public.asset_metadata.title.split(",")[0]
+          : item.sources[0]["prefix"].split("/")[1];
       // set the first content to be current content
       if (firstContent === "") {
         firstContent = item["id"];
