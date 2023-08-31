@@ -230,7 +230,7 @@ const ClipRes = (props) => {
         <div style={videoTitleContainer}>
           {"public" in props.clipInfo.meta
             ? props.clipInfo.meta.public.asset_metadata.title
-            : props.clipInfo.sources[0]["prefix"].split("/")[1]}
+            : props.clipInfo.sources[0]["prefix"].split("/")[2]}
         </div>
         <div style={videoPlayerContainer}>
           {url !== null ? (
