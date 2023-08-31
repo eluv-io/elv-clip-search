@@ -138,11 +138,11 @@ const TagsPad = (props) => {
   const prepareTags = async () => {
     const _hasTags =
       props.searchVersion === "v2"
-        ? ("f_start_time" in props.clipInfo.sources[0].fields &&
-            "f_end_time" in props.clipInfo.sources[0].fields) ||
-          ("f_image_height" in props.clipInfo.sources[0].fields &&
-            "f_image_width" in props.clipInfo.sources[0].fields)
+        ? Object.keys(props.clipInfo.sources[0].fields).some((k) => {
+            return k in tags.current;
+          })
         : "text" in props.clipInfo.sources[0].document;
+
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
       for (let src of props.clipInfo.sources) {
