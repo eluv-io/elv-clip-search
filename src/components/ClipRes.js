@@ -77,7 +77,11 @@ const ClipRes = (props) => {
   const [player, setPlayer] = useState(undefined);
 
   useEffect(() => {
-    if (Object.keys(props.clipInfo.meta).length === 0) {
+    if (
+      props.searchVersion === "v2" &&
+      props.clipInfo.start === "0s" &&
+      props.clipInfo.end === "0s"
+    ) {
       console.log("Loading Img Url");
       setLoadingImgUrl(true);
       setLoadingImgUrlErr(false);
@@ -230,9 +234,9 @@ const ClipRes = (props) => {
         </div>
         <div style={videoPlayerContainer}>
           {url !== null ? (
-            "public" in props.clipInfo.meta ? (
-              <div ref={(element) => InitializeVideo({ element })}></div>
-            ) : (
+            props.searchVersion === "v2" &&
+            props.clipInfo.start === "0s" &&
+            props.clipInfo.end === "0s" ? (
               <div
                 style={{
                   width: "auto",
@@ -261,6 +265,8 @@ const ClipRes = (props) => {
                   ></img>
                 )}
               </div>
+            ) : (
+              <div ref={(element) => InitializeVideo({ element })}></div>
             )
           ) : (
             <div
