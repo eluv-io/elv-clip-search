@@ -204,6 +204,13 @@ const App = () => {
     "segment",
     "speech_to_text",
   ];
+  const ASSETS_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+  ];
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
@@ -212,6 +219,7 @@ const App = () => {
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
+  const [searchAssets, setSearchAssets] = useState(false);
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
 
@@ -473,6 +481,7 @@ const App = () => {
         search,
         fuzzySearchPhrase,
         fuzzySearchField,
+        searchAssets,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -597,20 +606,43 @@ const App = () => {
             if (searchObjMeta["version"] === "2.0") {
               setShowFuzzy(true);
               searchVersion.current = "v2";
+              try {
+                const indexerType =
+                  searchObjMeta["config"]["indexer"]["arguments"]["document"][
+                    "prefix"
+                  ];
+                if (indexerType.includes("assets")) {
+                  setSearchAssets(true);
+                }
+              } catch (error) {
+                console.log(error);
+              }
             } else {
               setShowFuzzy(false);
               setShowTopk(false);
               searchVersion.current = "v1";
             }
-            filteredSearchFields.current = Object.keys(
-              searchObjMeta.config.indexer.arguments.fields
-            )
-              .filter((n) => {
-                return ALL_SEARCH_FIELDS.includes(n);
-              })
-              .map((n) => {
-                return `f_${n}`;
-              });
+            if (searchAssets === true) {
+              filteredSearchFields.current = Object.keys(
+                searchObjMeta.config.indexer.arguments.fields
+              )
+                .filter((n) => {
+                  return ASSETS_SEARCH_FIELDS.includes(n);
+                })
+                .map((n) => {
+                  return `f_${n}`;
+                });
+            } else {
+              filteredSearchFields.current = Object.keys(
+                searchObjMeta.config.indexer.arguments.fields
+              )
+                .filter((n) => {
+                  return ALL_SEARCH_FIELDS.includes(n);
+                })
+                .map((n) => {
+                  return `f_${n}`;
+                });
+            }
             setLoadingSearchVersion(false);
             setHaveSearchVersion(true);
           } catch (err) {

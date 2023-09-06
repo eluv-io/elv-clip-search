@@ -89,6 +89,7 @@ export const createSearchUrl = async ({
   search,
   fuzzySearchPhrase,
   fuzzySearchField,
+  searchAssets,
 }) => {
   try {
     if (searchVersion === "v1") {
@@ -145,6 +146,10 @@ export const createSearchUrl = async ({
       // if we do not have the exact match filters, we should enable semantic=true
       if (search === "") {
         queryParams.semantic = true;
+      }
+      // for assets index type, disable clip and relevant parms
+      if (searchAssets === true) {
+        queryParams.clips = false;
       }
       const url = await client.Rep({
         libraryId,
