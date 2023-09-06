@@ -211,6 +211,7 @@ const App = () => {
     "logo",
     "object",
   ];
+
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
@@ -219,7 +220,7 @@ const App = () => {
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
-  const [searchAssets, setSearchAssets] = useState(false);
+  const searchAssets = useRef(false);
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
 
@@ -612,7 +613,7 @@ const App = () => {
                     "prefix"
                   ];
                 if (indexerType.includes("assets")) {
-                  setSearchAssets(true);
+                  searchAssets.current = true
                 }
               } catch (error) {
                 console.log(error);
@@ -622,27 +623,15 @@ const App = () => {
               setShowTopk(false);
               searchVersion.current = "v1";
             }
-            if (searchAssets === true) {
-              filteredSearchFields.current = Object.keys(
-                searchObjMeta.config.indexer.arguments.fields
-              )
-                .filter((n) => {
-                  return ASSETS_SEARCH_FIELDS.includes(n);
-                })
-                .map((n) => {
-                  return `f_${n}`;
-                });
-            } else {
-              filteredSearchFields.current = Object.keys(
-                searchObjMeta.config.indexer.arguments.fields
-              )
-                .filter((n) => {
-                  return ALL_SEARCH_FIELDS.includes(n);
-                })
-                .map((n) => {
-                  return `f_${n}`;
-                });
-            }
+            const selectedFields = searchAssets.current
+              ? ASSETS_SEARCH_FIELDS
+              : ALL_SEARCH_FIELDS;
+            console.log("selectedFields", selectedFields);
+            filteredSearchFields.current = Object.keys(
+              searchObjMeta.config.indexer.arguments.fields
+            )
+              .filter((n) => selectedFields.includes(n))
+              .map((n) => `f_${n}`);
             setLoadingSearchVersion(false);
             setHaveSearchVersion(true);
           } catch (err) {

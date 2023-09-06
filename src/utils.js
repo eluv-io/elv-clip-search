@@ -148,7 +148,7 @@ export const createSearchUrl = async ({
         queryParams.semantic = true;
       }
       // for assets index type, disable clip and relevant parms
-      if (searchAssets === true) {
+      if (searchAssets.current === true) {
         queryParams.clips = false;
       }
       const url = await client.Rep({
