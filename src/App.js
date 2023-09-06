@@ -448,6 +448,7 @@ const App = () => {
 
   const jumpToContent = (objectId) => {
     // after replacing the player, we do not need to load the url explicitly
+    // display the given objectID content on page 1
     currentPage.current = 1;
     numPages.current = Object.keys(contents.current[objectId].clips).length;
     setLoadingPlayoutUrl(false);
@@ -522,13 +523,14 @@ const App = () => {
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
+          console.log("search assets", searchAssets);
           setTotalContent(
-            searchAssets
+            searchAssets.current
               ? searchRes["data"]["results"].length
               : searchRes["data"]["contents"].length
           );
           contents.current = clips_per_content;
-          console.log("num of results", clips_per_content);
+          console.log("contents", contents);
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
           firstContentToDisplay = firstContent;
@@ -940,11 +942,12 @@ const App = () => {
                   return (
                     <ClipRes
                       clipInfo={clip}
-                      key={clip.id + clip.start_time}
+                      key={clip.id + (clip.start_time || clip.rank)}
                       client={getClient()}
                       network={network.current}
                       clientadd={clientAdd.current}
                       searchID={searchID}
+                      searchAssets={searchAssets.current}
                       contents={contents.current}
                       db={db.current}
                       searchVersion={searchVersion.current}

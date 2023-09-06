@@ -75,13 +75,10 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
+  console.log("clipInfo", clipInfo);
 
   useEffect(() => {
-    if (
-      props.searchVersion === "v2" &&
-      props.clipInfo.start === "0s" &&
-      props.clipInfo.end === "0s"
-    ) {
+    if (props.searchVersion === "v2" && props.searchAssets === true) {
       console.log("Loading Img Url");
       setLoadingImgUrl(true);
       setLoadingImgUrlErr(false);
@@ -90,7 +87,7 @@ const ClipRes = (props) => {
         .ContentObjectImageUrl({
           libraryId: props.clipInfo.qlib_id,
           objectId: props.clipInfo.id,
-          imagePath: `${props.clipInfo.sources[0].prefix}/file`,
+          imagePath: `${props.clipInfo.prefix}/file`,
         })
         .then((url) => {
           setLoadingImgUrl(false);
@@ -230,13 +227,11 @@ const ClipRes = (props) => {
         <div style={videoTitleContainer}>
           {"public" in props.clipInfo.meta
             ? props.clipInfo.meta.public.asset_metadata.title
-            : props.clipInfo.sources[0]["prefix"].split("/")[2]}
+            : props.clipInfo.prefix.split("/")[2]}
         </div>
         <div style={videoPlayerContainer}>
           {url !== null ? (
-            props.searchVersion === "v2" &&
-            props.clipInfo.start === "0s" &&
-            props.clipInfo.end === "0s" ? (
+            props.searchVersion === "v2" && props.searchAssets === true ? (
               <div
                 style={{
                   width: "auto",
@@ -250,7 +245,7 @@ const ClipRes = (props) => {
                 {loadingImgUrl ? (
                   "Loading Img Url"
                 ) : loadingImgUrlErr ? (
-                  "loading Img Url err"
+                  "Loading Img Url Error"
                 ) : (
                   <img
                     style={{
@@ -280,7 +275,7 @@ const ClipRes = (props) => {
                 justifyContent: "center",
               }}
             >
-              Playout URL Err
+              Playout URL Error
             </div>
           )}
         </div>
