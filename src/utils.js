@@ -7,7 +7,14 @@ export const toTimeString = (totalMiliSeconds) => {
   return result;
 };
 
-export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
+export const parseSearchRes = async (
+  searchResults,
+  TOPK,
+  CLIPS_PER_PAGE,
+  searchAssets,
+) => {
+  const data = searchAssets === true ? searchResults["results"] : searchResults["contents"];
+  console.log("search results", data);
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -148,7 +155,7 @@ export const createSearchUrl = async ({
         queryParams.semantic = true;
       }
       // for assets index type, disable clip and relevant parms
-      if (searchAssets.current === true) {
+      if (searchAssets === true) {
         queryParams.clips = false;
       }
       const url = await client.Rep({

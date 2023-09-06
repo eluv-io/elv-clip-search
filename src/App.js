@@ -482,7 +482,7 @@ const App = () => {
         search,
         fuzzySearchPhrase,
         fuzzySearchField,
-        searchAssets,
+        searchAssets: searchAssets.current,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -512,17 +512,23 @@ const App = () => {
             topkRes,
             topkCount,
           } = await parseSearchRes(
-            searchRes["data"]["contents"],
+            searchRes["data"],
             TOPK,
-            CLIPS_PER_PAGE
+            CLIPS_PER_PAGE,
+            searchAssets.current
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
-          setTotalContent(searchRes["data"]["contents"].length);
+          setTotalContent(
+            searchAssets
+              ? searchRes["data"]["results"].length
+              : searchRes["data"]["contents"].length
+          );
           contents.current = clips_per_content;
+          console.log("num of results", clips_per_content);
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
           firstContentToDisplay = firstContent;
@@ -607,13 +613,14 @@ const App = () => {
             if (searchObjMeta["version"] === "2.0") {
               setShowFuzzy(true);
               searchVersion.current = "v2";
+              searchAssets.current = false;
               try {
                 const indexerType =
                   searchObjMeta["config"]["indexer"]["arguments"]["document"][
                     "prefix"
                   ];
                 if (indexerType.includes("assets")) {
-                  searchAssets.current = true
+                  searchAssets.current = true;
                 }
               } catch (error) {
                 console.log(error);
