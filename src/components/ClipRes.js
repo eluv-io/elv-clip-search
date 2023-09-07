@@ -75,7 +75,6 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
-  console.log("clipInfo", clipInfo);
 
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === true) {
@@ -299,6 +298,7 @@ const ClipRes = (props) => {
         clientadd={props.clientadd}
         searchID={props.searchID}
         searchVersion={props.searchVersion}
+        searchAssets={props.searchAssets}
         viewTime={viewTime.current}
         contents={props.contents}
         dislikedTags={dislikedTags.current}
