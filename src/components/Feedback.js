@@ -23,8 +23,8 @@ const feedback = {
 
 const options = [
   { value: 0, label: "Please choose a reason" },
-  { value: 1, label: "Clip is irrelevant" },
-  { value: 2, label: "Clip is offensive" },
+  { value: 1, label: "Result is irrelevant" },
+  { value: 2, label: "Result is offensive" },
   { value: 3, label: "Perfect Match!" },
   { value: 4, label: "Others.." },
 ];

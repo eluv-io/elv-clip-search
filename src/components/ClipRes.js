@@ -92,6 +92,7 @@ const ClipRes = (props) => {
           setLoadingImgUrlErr(false);
           console.log("Loading Img Url", url);
           setImgUrl(url);
+          props.clipInfo.url = url;
         })
         .catch((err) => {
           setLoadingImgUrl(false);
@@ -215,7 +216,7 @@ const ClipRes = (props) => {
         },
       },
     });
-    console.log(_player);
+    console.log("EluvioPlayer", _player);
     setPlayer(_player);
   };
 
@@ -284,6 +285,7 @@ const ClipRes = (props) => {
             db={props.db}
             clientadd={props.clientadd}
             searchID={props.searchID}
+            searchAssets={props.searchAssets}
             viewTime={viewTime.current}
             contents={props.contents}
             searchVersion={props.searchVersion}
