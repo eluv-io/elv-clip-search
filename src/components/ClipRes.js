@@ -78,20 +78,19 @@ const ClipRes = (props) => {
 
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === true) {
-      console.log("Loading Img Url");
       setLoadingImgUrl(true);
       setLoadingImgUrlErr(false);
       setImgUrl("");
       props.client
-        .ContentObjectImageUrl({
+        .FileUrl({
           libraryId: props.clipInfo.qlib_id,
-          objectId: props.clipInfo.id,
-          imagePath: `${props.clipInfo.prefix}/file`,
+          versionHash: props.clipInfo.hash,
+          filePath: `${props.clipInfo.prefix}`,
         })
         .then((url) => {
           setLoadingImgUrl(false);
           setLoadingImgUrlErr(false);
-          console.log(url);
+          console.log("Loading Img Url", url);
           setImgUrl(url);
         })
         .catch((err) => {
