@@ -154,7 +154,7 @@ const TagsPad = (props) => {
 
       for (let src of sourceData) {
         let currdoc = props.searchVersion === "v2" ? src.fields : src.document;
-        console.log(currdoc);
+        console.log("currdoc", currdoc);
 
         let shotStart, shotEnd;
 
@@ -422,6 +422,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  key={t.idx}
                 >
                   {t.status}
                   <div>

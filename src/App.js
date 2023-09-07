@@ -530,7 +530,6 @@ const App = () => {
               : searchRes["data"]["contents"].length
           );
           contents.current = clips_per_content;
-          console.log("contents", contents);
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
           firstContentToDisplay = firstContent;

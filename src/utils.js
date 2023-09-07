@@ -17,7 +17,6 @@ export const parseSearchRes = async (
     searchAssets === true
       ? searchResults["results"]
       : searchResults["contents"];
-  console.log("search results", data);
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -78,7 +77,6 @@ export const parseSearchRes = async (
       clips_per_page[pageIndex].push(clips[i]);
     }
     clips_per_content[id].clips = clips_per_page;
-    console.log("clips_per_content", clips_per_content);
   }
   return {
     // the following three are for "group by content" display mode
