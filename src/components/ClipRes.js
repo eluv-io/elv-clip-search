@@ -65,7 +65,6 @@ const ClipRes = (props) => {
   const clipInfo = props.clipInfo;
   const shots = useRef({});
   const clipRecorded = useRef(false);
-  const dislikedTags = useRef([]);
   const url =
     props.clipInfo.url === null
       ? null
@@ -73,6 +72,7 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
+  const videoElementRef = useRef(undefined);
 
   useEffect(() => {
     return () => {
@@ -100,13 +100,15 @@ const ClipRes = (props) => {
     if (props.db !== null) {
       try {
         const shotInfoRef = collection(props.db, "Shot_info");
-        const _hasTags = "text" in props.clipInfo.sources[0].document;
+        const _hasTags =
+          "f_start_time" in props.clipInfo.sources[0].fields &&
+          "f_end_time" in props.clipInfo.sources[0].fields;
         if (_hasTags) {
           const iqHash = props.clipInfo.hash;
           for (let src of props.clipInfo.sources) {
-            const currdoc = src.document;
+            const currdoc = src.fields;
             const shotID = hash(
-              iqHash + "_" + currdoc.start_time + "-" + currdoc.end_time
+              iqHash + "_" + currdoc.f_start_time + "-" + currdoc.f_end_time
             );
             const shotRef = doc(shotInfoRef, shotID);
             getDoc(shotRef).then((shot) => {
@@ -172,6 +174,7 @@ const ClipRes = (props) => {
         playerOptions: {
           controls: EluvioPlayerParameters.controls.AUTO_HIDE,
           playerCallback: ({ videoElement }) => {
+            videoElementRef.current = videoElement;
             videoElement.style.height = "100%";
             videoElement.style.width = "100%";
             videoElement.addEventListener("play", () => {
@@ -233,28 +236,10 @@ const ClipRes = (props) => {
       <QAPad
         clipInfo={props.clipInfo}
         db={props.db}
-        clientadd={props.clientadd}
         searchID={props.searchID}
-        viewTime={viewTime.current}
-        contents={props.contents}
-        dislikedTags={dislikedTags.current}
-        dislikeTagHook={(id) => {
-          dislikedTags.current.push(id);
-        }}
-        updatePrevShots={(shotID, i, score) => {
-          if (shotID in shots.current) {
-            shots.current[shotID].tags[i].feedback[props.searchID.current] =
-              score;
-          }
-        }}
-        initializePrevShots={(shotID, tag) => {
-          shots.current[shotID].tags.push(tag);
-        }}
-        prevShots={shots.current}
-        setShots={(s) => {
-          shots.current = s;
-        }}
         prevS={shots}
+        videoElementRef={videoElementRef}
+        searchVersion={props.searchVersion}
       ></QAPad>
     </div>
   );

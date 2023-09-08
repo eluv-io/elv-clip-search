@@ -120,13 +120,14 @@ export const createSearchUrl = async ({
             : search === ""
             ? fuzzySearchPhrase
             : `((${fuzzySearchPhrase}) AND ${search})`,
-        select: "start_time,end_time,text,/public/asset_metadata/title",
+        select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        display_fields: "f_start_time,f_end_time",
+        display_fields: "all",
         clips: true,
         scored: true,
         clips_include_source_tags: true,
+        clips_max_duration: 55,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
