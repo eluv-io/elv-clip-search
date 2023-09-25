@@ -3,6 +3,7 @@ import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+import { getEmbedUrl } from "../utils";
 const container = {
   width: "97%",
   height: 900,
@@ -69,12 +70,7 @@ const ClipRes = (props) => {
   const [embedUrl, setEmbedUrl] = useState("");
   const [loadingImgUrl, setLoadingImgUrl] = useState(false);
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
-  const url =
-    props.clipInfo.url === null
-      ? null
-      : `${props.clipInfo.url}&resolve=false&clip_start=${
-          props.clipInfo.start_time / 1000
-        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const url = props.clipInfo.url;
   const [player, setPlayer] = useState(undefined);
   // debug line: keep it
   // console.log(JSON.stringify(props.client.AllowedMethods(), null, 2));
@@ -107,18 +103,35 @@ const ClipRes = (props) => {
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === false) {
       setEmbedUrl("");
-      props.client
-        .EmbedUrl({
-          objectId: props.clipInfo.id,
-          versionHash: props.clipInfo.hash,
-          duration: 7 * 24 * 60 * 60 * 1000,
-          clipStart: props.clipInfo.start_time,
-          clipEnd: props.clipInfo.f_end_time,
-        })
-        .then((embUrl) => {
-          setEmbedUrl(embUrl);
+      // props.client
+      //   .EmbedUrl({
+      //     objectId: props.clipInfo.id,
+      //     versionHash: props.clipInfo.hash,
+      //     duration: 7 * 24 * 60 * 60 * 1000,
+      //     clipStart: props.clipInfo.start_time,
+      //     clipEnd: props.clipInfo.f_end_time,
+      //   })
+      getEmbedUrl({
+        client: props.client,
+        objectId: props.clipInfo.id,
+        duration: 7 * 24 * 60 * 60 * 1000,
+        clipStart: props.clipInfo.start_time / 1000,
+        clipEnd: props.clipInfo.end_time / 1000,
+      })
+        .then((res) => {
+          if ("embedUrl" in res) {
+            setEmbedUrl(res["embedUrl"]);
+          } else {
+            // TODO if you would like to use playout url instead
+            if ("playoutUrl" in res) {
+              setEmbedUrl(res["playoutUrl"]);
+            } else {
+              setEmbedUrl("Can not create a playable url");
+            }
+          }
         })
         .catch((err) => {
+          setEmbedUrl("Create video url err");
           console.log(err);
         });
     }
