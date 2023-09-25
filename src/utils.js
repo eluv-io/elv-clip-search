@@ -251,14 +251,15 @@ export const getEmbedUrl = async ({
         embedUrl: embedUrl.toString(),
       };
     } else {
-      const playoutUrl = await getPlayoutUrl({ client, objectId });
-      return {
-        playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
-      };
+      // const playoutUrl = await getPlayoutUrl({ client, objectId });
+      // return {
+      //   playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
+      // };
+      return { reason: "Account has no permission to create the embed URL" };
     }
   } catch (err) {
     console.log(err);
-    console.log("create embed url err");
-    return {};
+    console.log("Create embed URL error");
+    return { reason: "Create embed URL error" };
   }
 };

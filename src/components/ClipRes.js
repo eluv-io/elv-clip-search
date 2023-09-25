@@ -122,12 +122,7 @@ const ClipRes = (props) => {
           if ("embedUrl" in res) {
             setEmbedUrl(res["embedUrl"]);
           } else {
-            // TODO if you would like to use playout url instead
-            if ("playoutUrl" in res) {
-              setEmbedUrl(res["playoutUrl"]);
-            } else {
-              setEmbedUrl("Can not create a playable url");
-            }
+            setEmbedUrl(res["reason"]);
           }
         })
         .catch((err) => {
