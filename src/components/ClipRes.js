@@ -66,6 +66,7 @@ const ClipRes = (props) => {
   const clipRecorded = useRef(false);
   const dislikedTags = useRef([]);
   const [imgUrl, setImgUrl] = useState("");
+  const [embedUrl, setEmbedUrl] = useState("");
   const [loadingImgUrl, setLoadingImgUrl] = useState(false);
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url =
@@ -75,6 +76,8 @@ const ClipRes = (props) => {
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
   const [player, setPlayer] = useState(undefined);
+  // debug line: keep it
+  // console.log(JSON.stringify(props.client.AllowedMethods(), null, 2));
 
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === true) {
@@ -92,7 +95,6 @@ const ClipRes = (props) => {
           setLoadingImgUrlErr(false);
           console.log("Loading Img Url", url);
           setImgUrl(url);
-          props.clipInfo.url = url;
         })
         .catch((err) => {
           setLoadingImgUrl(false);
@@ -100,7 +102,27 @@ const ClipRes = (props) => {
           console.log(err);
         });
     }
-  }, []);
+  }, [props.searchVersion, props.searchAssets]);
+
+  useEffect(() => {
+    if (props.searchVersion === "v2" && props.searchAssets === false) {
+      setEmbedUrl("");
+      props.client
+        .EmbedUrl({
+          objectId: props.clipInfo.id,
+          versionHash: props.clipInfo.hash,
+          duration: 7 * 24 * 60 * 60 * 1000,
+          clipStart: props.clipInfo.start_time,
+          clipEnd: props.clipInfo.f_end_time,
+        })
+        .then((embUrl) => {
+          setEmbedUrl(embUrl);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [props.searchVersion, props.searchAssets]);
 
   useEffect(() => {
     return () => {
@@ -289,6 +311,8 @@ const ClipRes = (props) => {
             viewTime={viewTime.current}
             contents={props.contents}
             searchVersion={props.searchVersion}
+            assetsUrl={imgUrl}
+            clipEmbedUrl={embedUrl}
           ></InfoPad>
         </div>
       </div>
