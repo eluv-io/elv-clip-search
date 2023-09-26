@@ -251,7 +251,7 @@ const ClipRes = (props) => {
         },
       },
     });
-    console.log("EluvioPlayer", _player);
+    // console.log("EluvioPlayer", _player);
     setPlayer(_player);
   };
 
