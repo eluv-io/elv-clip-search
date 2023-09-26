@@ -49,18 +49,18 @@ const InfoPad = (props) => {
             width: "10%",
             borderBottom: showDetails ? "solid" : "none",
           }}
-          id={`detail_select_${props.clipInfo.start}`}
+          id={`detail_select_${props.clipInfo.rank}`}
           onMouseEnter={() => {
             if (!showDetails) {
               document.getElementById(
-                `detail_select_${props.clipInfo.start}`
+                `detail_select_${props.clipInfo.rank}`
               ).style.borderBottom = "dashed";
             }
           }}
           onMouseOut={() => {
             if (!showDetails) {
               document.getElementById(
-                `detail_select_${props.clipInfo.start}`
+                `detail_select_${props.clipInfo.rank}`
               ).style.borderBottom = "none";
             }
           }}
@@ -80,18 +80,18 @@ const InfoPad = (props) => {
             width: "10%",
             borderBottom: showDetails ? "none" : "solid",
           }}
-          id={`review_select_${props.clipInfo.start}`}
+          id={`review_select_${props.clipInfo.rank}`}
           onMouseEnter={() => {
             if (showDetails) {
               document.getElementById(
-                `review_select_${props.clipInfo.start}`
+                `review_select_${props.clipInfo.rank}`
               ).style.borderBottom = "dashed";
             }
           }}
           onMouseOut={() => {
             if (showDetails) {
               document.getElementById(
-                `review_select_${props.clipInfo.start}`
+                `review_select_${props.clipInfo.rank}`
               ).style.borderBottom = "none";
             }
           }}
@@ -111,17 +111,26 @@ const InfoPad = (props) => {
             <div>{props.clipInfo.id}</div>
           </div>
 
-          <div style={shortInfo}>
-            <div>time interval: </div>
-            <div>
-              {props.clipInfo.start} - {props.clipInfo.end}
+          {props.searchAssets === true ? (
+            <div style={shortInfo}>
+              <div>prefix: </div>
+              <div>{props.clipInfo.prefix}</div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div style={shortInfo}>
+                <div>time interval: </div>
+                <div>
+                  {props.clipInfo.start} - {props.clipInfo.end}
+                </div>
+              </div>
 
-          <div style={shortInfo}>
-            <div>source count: </div>
-            <div>{props.clipInfo.source_count}</div>
-          </div>
+              <div style={shortInfo}>
+                <div>shot source count: </div>
+                <div>{props.clipInfo.source_count}</div>
+              </div>
+            </>
+          )}
 
           {props.searchVersion === "v2" ? (
             <div style={shortInfo}>
@@ -149,7 +158,7 @@ const InfoPad = (props) => {
                 backgroundColor: "transparent",
               }}
               readOnly
-              value={props.clipInfo.url || ""}
+              value={props.assetsUrl || props.clipEmbedUrl}
             ></textarea>
           </div>
         </div>
@@ -168,6 +177,7 @@ const InfoPad = (props) => {
             db={props.db}
             clientadd={props.clientadd}
             searchID={props.searchID}
+            searchAssets={props.searchAssets}
             viewTime={props.viewTime}
             clipInfo={props.clipInfo}
             contents={props.contents}

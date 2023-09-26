@@ -136,23 +136,42 @@ const TagsPad = (props) => {
   };
 
   const prepareTags = async () => {
-    const _hasTags =
-      props.searchVersion === "v2"
-        ? "f_start_time" in props.clipInfo.sources[0].fields &&
-          "f_end_time" in props.clipInfo.sources[0].fields
-        : "text" in props.clipInfo.sources[0].document;
+    const sourceFields =
+      props.searchVersion === "v2" && props.searchAssets
+        ? props.clipInfo.fields
+        : props.clipInfo.sources[0].fields;
+
+    let _hasTags =
+      props.searchVersion !== "v2"
+        ? "text" in props.clipInfo.sources[0].document
+        : Object.keys(sourceFields).some((k) => k in tags.current);
+
     if (_hasTags) {
       const iqHash = props.clipInfo.hash;
-      for (let src of props.clipInfo.sources) {
-        const currdoc =
-          props.searchVersion === "v2" ? src.fields : src.document;
-        console.log(currdoc);
-        const shotStart =
-          props.searchVersion === "v2"
-            ? currdoc.f_start_time
-            : currdoc.start_time;
-        const shotEnd =
-          props.searchVersion === "v2" ? currdoc.f_end_time : currdoc.end_time;
+      let sourceData = props.searchAssets
+        ? [props.clipInfo]
+        : props.clipInfo.sources;
+
+      for (let src of sourceData) {
+        let currdoc = props.searchVersion === "v2" ? src.fields : src.document;
+        console.log("currdoc", currdoc);
+
+        let shotStart, shotEnd;
+
+        if (props.searchAssets) {
+          shotStart = 0;
+          shotEnd = 0;
+        } else {
+          shotStart =
+            props.searchVersion === "v2"
+              ? currdoc.f_start_time
+              : currdoc.start_time;
+          shotEnd =
+            props.searchVersion === "v2"
+              ? currdoc.f_end_time
+              : currdoc.end_time;
+        }
+
         const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
         const shot = {
           iqHash: iqHash,
@@ -161,7 +180,7 @@ const TagsPad = (props) => {
           shotID: shotID,
           tags: [],
         };
-
+        // Further operations on 'shot' if required
         // tag index inside one shot
         // since tags in shot is saved as a list, can use this index directly target at that tag
         if (props.searchVersion === "v2") {
@@ -403,6 +422,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
+                  key={t.idx}
                 >
                   {t.status}
                   <div>

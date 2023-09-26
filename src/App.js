@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
+import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
@@ -204,6 +204,14 @@ const App = () => {
     "segment",
     "speech_to_text",
   ];
+  const ASSETS_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+  ];
+
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
@@ -212,6 +220,7 @@ const App = () => {
   const [libId, setLibId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
+  const searchAssets = useRef(false);
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
 
@@ -390,7 +399,7 @@ const App = () => {
   };
 
   const storeSearchHistory = () => {
-    if (db !== null) {
+    if (db.current !== null) {
       try {
         console.log(searchTerms);
         const colRef = collection(db.current, "Search_history");
@@ -439,6 +448,7 @@ const App = () => {
 
   const jumpToContent = (objectId) => {
     // after replacing the player, we do not need to load the url explicitly
+    // display the given objectID content on page 1
     currentPage.current = 1;
     numPages.current = Object.keys(contents.current[objectId].clips).length;
     setLoadingPlayoutUrl(false);
@@ -473,6 +483,7 @@ const App = () => {
         search,
         fuzzySearchPhrase,
         fuzzySearchField,
+        searchAssets: searchAssets.current,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -502,16 +513,22 @@ const App = () => {
             topkRes,
             topkCount,
           } = await parseSearchRes(
-            searchRes["data"]["contents"],
+            searchRes["data"],
             TOPK,
-            CLIPS_PER_PAGE
+            CLIPS_PER_PAGE,
+            searchAssets.current
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
-          setTotalContent(searchRes["data"]["contents"].length);
+          console.log("search assets", searchAssets.current);
+          setTotalContent(
+            searchAssets.current
+              ? searchRes["data"]["results"].length
+              : searchRes["data"]["contents"].length
+          );
           contents.current = clips_per_content;
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
@@ -597,20 +614,32 @@ const App = () => {
             if (searchObjMeta["version"] === "2.0") {
               setShowFuzzy(true);
               searchVersion.current = "v2";
+              searchAssets.current = false;
+              try {
+                const indexerType =
+                  searchObjMeta["config"]["indexer"]["arguments"]["document"][
+                    "prefix"
+                  ];
+                if (indexerType.includes("assets")) {
+                  searchAssets.current = true;
+                }
+              } catch (error) {
+                console.log(error);
+              }
             } else {
               setShowFuzzy(false);
               setShowTopk(false);
               searchVersion.current = "v1";
             }
+            const selectedFields = searchAssets.current
+              ? ASSETS_SEARCH_FIELDS
+              : ALL_SEARCH_FIELDS;
+            console.log("selectedFields", selectedFields);
             filteredSearchFields.current = Object.keys(
               searchObjMeta.config.indexer.arguments.fields
             )
-              .filter((n) => {
-                return ALL_SEARCH_FIELDS.includes(n);
-              })
-              .map((n) => {
-                return `f_${n}`;
-              });
+              .filter((n) => selectedFields.includes(n))
+              .map((n) => `f_${n}`);
             setLoadingSearchVersion(false);
             setHaveSearchVersion(true);
           } catch (err) {
@@ -912,11 +941,12 @@ const App = () => {
                   return (
                     <ClipRes
                       clipInfo={clip}
-                      key={clip.id + clip.start_time}
+                      key={clip.id + (clip.start_time || clip.rank)}
                       client={getClient()}
                       network={network.current}
                       clientadd={clientAdd.current}
                       searchID={searchID}
+                      searchAssets={searchAssets.current}
                       contents={contents.current}
                       db={db.current}
                       searchVersion={searchVersion.current}
