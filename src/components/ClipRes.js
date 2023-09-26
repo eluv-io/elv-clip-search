@@ -1,184 +1,326 @@
-import React from "react";
-import { useRef, useState } from "react";
-import ReactPlayer from "react-player";
-const body = {
+import QAPad from "./QAPad";
+import InfoPad from "./InfoPad";
+import React, { useEffect, useRef, useState } from "react";
+import { collection, doc, getDoc } from "firebase/firestore";
+import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+const container = {
+  width: "97%",
+  height: 900,
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "whitesmoke",
+  padding: 10,
+  marginBottom: 10,
+  marginTop: 10,
+};
+
+const videoContainer = {
+  width: "80%",
+  height: "95%",
   display: "flex",
   flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   backgroundColor: "whitesmoke",
   borderWidth: 2,
   borderColor: "grey",
   border: "solid",
-  alignItems: "center",
-  marginTop: 10,
-  marginBottom: 10,
   borderRadius: 10,
-  width: "96%",
+};
+
+const videoTitleContainer = {
+  width: "100%",
+  height: "5%",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: "bold",
 };
 
 const videoPlayerContainer = {
-  width: "90%",
-  height: "70%",
-  marginTop: "2%",
-  flexDirection: "column",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const audioCtrlContainer = {
-  display: " flex",
-  flexDirection: "row",
-  width: "100%",
-  height: "5%",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const info = {
-  display: " flex",
-  flexDirection: "column",
-  width: "100%",
-  height: "20%",
-  margin: "2%",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const shortInfo = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
   width: "95%",
-  height: "8%",
-  marginTop: "0.5%",
-};
-
-const longInfo = {
-  width: "95%",
-  height: "50%",
-  display: "flex",
+  height: "68%",
   flexDirection: "column",
+  display: "flex",
   alignItems: "center",
   justifyContent: "center",
+};
+
+const videoInfoContainer = {
+  width: "95%",
+  height: "27%",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
 };
 
 const ClipRes = (props) => {
+  const viewTime = useRef(0);
+  const startTime = useRef(null);
+  const clipInfo = props.clipInfo;
+  const shots = useRef({});
+  const clipRecorded = useRef(false);
+  const dislikedTags = useRef([]);
+  const [imgUrl, setImgUrl] = useState("");
+  const [loadingImgUrl, setLoadingImgUrl] = useState(false);
+  const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url =
     props.clipInfo.url === null
       ? null
       : `${props.clipInfo.url}&resolve=false&clip_start=${
           props.clipInfo.start_time / 1000
         }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
-  const playerRef = useRef(null);
-  const [audioTracks, setAudioTracks] = useState(null);
-  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
-  return (
-    <div style={body}>
-      <div style={videoPlayerContainer}>
-        {url !== null ? (
-          <ReactPlayer
-            ref={playerRef}
-            url={url}
-            width="100%"
-            height="auto"
-            autoPlay={false}
-            controls={true}
-            config={{
-              capLevelToPlayerSize: true,
-              maxBufferLength: 0,
-            }}
-            onReady={() => {
-              console.log("new player ready");
-              const hls = playerRef.current.getInternalPlayer("hls");
-              const tracks = hls.audioTrackController.tracks;
-              if (tracks !== null && tracks.length > 1) {
-                setAudioTracks(tracks);
-                setSelectedAudioTrack(0);
+  const [player, setPlayer] = useState(undefined);
+
+  useEffect(() => {
+    if (props.searchVersion === "v2" && props.searchAssets === true) {
+      setLoadingImgUrl(true);
+      setLoadingImgUrlErr(false);
+      setImgUrl("");
+      props.client
+        .FileUrl({
+          libraryId: props.clipInfo.qlib_id,
+          versionHash: props.clipInfo.hash,
+          filePath: `${props.clipInfo.prefix}`,
+        })
+        .then((url) => {
+          setLoadingImgUrl(false);
+          setLoadingImgUrlErr(false);
+          console.log("Loading Img Url", url);
+          setImgUrl(url);
+          props.clipInfo.url = url;
+        })
+        .catch((err) => {
+          setLoadingImgUrl(false);
+          setLoadingImgUrlErr(true);
+          console.log(err);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (player) {
+        player.Destroy();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    prepareShots()
+      .then(() => {
+        // console.log(shots.current);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  const hash = (s) => {
+    return s;
+  };
+
+  const prepareShots = async () => {
+    if (props.db !== null) {
+      try {
+        const shotInfoRef = collection(props.db, "Shot_info");
+        const _hasTags =
+          "f_start_time" in props.clipInfo.sources[0].fields &&
+          "f_end_time" in props.clipInfo.sources[0].fields;
+        if (_hasTags) {
+          const iqHash = props.clipInfo.hash;
+          for (let src of props.clipInfo.sources) {
+            const currdoc = src.fields;
+            const shotID = hash(
+              iqHash + "_" + currdoc.f_start_time + "-" + currdoc.f_end_time
+            );
+            const shotRef = doc(shotInfoRef, shotID);
+            getDoc(shotRef).then((shot) => {
+              if (shot.exists()) {
+                shots.current[shotID] = shot.data();
               }
-            }}
-          ></ReactPlayer>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "white",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            Playout URL Err
-          </div>
-        )}
-      </div>
+            });
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
 
-      {audioTracks && (
-        <div style={audioCtrlContainer}>
-          audio track:
-          <select
-            onChange={(event) => {
-              const audioTrackId = event.target.value;
-              setSelectedAudioTrack(audioTrackId);
-              console.log(`set audio track to ${audioTrackId}`);
-              const hls = playerRef.current.getInternalPlayer("hls");
-              hls.audioTrackController.setAudioTrack(audioTrackId);
-            }}
-            value={selectedAudioTrack}
-            style={{ height: "100%", width: "20%", marginLeft: 5 }}
-          >
-            {audioTracks.map((track) => {
-              return (
-                <option key={`option-${track.id}`} value={track.id}>
-                  {track.name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )}
+  const handleStart = (time) => {
+    startTime.current = time;
+    console.log(`started, starttime: ${startTime.current}`);
+  };
 
-      <div style={info}>
-        <div style={shortInfo}>
-          <div>title: </div>
-          <div>{props.clipInfo.meta.public.asset_metadata.title}</div>
+  const handlePause = (time) => {
+    const elapsedTime = time - startTime.current;
+    viewTime.current = viewTime.current + elapsedTime;
+    console.log(
+      `paused, elapsedtime: ${elapsedTime}, total view time: ${viewTime.current}`
+    );
+
+    // startTime.current = null;
+    try {
+      if (!clipRecorded.current) {
+        props.updateEngagement(clipInfo, elapsedTime, 1);
+        clipRecorded.current = true;
+      } else {
+        props.updateEngagement(clipInfo, elapsedTime, 0);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const InitializeVideo = ({ element }) => {
+    if (!element || player) {
+      return;
+    }
+    const _player = new EluvioPlayer(element, {
+      clientOptions: {
+        network:
+          EluvioPlayerParameters.networks[
+            props.network === "main" ? "MAIN" : "DEMO"
+          ],
+        client: props.client,
+      },
+      sourceOptions: {
+        playoutParameters: {
+          versionHash: props.clipInfo.hash,
+          clipStart: props.clipInfo.start_time / 1000,
+          clipEnd: props.clipInfo.end_time / 1000,
+          ignoreTrimming: true,
+        },
+      },
+      playerOptions: {
+        controls: EluvioPlayerParameters.controls.AUTO_HIDE,
+        playerCallback: ({ videoElement }) => {
+          videoElement.style.height = "100%";
+          videoElement.style.width = "100%";
+          videoElement.addEventListener("play", () => {
+            handleStart(videoElement.currentTime);
+          });
+          videoElement.addEventListener("pause", () => {
+            handlePause(videoElement.currentTime);
+          });
+          videoElement.addEventListener("seeking", () => {
+            if (!videoElement.paused) {
+              videoElement.pause();
+            }
+          });
+        },
+      },
+    });
+    console.log("EluvioPlayer", _player);
+    setPlayer(_player);
+  };
+
+  return (
+    <div style={container}>
+      <div style={videoContainer}>
+        <div style={videoTitleContainer}>
+          {"public" in props.clipInfo.meta
+            ? props.clipInfo.meta.public.asset_metadata.title
+            : props.clipInfo.prefix.split("/")[2]}
         </div>
-        <div style={shortInfo}>
-          <div>library id: </div>
-          <div>{props.clipInfo.qlib_id}</div>
-        </div>
-        <div style={shortInfo}>
-          <div>content id: </div>
-          <div>{props.clipInfo.id}</div>
-        </div>
-        <div style={shortInfo}>
-          <div>start_time: </div>
-          <div>{props.clipInfo.start}</div>
-        </div>
-        <div style={shortInfo}>
-          <div>end_time: </div>
-          <div>{props.clipInfo.end}</div>
-        </div>
-        {url !== null && (
-          <div style={longInfo}>
-            <div>playout url</div>
-            <textarea
-              name="playout url"
-              value={url}
+        <div style={videoPlayerContainer}>
+          {url !== null ? (
+            props.searchVersion === "v2" && props.searchAssets === true ? (
+              <div
+                style={{
+                  width: "auto",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {loadingImgUrl ? (
+                  "Loading Img Url"
+                ) : loadingImgUrlErr ? (
+                  "Loading Img Url Error"
+                ) : (
+                  <img
+                    style={{
+                      width: "auto",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    src={imgUrl}
+                  ></img>
+                )}
+              </div>
+            ) : (
+              <div ref={(element) => InitializeVideo({ element })}></div>
+            )
+          ) : (
+            <div
               style={{
+                width: "auto",
                 height: "100%",
-                width: "100%",
-                padding: 5,
-                borderStyle: "None",
-                borderRadius: 10,
+                backgroundColor: "transparent",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-              readOnly
-            ></textarea>
-          </div>
-        )}
+            >
+              Playout URL Error
+            </div>
+          )}
+        </div>
+
+        <div style={videoInfoContainer}>
+          <InfoPad
+            clipInfo={props.clipInfo}
+            db={props.db}
+            clientadd={props.clientadd}
+            searchID={props.searchID}
+            searchAssets={props.searchAssets}
+            viewTime={viewTime.current}
+            contents={props.contents}
+            searchVersion={props.searchVersion}
+          ></InfoPad>
+        </div>
       </div>
+
+      <QAPad
+        clipInfo={props.clipInfo}
+        db={props.db}
+        clientadd={props.clientadd}
+        searchID={props.searchID}
+        searchVersion={props.searchVersion}
+        searchAssets={props.searchAssets}
+        viewTime={viewTime.current}
+        contents={props.contents}
+        dislikedTags={dislikedTags.current}
+        dislikeTagHook={(id) => {
+          dislikedTags.current.push(id);
+        }}
+        updatePrevShots={(shotID, i, score) => {
+          if (shotID in shots.current) {
+            shots.current[shotID].tags[i].feedback[props.searchID.current] =
+              score;
+          }
+        }}
+        initializePrevShots={(shotID, tag) => {
+          shots.current[shotID].tags.push(tag);
+        }}
+        prevShots={shots.current}
+        setShots={(s) => {
+          shots.current = s;
+        }}
+        prevS={shots}
+      ></QAPad>
     </div>
   );
 };

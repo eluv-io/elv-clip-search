@@ -12,7 +12,7 @@ const body = {
 const left = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "10%",
   height: "100%",
@@ -65,7 +65,7 @@ const checker = {
 const right = {
   display: "flex",
   flexDirection: "row",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "center",
   width: "5%",
   height: "100%",
@@ -103,7 +103,7 @@ const FuzzySearchBox = (props) => {
             });
             props.handleSubmitClick({
               fields: fields,
-              text: `(${text.trim()})`,
+              text: text.trim(),
             });
           } else {
             props.handleSubmitClick({ fields: [], text: "" });
@@ -123,11 +123,21 @@ const FuzzySearchBox = (props) => {
               style={{ marginRight: 5 }}
               type="checkbox"
               checked={checkedState[index]}
+              disabled={props.disabled}
               onChange={() => {
                 const updatedCheckedState = checkedState.map((status, _index) =>
                   index === _index ? !status : status
                 );
                 setCheckedState(updatedCheckedState);
+                if (text.trim() !== "") {
+                  const fields = options.filter((item, index) => {
+                    return updatedCheckedState[index];
+                  });
+                  props.handleSubmitClick({
+                    fields: fields,
+                    text: text.trim(),
+                  });
+                }
               }}
             />
             <span style={{ fontSize: 13 }}>{item.slice(2)}</span>
@@ -145,11 +155,10 @@ const FuzzySearchBox = (props) => {
           const fields = options.filter((item, index) => {
             return checkedState[index];
           });
-          props.handleSubmitClick({ fields: fields, text: `(${text.trim()})` });
+          props.handleSubmitClick({ fields: fields, text: text.trim() });
         } else {
           props.handleSubmitClick({ fields: [], text: "" });
         }
-
         props.statusHandler();
       }}
       disabled={props.disabled}

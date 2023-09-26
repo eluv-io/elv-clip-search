@@ -7,7 +7,16 @@ export const toTimeString = (totalMiliSeconds) => {
   return result;
 };
 
-export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
+export const parseSearchRes = async (
+  searchResults,
+  TOPK,
+  CLIPS_PER_PAGE,
+  searchAssets
+) => {
+  const data =
+    searchAssets === true
+      ? searchResults["results"]
+      : searchResults["contents"];
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -19,6 +28,7 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
     }
     // get currernt item
     const item = JSON.parse(JSON.stringify(data[i]));
+    item["rank"] = i + 1;
     topkCount += 1;
     item.processed = false;
     topkResPage.push(item);
@@ -37,11 +47,14 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
   for (let i = 0; i < data.length; i++) {
     // get currernt item
     const item = data[i];
+    item["rank"] = i + 1;
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
       idNameMap[item["id"]] =
-        item.meta.public.asset_metadata.title.split(",")[0];
+        "public" in item.meta
+          ? item.meta.public.asset_metadata.title.split(",")[0]
+          : item.sources[0]["prefix"].split("/")[1];
       // set the first content to be current content
       if (firstContent === "") {
         firstContent = item["id"];
@@ -85,6 +98,7 @@ export const createSearchUrl = async ({
   search,
   fuzzySearchPhrase,
   fuzzySearchField,
+  searchAssets,
 }) => {
   try {
     if (searchVersion === "v1") {
@@ -102,7 +116,7 @@ export const createSearchUrl = async ({
           select: "...,text,/public/asset_metadata/title",
           start: 0,
           limit: 160,
-          clips_include_source_tags: false,
+          clips_include_source_tags: true,
           clips: true,
           sort: "f_start_time@asc",
         },
@@ -116,14 +130,16 @@ export const createSearchUrl = async ({
           fuzzySearchPhrase === ""
             ? `(${search})`
             : search === ""
-            ? `(${fuzzySearchPhrase})`
-            : `(${[fuzzySearchPhrase, search].join(" AND ")})`,
+            ? fuzzySearchPhrase
+            : `((${fuzzySearchPhrase}) AND ${search})`,
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        display_fields: "f_start_time,f_end_time",
+        display_fields: "all",
         clips: true,
         scored: true,
+        clips_include_source_tags: true,
+        clips_max_duration: 55,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
@@ -134,6 +150,15 @@ export const createSearchUrl = async ({
       } else {
         // only  set the max-total when we are using fuzzy search
         queryParams.max_total = 160;
+      }
+      // for the two pass approach,
+      // if we do not have the exact match filters, we should enable semantic=true
+      if (search === "") {
+        queryParams.semantic = true;
+      }
+      // for assets index type, disable clip and relevant parms
+      if (searchAssets === true) {
+        queryParams.clips = false;
       }
       const url = await client.Rep({
         libraryId,
