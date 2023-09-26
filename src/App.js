@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
+import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";

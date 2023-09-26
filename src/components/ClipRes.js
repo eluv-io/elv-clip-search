@@ -103,30 +103,35 @@ const ClipRes = (props) => {
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === false) {
       setEmbedUrl("");
-      // props.client
-      //   .EmbedUrl({
-      //     objectId: props.clipInfo.id,
-      //     versionHash: props.clipInfo.hash,
-      //     duration: 7 * 24 * 60 * 60 * 1000,
-      //     clipStart: props.clipInfo.start_time,
-      //     clipEnd: props.clipInfo.f_end_time,
-      //   })
-      getEmbedUrl({
-        client: props.client,
-        objectId: props.clipInfo.id,
-        duration: 7 * 24 * 60 * 60 * 1000,
-        clipStart: props.clipInfo.start_time / 1000,
-        clipEnd: props.clipInfo.end_time / 1000,
-      })
-        .then((res) => {
-          if ("embedUrl" in res) {
-            setEmbedUrl(res["embedUrl"]);
-          } else {
-            setEmbedUrl(res["reason"]);
-          }
+      props.client
+        .EmbedUrl({
+          objectId: props.clipInfo.id,
+          versionHash: props.clipInfo.hash,
+          duration: 7 * 24 * 60 * 60 * 1000,
+          options: {
+            clipStart: props.clipInfo.start_time / 1000,
+            clipEnd: props.clipInfo.end_time / 1000,
+          },
         })
+        .then((embUrl) => {
+          setEmbedUrl(embUrl);
+        })
+        // getEmbedUrl({
+        //   client: props.client,
+        //   objectId: props.clipInfo.id,
+        //   duration: 7 * 24 * 60 * 60 * 1000,
+        //   clipStart: props.clipInfo.start_time / 1000,
+        //   clipEnd: props.clipInfo.end_time / 1000,
+        // })
+        //   .then((res) => {
+        //     if ("embedUrl" in res) {
+        //       setEmbedUrl(res["embedUrl"]);
+        //     } else {
+        //       setEmbedUrl(res["reason"]);
+        //     }
+        //   })
         .catch((err) => {
-          setEmbedUrl("Create video url err");
+          setEmbedUrl("Create Embed URL error");
           console.log(err);
         });
     }
