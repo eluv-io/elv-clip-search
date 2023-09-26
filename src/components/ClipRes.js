@@ -3,6 +3,7 @@ import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+import { getEmbedUrl } from "../utils";
 const container = {
   width: "97%",
   height: 900,
@@ -66,15 +67,13 @@ const ClipRes = (props) => {
   const clipRecorded = useRef(false);
   const dislikedTags = useRef([]);
   const [imgUrl, setImgUrl] = useState("");
+  const [embedUrl, setEmbedUrl] = useState("");
   const [loadingImgUrl, setLoadingImgUrl] = useState(false);
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
-  const url =
-    props.clipInfo.url === null
-      ? null
-      : `${props.clipInfo.url}&resolve=false&clip_start=${
-          props.clipInfo.start_time / 1000
-        }&clip_end=${props.clipInfo.end_time / 1000}&ignore_trimming=true`;
+  const url = props.clipInfo.url;
   const [player, setPlayer] = useState(undefined);
+  // debug line: keep it
+  // console.log(JSON.stringify(props.client.AllowedMethods(), null, 2));
 
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === true) {
@@ -92,7 +91,6 @@ const ClipRes = (props) => {
           setLoadingImgUrlErr(false);
           console.log("Loading Img Url", url);
           setImgUrl(url);
-          props.clipInfo.url = url;
         })
         .catch((err) => {
           setLoadingImgUrl(false);
@@ -100,7 +98,44 @@ const ClipRes = (props) => {
           console.log(err);
         });
     }
-  }, []);
+  }, [props.searchVersion, props.searchAssets]);
+
+  useEffect(() => {
+    if (props.searchVersion === "v2" && props.searchAssets === false) {
+      setEmbedUrl("");
+      props.client
+        .EmbedUrl({
+          objectId: props.clipInfo.id,
+          versionHash: props.clipInfo.hash,
+          duration: 7 * 24 * 60 * 60 * 1000,
+          options: {
+            clipStart: props.clipInfo.start_time / 1000,
+            clipEnd: props.clipInfo.end_time / 1000,
+          },
+        })
+        .then((embUrl) => {
+          setEmbedUrl(embUrl);
+        })
+        // getEmbedUrl({
+        //   client: props.client,
+        //   objectId: props.clipInfo.id,
+        //   duration: 7 * 24 * 60 * 60 * 1000,
+        //   clipStart: props.clipInfo.start_time / 1000,
+        //   clipEnd: props.clipInfo.end_time / 1000,
+        // })
+        //   .then((res) => {
+        //     if ("embedUrl" in res) {
+        //       setEmbedUrl(res["embedUrl"]);
+        //     } else {
+        //       setEmbedUrl(res["reason"]);
+        //     }
+        //   })
+        .catch((err) => {
+          setEmbedUrl("Create Embed URL error");
+          console.log(err);
+        });
+    }
+  }, [props.searchVersion, props.searchAssets]);
 
   useEffect(() => {
     return () => {
@@ -216,7 +251,7 @@ const ClipRes = (props) => {
         },
       },
     });
-    console.log("EluvioPlayer", _player);
+    // console.log("EluvioPlayer", _player);
     setPlayer(_player);
   };
 
@@ -289,6 +324,8 @@ const ClipRes = (props) => {
             viewTime={viewTime.current}
             contents={props.contents}
             searchVersion={props.searchVersion}
+            assetsUrl={imgUrl}
+            clipEmbedUrl={embedUrl}
           ></InfoPad>
         </div>
       </div>

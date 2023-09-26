@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
+import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
@@ -399,7 +399,7 @@ const App = () => {
   };
 
   const storeSearchHistory = () => {
-    if (db !== null) {
+    if (db.current !== null) {
       try {
         console.log(searchTerms);
         const colRef = collection(db.current, "Search_history");
@@ -523,7 +523,7 @@ const App = () => {
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
-          console.log("search assets", searchAssets);
+          console.log("search assets", searchAssets.current);
           setTotalContent(
             searchAssets.current
               ? searchRes["data"]["results"].length

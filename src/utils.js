@@ -213,3 +213,53 @@ export const getPlayoutUrl = async ({ client, objectId }) => {
     return null;
   }
 };
+
+export const getEmbedUrl = async ({
+  client,
+  objectId,
+  clipStart,
+  clipEnd,
+  duration,
+}) => {
+  try {
+    const permission = await client.Permission({ objectId });
+    if (["owner", "editable", "viewable"].includes(permission)) {
+      const networkInfo = await client.NetworkInfo();
+      const networkName =
+        networkInfo.name === "demov3"
+          ? "demo"
+          : networkInfo.name === "test" && networkInfo.id === 955205
+          ? "testv4"
+          : networkInfo.name;
+      let embedUrl = new URL("https://embed.v3.contentfabric.io");
+
+      embedUrl.searchParams.set("p", "");
+      embedUrl.searchParams.set("net", networkName);
+      embedUrl.searchParams.set("oid", objectId);
+      embedUrl.searchParams.set("end", clipEnd);
+      embedUrl.searchParams.set("start", clipStart);
+      embedUrl.searchParams.set("ct", "s");
+      embedUrl.searchParams.set("st", "");
+      embedUrl.searchParams.set("off", "default");
+
+      const token = await client.CreateSignedToken({
+        objectId,
+        duration,
+      });
+      embedUrl.searchParams.set("ath", token);
+      return {
+        embedUrl: embedUrl.toString(),
+      };
+    } else {
+      // const playoutUrl = await getPlayoutUrl({ client, objectId });
+      // return {
+      //   playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
+      // };
+      return { reason: "Account has no permission to create the embed URL" };
+    }
+  } catch (err) {
+    console.log(err);
+    console.log("Create embed URL error");
+    return { reason: "Create embed URL error" };
+  }
+};
