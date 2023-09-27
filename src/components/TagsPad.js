@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import {
   BiArrowFromTop,
   BiArrowToTop,
@@ -29,8 +28,6 @@ const TagsPad = (props) => {
           "Speech to Text": [],
         }
   );
-
-  const shots = useRef({});
 
   const tagsMap =
     props.searchVersion === "v2"
@@ -77,63 +74,16 @@ const TagsPad = (props) => {
 
   const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
-  const db = props.db;
 
   useEffect(() => {
-    console.log("parsing tags");
     try {
       prepareTags().then(() => {
-        console.log("Before clicking", props.prevS.current);
         setTagsReady(true);
       });
     } catch (err) {
       console.log(err);
     }
   }, []);
-
-  const hash = (s) => {
-    return s;
-  };
-
-  const pushShotToDB = (shot) => {
-    if (db === null) {
-      return;
-    }
-    console.log("pushing shot into DB ...... ");
-    const shotInfoRef = collection(db, "Shot_info");
-    const shotRef = doc(shotInfoRef, shot.shotID);
-    getDoc(shotRef).then((s) => {
-      if (s.exists()) {
-        updateDoc(shotRef, {
-          start: shot.start,
-          end: shot.end,
-          iqHash: shot.iqHash,
-          "iqHash_start-end": shot.shotID,
-          tags: shot.tags,
-        })
-          .then(() => {
-            console.log("shot updated successfully!");
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } else {
-        setDoc(shotRef, {
-          start: shot.start,
-          end: shot.end,
-          iqHash: shot.iqHash,
-          "iqHash_start-end": shot.shotID,
-          tags: shot.tags,
-        })
-          .then(() => {
-            console.log("shot created successfully");
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
-    });
-  };
 
   const prepareTags = async () => {
     const sourceFields =
@@ -146,12 +96,12 @@ const TagsPad = (props) => {
         ? "text" in props.clipInfo.sources[0].document
         : Object.keys(sourceFields).some((k) => k in tags.current);
 
+    console.log("parsing tags");
     if (_hasTags) {
-      const iqHash = props.clipInfo.hash;
+      const contentHash = props.clipInfo.hash;
       let sourceData = props.searchAssets
         ? [props.clipInfo]
         : props.clipInfo.sources;
-
       for (let src of sourceData) {
         let currdoc = props.searchVersion === "v2" ? src.fields : src.document;
         console.log("currdoc", currdoc);
@@ -171,16 +121,29 @@ const TagsPad = (props) => {
               ? currdoc.f_end_time
               : currdoc.end_time;
         }
-
-        const shotID = hash(iqHash + "_" + shotStart + "-" + shotEnd);
+        const shotId = contentHash + "_" + shotStart + "-" + shotEnd;
         const shot = {
-          iqHash: iqHash,
+          iqHash: contentHash,
           start: shotStart,
           end: shotEnd,
-          shotID: shotID,
+          shotId: shotId,
           tags: [],
         };
-        // Further operations on 'shot' if required
+
+        let needToPush = false;
+        // try to see  if we have  this shot in Memo, if not, try to load from DB.
+        // the shot from DB could be null as well
+        if (props.shotsMemo.current[shotId] == null) {
+          console.log("trying to load from DB");
+          if (props.dbClient !== null) {
+            const shotInDB = await props.dbClient.getShot({ shotId });
+            if (shotInDB == null) {
+              needToPush = true;
+            } else {
+              props.shotsMemo.current[shotId] = shotInDB;
+            }
+          }
+        }
         // tag index inside one shot
         // since tags in shot is saved as a list, can use this index directly target at that tag
         if (props.searchVersion === "v2") {
@@ -192,18 +155,18 @@ const TagsPad = (props) => {
             for (let i in currdoc[k]) {
               let text = currdoc[k][i];
               let dislikeState = 0;
-              if (shotID in props.prevS.current) {
+              if (props.shotsMemo.current[shotId] != null) {
                 const prevDislike =
-                  props.prevS.current[shotID].tags[idx].feedback;
-                if (props.searchID.current in prevDislike) {
-                  dislikeState = prevDislike[props.searchID.current];
+                  props.shotsMemo.current[shotId].tags[idx].feedback;
+                if (props.searchId in prevDislike) {
+                  dislikeState = prevDislike[props.searchId];
                 }
               }
               const tag = {
                 track: k,
                 status: text,
                 dislike: dislikeState,
-                shotID: shotID,
+                shotId: shotId,
                 tagIdx: idx,
               };
               if (
@@ -217,7 +180,7 @@ const TagsPad = (props) => {
 
               shot.tags.push({
                 status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchID.current]: dislikeState },
+                feedback: { [props.searchId]: dislikeState },
               });
               idx = idx + 1;
             }
@@ -262,18 +225,22 @@ const TagsPad = (props) => {
             }
           }
         }
-
-        shots.current[shotID] = shot;
-        pushShotToDB(shot);
+        // save only when we do not have that shot in shotsMemo
+        if (props.shotsMemo.current[shotId] == null) {
+          props.shotsMemo.current[shotId] = shot;
+          if (needToPush && props.dbClient !== null) {
+            await props.dbClient.setShot({ shot });
+          }
+        }
       }
     }
   };
 
   const collect = async (lst, t, score) => {
-    console.log("review tag");
-    props.dislikeTagHook(t.track + t.status);
-    const shotID = t.shotID;
-    const currTags = shots.current[shotID].tags;
+    console.log("Processing tags review");
+    const shotId = t.shotId;
+    const currTags = props.shotsMemo.current[shotId].tags;
+    console.log(currTags);
     const allIndices = currTags.reduce((indices, dic, idx) => {
       if (dic.status.text === t.status) {
         indices.push(idx);
@@ -281,59 +248,40 @@ const TagsPad = (props) => {
       return indices;
     }, []);
     allIndices.forEach((i) => {
-      shots.current[shotID].tags[i].feedback[props.searchID.current] = score;
+      props.shotsMemo.current[shotId].tags[i].feedback[props.searchId] = score;
     });
-    props.prevS.current = shots.current;
-    console.log("After clicking", props.prevS.current);
 
     const idx = lst.findIndex((dic) => dic.status === t.status);
     lst[idx].dislike = score;
     setRefresh((v) => !v);
-
-    if (db !== null) {
-      pushShotToDB(shots.current[shotID]);
-
-      const clipInfo = props.clipInfo;
-      const clipRank = clipInfo.rank;
-      const clipStart = clipInfo.start;
-      const clipEnd = clipInfo.end;
-      const contentHash = clipInfo.hash;
-      try {
-        const clipInfoRef = collection(db, "Clip_info");
-        const clipRef = doc(
-          clipInfoRef,
-          contentHash + "_" + clipStart + "-" + clipEnd
-        );
-        const clip = await getDoc(clipRef);
-        if (!clip.exists()) {
-          setDoc(clipRef, {
-            contentHash: contentHash,
-            start_time: clipStart,
-            end_time: clipEnd,
-            rank: [{ searchID: props.searchID.current, rank: clipRank }],
-            shots: Object.keys(shots.current),
-          }).then(() => {
-            console.log("clip stored successfully!");
-          });
-        } else {
-          const tempRank = clip.data().rank;
-          if (
-            !(
-              tempRank[tempRank.length - 1].rank === clipRank &&
-              tempRank[tempRank.length - 1].searchID === props.searchID.current
-            )
-          ) {
-            tempRank.push({ searchID: props.searchID.current, rank: clipRank });
-            updateDoc(clipRef, {
-              rank: tempRank,
-            }).then(() => {
-              console.log("clip rank updated successfully!");
-            });
-          }
-        }
-      } catch (err) {
-        console.log(err);
+    try {
+      if (props.dbClient.current !== null) {
+        await props.dbClient.setShot({ shot: props.shotsMemo.current[shotId] });
+        console.log("Shot saved");
       }
+    } catch (err) {
+      console.log(err);
+    }
+
+    const clipInfo = props.clipInfo;
+    const clipRank = clipInfo.rank;
+    const clipStart = clipInfo.start;
+    const clipEnd = clipInfo.end;
+    const contentHash = clipInfo.hash;
+    try {
+      if (props.dbClient.current !== null) {
+        await props.dbClient.setClip({
+          searchId: props.searchId,
+          contentHash,
+          clipStart,
+          clipEnd,
+          clipRank,
+          shotIds: Object.keys(props.shotsMemo.current),
+        });
+        console.log("clip updated");
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -422,7 +370,7 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
-                  key={t.idx}
+                  key={`${t.status}`}
                 >
                   {t.status}
                   <div>

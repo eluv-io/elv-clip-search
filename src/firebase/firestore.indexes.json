@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "Data",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "clipHash",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "feedback_time",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

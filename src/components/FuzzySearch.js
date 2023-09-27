@@ -47,11 +47,8 @@ const selecter = {
   height: "90%",
   marginTop: 5,
   borderRadius: 5,
-  // borderWidth: 1,
   paddingTop: 5,
   paddingBottom: 5,
-  // borderColor: "grey",
-  // borderStyle: "ridge",
 };
 
 const checker = {
