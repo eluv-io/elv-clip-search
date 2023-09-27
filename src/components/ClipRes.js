@@ -119,7 +119,7 @@ const ClipRes = (props) => {
       };
       props.dbClient.setEngagement({
         searchId: props.searchId,
-        clientAddr: props.clientAddr,
+        walletAddr: props.walletAddr,
         engagement: props.engagement.current,
         init: false,
       });
@@ -200,7 +200,7 @@ const ClipRes = (props) => {
           <InfoPad
             clipInfo={props.clipInfo}
             dbClient={props.dbClient}
-            clientAddr={props.clientAddr}
+            walletAddr={props.walletAddr}
             searchId={props.searchId}
             viewTime={viewTime.current}
             contents={props.contents}
