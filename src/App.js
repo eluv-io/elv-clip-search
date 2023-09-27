@@ -5,6 +5,7 @@ import axios from "axios";
 import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
+import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
@@ -873,10 +874,24 @@ const App = () => {
               )}
               {havePlayoutUrl ? (
                 displayingContents.map((clip) => {
-                  return (
+                  return searchAssets.current ? (
+                    <AssetRes
+                      clipInfo={clip}
+                      key={clip.id + clip.rank}
+                      client={getClient()}
+                      network={network.current}
+                      clientAddr={clientAddr.current}
+                      searchId={searchId.current}
+                      searchAssets={searchAssets.current}
+                      contents={contents.current}
+                      searchVersion={searchVersion.current}
+                      engagement={engagement}
+                      dbClient={dbClient.current}
+                    ></AssetRes>
+                  ) : (
                     <ClipRes
                       clipInfo={clip}
-                      key={clip.id + (clip.start_time || clip.rank)}
+                      key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
                       clientAddr={clientAddr.current}

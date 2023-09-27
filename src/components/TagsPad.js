@@ -103,14 +103,17 @@ const TagsPad = (props) => {
         ? [props.clipInfo]
         : props.clipInfo.sources;
       for (let src of sourceData) {
+        // each represents a shot
+        // in asset mode, we have extra useful content related information
+        // in clip mode, we only have tags information
         let currdoc = props.searchVersion === "v2" ? src.fields : src.document;
-        console.log("currdoc", currdoc);
+        // currdoc is representing the shot's tags
 
-        let shotStart, shotEnd;
-
+        let shotStart, shotEnd, shotId;
         if (props.searchAssets) {
           shotStart = 0;
           shotEnd = 0;
+          shotId = contentHash + src.prefix;
         } else {
           shotStart =
             props.searchVersion === "v2"
@@ -120,8 +123,9 @@ const TagsPad = (props) => {
             props.searchVersion === "v2"
               ? currdoc.f_end_time
               : currdoc.end_time;
+          shotId = contentHash + "_" + shotStart + "_" + shotEnd;
         }
-        const shotId = contentHash + "_" + shotStart + "-" + shotEnd;
+
         const shot = {
           iqHash: contentHash,
           start: shotStart,
@@ -131,7 +135,7 @@ const TagsPad = (props) => {
         };
 
         let needToPush = false;
-        // try to see  if we have  this shot in Memo, if not, try to load from DB.
+        // try to see  if we have this shot in Memo, if not, try to load from DB.
         // the shot from DB could be null as well
         if (props.shotsMemo.current[shotId] == null) {
           console.log("trying to load from DB");
@@ -148,68 +152,66 @@ const TagsPad = (props) => {
         // since tags in shot is saved as a list, can use this index directly target at that tag
         if (props.searchVersion === "v2") {
           let idx = 0;
-          for (let k in tags.current) {
-            if (!(k in currdoc)) {
+          for (let trackname in tags.current) {
+            if (!(trackname in currdoc)) {
               continue;
             }
-            for (let i in currdoc[k]) {
-              let text = currdoc[k][i];
-              let dislikeState = 0;
+            for (let text of currdoc[k]) {
+              let like = 0;
               if (props.shotsMemo.current[shotId] != null) {
-                const prevDislike =
+                const prevLike =
                   props.shotsMemo.current[shotId].tags[idx].feedback;
-                if (props.searchId in prevDislike) {
-                  dislikeState = prevDislike[props.searchId];
+                if (props.searchId in prevLike) {
+                  like = prevLike[props.searchId];
                 }
               }
               const tag = {
-                track: k,
-                status: text,
-                dislike: dislikeState,
+                track: trackname,
+                text: text,
+                like: like,
                 shotId: shotId,
                 tagIdx: idx,
               };
               if (
-                !tags.current[k].some(
+                !tags.current[trackname].some(
                   (dictionary) =>
-                    dictionary.status.toLowerCase() === tag.status.toLowerCase()
+                    dictionary.text.toLowerCase() === tag.text.toLowerCase()
                 )
               ) {
-                tags.current[k].push(tag);
+                tags.current[trackname].push(tag);
               }
 
               shot.tags.push({
-                status: { track: k, text: text, idx: idx },
-                feedback: { [props.searchId]: dislikeState },
+                status: { track: trackname, text: text, idx: idx },
+                feedback: { [props.searchId]: like },
               });
               idx = idx + 1;
             }
           }
         } else {
           let idx = 0;
-          for (let k in tags.current) {
-            for (let v of currdoc.text[k]) {
+          for (let trackname in tags.current) {
+            for (let v of currdoc.text[trackname]) {
               for (let text of v.text) {
-                let dislikeState = 0;
-                if (shotID in props.prevS.current) {
-                  const prevDislike =
-                    props.prevS.current[shotID].tags[idx].feedback;
-                  if (props.searchID.current in prevDislike) {
-                    dislikeState = prevDislike[props.searchID.current];
+                let like = 0;
+                if (props.shotsMemo.current[shotId] != null) {
+                  const prevLike =
+                    props.shotsMemo.current[shotId].tags[idx].feedback;
+                  if (props.searchId in prevLike) {
+                    like = prevLike[props.searchId];
                   }
                 }
                 const tag = {
-                  track: k,
-                  status: text,
-                  dislike: dislikeState,
-                  shotID: shotID,
-                  tagIdx: idx,
+                  track: trackname,
+                  text: text,
+                  like: like,
+                  shotId: shotId,
+                  tags: [],
                 };
                 if (
-                  !tags.current[k].some(
+                  !tags.current[trackname].some(
                     (dictionary) =>
-                      dictionary.status.toLowerCase() ===
-                      tag.status.toLowerCase()
+                      dictionary.text.toLowerCase() === tag.text.toLowerCase()
                   )
                 ) {
                   tags.current[k].push(tag);
@@ -217,7 +219,7 @@ const TagsPad = (props) => {
 
                 shot.tags.push({
                   status: { track: k, text: text, idx: idx },
-                  feedback: { [props.searchID.current]: dislikeState },
+                  feedback: { [props.searchId]: like },
                 });
 
                 idx = idx + 1;
@@ -370,9 +372,9 @@ const TagsPad = (props) => {
                     borderRadius: 10,
                     marginBottom: 3,
                   }}
-                  key={`${t.status}`}
+                  key={`${t.text}`}
                 >
-                  {t.status}
+                  {t.text}
                   <div>
                     <button
                       style={{ border: "none", backgroundColor: "transparent" }}
@@ -380,7 +382,7 @@ const TagsPad = (props) => {
                     >
                       <BiLike
                         style={{
-                          color: t.dislike === 1 ? "#EAA14F" : "black",
+                          color: t.like === 1 ? "#EAA14F" : "black",
                         }}
                       />
                     </button>
@@ -391,7 +393,7 @@ const TagsPad = (props) => {
                     >
                       <BiDislike
                         style={{
-                          color: t.dislike === -1 ? "#EAA14F" : "black",
+                          color: t.like === -1 ? "#EAA14F" : "black",
                         }}
                       />
                     </button>

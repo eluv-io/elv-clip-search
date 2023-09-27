@@ -48,6 +48,13 @@ export const parseSearchRes = async (
     // get currernt item
     const item = data[i];
     item["rank"] = i + 1;
+    // for asset search res
+    if (searchAssets) {
+      item["start"] = 0;
+      item["end"] = 0;
+      item["f_start_time"] = 0;
+      item["f_end_time"] = 0;
+    }
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
