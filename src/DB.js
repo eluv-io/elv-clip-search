@@ -50,20 +50,20 @@ class DB {
     }
   }
 
-  async setUser({ clientAddr }) {
+  async setUser({ walletAddr }) {
     if (this.db !== null) {
       try {
-        const userDocRef = doc(this.db, "user", clientAddr);
+        const userDocRef = doc(this.db, "users", walletAddr);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           console.log("User already exists");
           await updateDoc(userDocRef, { userLoginTime: serverTimestamp() });
         } else {
           await setDoc(userDocRef, {
-            walletAddress: clientAddr,
+            walletAddress: walletAddr,
             emailAddress: null,
-            userCreateTime: null,
-            userLoginTime: serverTimestamp(), //last login time
+            userCreateTime: serverTimestamp(),
+            userLoginTime: null, //last login time
             userInformation: {},
           });
           console.log("New user added");
@@ -74,19 +74,20 @@ class DB {
     }
   }
 
-  async setEngagement({ searchId, clientAddr, engagement, init }) {
+  async setEngagement({ searchId, walletAddr, engagement, init }) {
     if (this.db !== null) {
       try {
         const engDocRef = doc(
           this.db,
-          "Engagement",
-          clientAddr + "_" + searchId
+          "engagements",
+          walletAddr + "_" + searchId
         );
+        console.log("engagement", engDocRef.id);
         if (init) {
           await setDoc(engDocRef, {
             engagement: engagement,
-            User_id: clientAddr,
-            Search_id: searchId,
+            walletAddress: walletAddr,
+            searchId: searchId,
           });
         } else {
           await updateDoc(engDocRef, {
@@ -103,7 +104,7 @@ class DB {
   }
 
   async setSearchHistory({
-    clientAddr,
+    walletAddr,
     fuzzySearchPhrase,
     fuzzySearchFields,
     searchKeywords,
@@ -115,7 +116,7 @@ class DB {
         const colRef = collection(this.db, "searchHistory");
         const now = Timestamp.now().toDate().toUTCString();
         const docRef = await addDoc(colRef, {
-          walletAddress: clientAddr,
+          walletAddress: walletAddr,
           searchTime: now,
           searchIndex: searchObjId,
           tenantAddress: tenantID,
@@ -136,7 +137,7 @@ class DB {
   async setShot({ shot }) {
     if (this.db !== null) {
       try {
-        const shotDocRef = doc(this.db, "Shot_info", shot.shotId);
+        const shotDocRef = doc(this.db, "shotInfo", shot.shotId);
         const shotDoc = await getDoc(shotDocRef);
         const payload = {
           start: shot.start,
@@ -159,7 +160,7 @@ class DB {
   async getShot({ shotId }) {
     if (this.db !== null) {
       try {
-        const shotRef = doc(this.db, "Shot_info", shotId);
+        const shotRef = doc(this.db, "shotInfo", shotId);
         const shot = await getDoc(shotRef);
         if (shot.exists()) {
           return shot.data();
@@ -185,7 +186,7 @@ class DB {
       try {
         const clipDocRef = doc(
           this.db,
-          "Clip_info",
+          "clipInfo",
           contentHash + "_" + clipStart + "-" + clipEnd
         );
         const clip = await getDoc(clipDocRef);
@@ -222,22 +223,22 @@ class DB {
     }
   }
 
-  async getFeedback({ clientAddr, clipHash, searchId }) {
+  async getFeedback({ walletAddr, clipHash, searchId }) {
     if (this.db !== null) {
       try {
-        const userRef = collection(this.db, "Feedback", clientAddr, "Data");
+        const userRef = collection(this.db, "feedbacks", walletAddr, "Data");
         const q = query(
           userRef,
           where("clipHash", "==", clipHash),
-          where("search_id", "==", searchId),
-          orderBy("feedback_time", "desc"),
+          where("searchId", "==", searchId),
+          orderBy("feedbackTime", "desc"),
           limit(1)
         );
         const res = await getDocs(q);
         return res;
       } catch (err) {
         console.log(
-          `Err: Get feedback for client ${clientAddr} on clip ${clipHash} in search ${searchId} failed`
+          `Err: Get feedback for wallet ${walletAddr} on clip ${clipHash} in search ${searchId} failed`
         );
         return [];
       }
@@ -247,7 +248,7 @@ class DB {
   }
 
   async setFeedback({
-    clientAddr,
+    walletAddr,
     clipHash,
     searchId,
     score,
@@ -256,20 +257,17 @@ class DB {
   }) {
     if (this.db !== null) {
       try {
-        const userRef = collection(this.db, "Feedback", clientAddr, "Data");
-        const now = Timestamp.now()
-          .toDate()
-          .toString()
-          .replace(/\([^()]*\)/g, "");
+        const userRef = collection(this.db, "feedbacks", walletAddr, "Data");
+        const now = Timestamp.now().toDate().toUTCString();
         const docRef = doc(userRef, now);
         await setDoc(docRef, {
-          client: clientAddr,
-          feedback_time: new Date(now),
+          walletAddress: walletAddr,
+          feedbackTime: now,
           rating: score,
           clipHash: clipHash,
           reason: reason,
-          other_reasons: otherReasons,
-          search_id: searchId,
+          otherReasons: otherReasons,
+          searchId: searchId,
         });
         console.log("Feedback collected successfully!");
       } catch (err) {

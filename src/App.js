@@ -238,7 +238,7 @@ const App = () => {
   const filteredSearchFields = useRef([]);
 
   const dbClient = useRef(null);
-  const clientAddr = useRef(null);
+  const walletAddr = useRef(null);
   const searchId = useRef(null);
 
   const engagement = useRef({});
@@ -251,8 +251,8 @@ const App = () => {
         if (_dbClient == null) return;
 
         const addr = await getClient().CurrentAccountAddress();
-        clientAddr.current = addr;
-        await _dbClient.setUser({ clientAddr: addr });
+        walletAddr.current = addr;
+        await _dbClient.setUser({ walletAddr: addr });
       } catch (err) {
         if (err.message.include("wallet")) {
           console.log(`Error: getting user wallet address failed`);
@@ -435,11 +435,11 @@ const App = () => {
         }
         // process about DB: set search History and send engagement data
         // could have err, but it would not affect whole page. the page can still work
-        if (dbClient.current !== null || clientAddr.current !== null) {
+        if (dbClient.current !== null || walletAddr.current !== null) {
           setProcessingDB(true);
           try {
             const _searchId = await dbClient.current.setSearchHistory({
-              clientAddr: clientAddr.current,
+              walletAddr: walletAddr.current,
               fuzzySearchFields: fuzzySearchField,
               fuzzySearchPhrase: fuzzySearchPhrase,
               searchKeywords: searchTerms,
@@ -450,7 +450,7 @@ const App = () => {
               searchId.current = _searchId;
               await dbClient.current.setEngagement({
                 searchId: _searchId,
-                clientAddr: clientAddr.current,
+                walletAddr: walletAddr.current,
                 engagement: engagement.current,
                 init: true,
               });
@@ -833,7 +833,7 @@ const App = () => {
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientAddr={clientAddr.current}
+                      walletAddr={walletAddr.current}
                       searchId={searchId.current}
                       contents={contents.current}
                       searchVersion={searchVersion.current}
