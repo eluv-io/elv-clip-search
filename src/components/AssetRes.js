@@ -168,6 +168,7 @@ const AssetRes = (props) => {
         clipInfo={props.clipInfo}
         searchId={props.searchId}
         searchAssets={props.searchAssets}
+        searchVersion={props.searchVersion}
         shotsMemo={shotsMemo}
         dbClient={props.dbClient}
       ></QAPad>
