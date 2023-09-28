@@ -175,7 +175,7 @@ const InfoPad = (props) => {
         >
           <Feedback
             dbClient={props.dbClient}
-            clientAddr={props.clientAddr}
+            walletAddr={props.walletAddr}
             searchId={props.searchId}
             searchAssets={props.searchAssets}
             viewTime={props.viewTime}

@@ -60,7 +60,7 @@ const Feedback = (props) => {
     if (props.dbClient !== null && props.searchId !== null) {
       props.dbClient
         .getFeedback({
-          clientAddr: props.clientAddr,
+          walletAddr: props.walletAddr,
           clipHash: clipHash,
           searchId: props.searchId,
         })
@@ -144,7 +144,7 @@ const Feedback = (props) => {
       }
       if (props.dbClient !== null && props.searchId !== null) {
         await props.dbClient.setFeedback({
-          clientAddr: props.clientAddr,
+          walletAddr: props.walletAddr,
           clipHash: clipHash,
           searchId: props.searchId,
           score: score,

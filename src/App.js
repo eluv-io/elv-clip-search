@@ -208,6 +208,7 @@ const App = () => {
   const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
+  const [tenId, setTenId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
   const searchAssets = useRef(false);
@@ -250,30 +251,31 @@ const App = () => {
   const filteredSearchFields = useRef([]);
 
   const dbClient = useRef(null);
-  const clientAddr = useRef(null);
+  const walletAddr = useRef(null);
   const searchId = useRef(null);
 
   const engagement = useRef({});
 
-  //initialize the DB and store the useradd
+  //initialize the DB and store the wallet_address and tenancy
   useEffect(() => {
-    try {
-      const _dbClient = getDBClient();
-      if (_dbClient == null) return;
-      getClient()
-        .CurrentAccountAddress()
-        .then(async (addr) => {
-          clientAddr.current = addr;
-          await _dbClient.setUser({ clientAddr: addr });
-        })
-        .catch((err) => {
-          console.log(`Err: Get client account address failed`);
-          console.log(err);
-        });
-    } catch (err) {
-      console.log("Error occured when storing the user info");
-      console.error(err);
-    }
+    const storeUserInfo = async () => {
+      try {
+        const _dbClient = getDBClient();
+        if (_dbClient == null) return;
+
+        const addr = await getClient().CurrentAccountAddress();
+        walletAddr.current = addr;
+        await _dbClient.setUser({ walletAddr: addr });
+      } catch (err) {
+        if (err.message.include("wallet")) {
+          console.log(`Error: getting user wallet address failed`);
+        } else {
+          console.log("Error occured when storing the user info");
+        }
+        console.error(err);
+      }
+    };
+    storeUserInfo();
   }, []);
 
   const resetLoadStatus = () => {
@@ -311,7 +313,7 @@ const App = () => {
         dbClient.current = _dbClient;
         return _dbClient;
       } catch (err) {
-        console.log(`Err: Creating the DB client failed`);
+        console.log(`Error occurred when creating the DB client failed`);
         return null;
       }
     } else {
@@ -457,20 +459,22 @@ const App = () => {
         }
         // process about DB: set search History and send engagement data
         // could have err, but it would not affect whole page. the page can still work
-        if (dbClient.current !== null || clientAddr.current !== null) {
+        if (dbClient.current !== null || walletAddr.current !== null) {
           setProcessingDB(true);
           try {
             const _searchId = await dbClient.current.setSearchHistory({
-              clientAddr: clientAddr.current,
+              walletAddr: walletAddr.current,
               fuzzySearchFields: fuzzySearchField,
               fuzzySearchPhrase: fuzzySearchPhrase,
               searchKeywords: searchTerms,
+              searchObjId: objId,
+              tenantID: tenId,
             });
             if (_searchId !== null) {
               searchId.current = _searchId;
               await dbClient.current.setEngagement({
                 searchId: _searchId,
-                clientAddr: clientAddr.current,
+                walletAddr: walletAddr.current,
                 engagement: engagement.current,
                 init: true,
               });
@@ -544,6 +548,7 @@ const App = () => {
           setErr(true);
           setErrMsg("Invalid search index Id");
         }
+
         if (libId !== "") {
           try {
             setLibId(libId);
@@ -588,6 +593,15 @@ const App = () => {
             setLoadingSearchVersion(false);
             setErr(true);
             setErrMsg(err.message);
+          }
+          try {
+            let fetchedTenId = "";
+            fetchedTenId = await client.ContentObjectTenantId({
+              [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+            });
+            setTenId(fetchedTenId);
+          } catch (err) {
+            console.log("Error: TenantID is not available");
           }
         }
       }}
@@ -897,7 +911,7 @@ const App = () => {
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientAddr={clientAddr.current}
+                      walletAddr={walletAddr.current}
                       searchId={searchId.current}
                       searchAssets={searchAssets.current}
                       contents={contents.current}
