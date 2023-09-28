@@ -897,7 +897,7 @@ const App = () => {
                       key={clip.id + clip.rank}
                       client={getClient()}
                       network={network.current}
-                      clientAddr={clientAddr.current}
+                      walletAddr={walletAddr.current}
                       searchId={searchId.current}
                       searchAssets={searchAssets.current}
                       contents={contents.current}
