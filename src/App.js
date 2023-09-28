@@ -484,6 +484,9 @@ const App = () => {
           } finally {
             setProcessingDB(false);
           }
+        } else {
+          // fake a searchId
+          searchId.current = objId;
         }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {

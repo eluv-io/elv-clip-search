@@ -90,7 +90,6 @@ const TagsPad = (props) => {
       props.searchVersion === "v2" && props.searchAssets
         ? props.clipInfo.fields
         : props.clipInfo.sources[0].fields;
-    console.log(props.clipInfo.sources[0]);
     let _hasTags =
       props.searchVersion === "v2"
         ? Object.keys(sourceFields).some((k) => k in tags.current)
@@ -242,9 +241,8 @@ const TagsPad = (props) => {
     console.log("Processing tags review");
     const shotId = t.shotId;
     const currTags = props.shotsMemo.current[shotId].tags;
-    console.log(currTags);
     const allIndices = currTags.reduce((indices, dic, idx) => {
-      if (dic.status.text === t.status) {
+      if (dic.status.text === t.text) {
         indices.push(idx);
       }
       return indices;
@@ -253,11 +251,11 @@ const TagsPad = (props) => {
       props.shotsMemo.current[shotId].tags[i].feedback[props.searchId] = score;
     });
 
-    const idx = lst.findIndex((dic) => dic.status === t.status);
-    lst[idx].dislike = score;
+    const idx = lst.findIndex((dic) => dic.text === t.text);
+    lst[idx].like = score;
     setRefresh((v) => !v);
     try {
-      if (props.dbClient.current !== null) {
+      if (props.dbClient !== null) {
         await props.dbClient.setShot({ shot: props.shotsMemo.current[shotId] });
         console.log("Shot saved");
       }
@@ -271,7 +269,7 @@ const TagsPad = (props) => {
     const clipEnd = clipInfo.end;
     const contentHash = clipInfo.hash;
     try {
-      if (props.dbClient.current !== null) {
+      if (props.dbClient !== null) {
         await props.dbClient.setClip({
           searchId: props.searchId,
           contentHash,
