@@ -90,11 +90,11 @@ const TagsPad = (props) => {
       props.searchVersion === "v2" && props.searchAssets
         ? props.clipInfo.fields
         : props.clipInfo.sources[0].fields;
-
+    console.log(props.clipInfo.sources[0]);
     let _hasTags =
-      props.searchVersion !== "v2"
-        ? "text" in props.clipInfo.sources[0].document
-        : Object.keys(sourceFields).some((k) => k in tags.current);
+      props.searchVersion === "v2"
+        ? Object.keys(sourceFields).some((k) => k in tags.current)
+        : "text" in props.clipInfo.sources[0].document;
 
     console.log("parsing tags");
     if (_hasTags) {
@@ -156,7 +156,7 @@ const TagsPad = (props) => {
             if (!(trackname in currdoc)) {
               continue;
             }
-            for (let text of currdoc[k]) {
+            for (let text of currdoc[trackname]) {
               let like = 0;
               if (props.shotsMemo.current[shotId] != null) {
                 const prevLike =
@@ -214,11 +214,11 @@ const TagsPad = (props) => {
                       dictionary.text.toLowerCase() === tag.text.toLowerCase()
                   )
                 ) {
-                  tags.current[k].push(tag);
+                  tags.current[trackname].push(tag);
                 }
 
                 shot.tags.push({
-                  status: { track: k, text: text, idx: idx },
+                  status: { track: trackname, text: text, idx: idx },
                   feedback: { [props.searchId]: like },
                 });
 

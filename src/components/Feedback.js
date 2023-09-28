@@ -43,7 +43,7 @@ const starStyle = {
 
 const Feedback = (props) => {
   const [wantinput, setWantinput] = useState(false);
-  const [otherReasons, setOtherReasons] = useState("");
+  const otherreasons = useRef("");
   const [reason, setReason] = useState("");
   const [reasonId, setReasonId] = useState(0);
   const hasReason = useRef(false);

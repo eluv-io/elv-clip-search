@@ -128,14 +128,24 @@ const ClipRes = (props) => {
   }, []);
 
   useEffect(() => {
-    const _hasTags =
-      "f_start_time" in props.clipInfo.sources[0].fields &&
-      "f_end_time" in props.clipInfo.sources[0].fields;
-    if (_hasTags) {
-      for (let src of props.clipInfo.sources) {
-        const currdoc = src.document;
-        const shotId = `${props.clipInfo.hash}_${currdoc.start_time}-${currdoc.end_time}`;
-        shotsMemo.current[shotId] = null;
+    if (props.searchVersion === "v1") {
+      const _hasTags =
+        Object.keys(props.clipInfo.sources[0].document.text).length > 0;
+      if (_hasTags) {
+        for (let src of props.clipInfo.sources) {
+          const currdoc = src.document;
+          const shotId = `${props.clipInfo.hash}_${currdoc.start_time}_${currdoc.end_time}`;
+          shotsMemo.current[shotId] = null;
+        }
+      }
+    } else {
+      const _hasTags = Object.keys(props.clipInfo.sources[0].fields).length > 0;
+      if (_hasTags) {
+        for (let src of props.clipInfo.sources) {
+          const currdoc = src.fields;
+          const shotId = `${props.clipInfo.hash}_${currdoc.f_start_time}_${currdoc.f_end_time}`;
+          shotsMemo.current[shotId] = null;
+        }
       }
     }
   }, []);
@@ -297,6 +307,7 @@ const ClipRes = (props) => {
 
       <QAPad
         clipInfo={props.clipInfo}
+        searchVersion={props.searchVersion}
         searchId={props.searchId}
         searchAssets={props.searchAssets}
         shotsMemo={shotsMemo}
