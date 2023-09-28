@@ -186,7 +186,7 @@ class DB {
       try {
         const clipDocRef = doc(
           this.db,
-          "Clip_info",
+          "clipInfo",
           contentHash + "_" + clipStart + "_" + clipEnd
         );
         const clip = await getDoc(clipDocRef);

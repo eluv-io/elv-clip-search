@@ -313,7 +313,7 @@ const App = () => {
         dbClient.current = _dbClient;
         return _dbClient;
       } catch (err) {
-        console.log(`Error occurred when creating the DB client failed`);
+        console.log(`Error occurred when creating the DB client`);
         return null;
       }
     } else {
