@@ -5,7 +5,7 @@ import {
   BiDislike,
   BiLike,
 } from "react-icons/bi";
-import { tagsFormat } from "./TagsFormat";
+import { tagsFormat } from "../TagsFormat";
 
 const TagsPad = (props) => {
   const tagsMap =
@@ -196,6 +196,7 @@ const TagsPad = (props) => {
     const clipStart = clipInfo.start;
     const clipEnd = clipInfo.end;
     const contentHash = clipInfo.hash;
+    console.log(clipInfo);
     try {
       if (props.dbClient !== null) {
         await props.dbClient.setClip({
