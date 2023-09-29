@@ -205,7 +205,7 @@ const TagsPad = (props) => {
                   text: text,
                   like: like,
                   shotId: shotId,
-                  tags: [],
+                  tagIdx: idx,
                 };
                 if (
                   !tags.current[trackname].some(
