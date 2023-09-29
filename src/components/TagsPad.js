@@ -119,7 +119,6 @@ const TagsPad = (props) => {
                   texts = texts[p];
                 }
               }
-              console.log(texts);
               if (typeof texts === "string") {
                 texts = [texts];
               }
