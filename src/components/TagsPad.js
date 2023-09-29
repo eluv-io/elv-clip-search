@@ -64,17 +64,19 @@ const TagsPad = (props) => {
       for (let src of sourceData) {
         // each src represent a shot
 
-        let shotStart, shotEnd, prefix, shotId;
+        let shotStart = src,
+          shotEnd = src,
+          prefix = src;
         for (let p of format.shotStart.split("/")) {
-          shotStart = src[p];
+          shotStart = shotStart[p];
         }
         for (let p of format.shotEnd.split("/")) {
-          shotEnd = src[p];
+          shotEnd = shotEnd[p];
         }
         for (let p of format.prefix.split("/")) {
-          prefix = src[p];
+          prefix = prefix[p];
         }
-        shotId = props.searchAssets
+        const shotId = props.searchAssets
           ? contentHash + src.prefix
           : contentHash + "_" + shotStart + "_" + shotEnd;
         const shot = {
