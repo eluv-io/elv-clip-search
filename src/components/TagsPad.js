@@ -76,6 +76,8 @@ const TagsPad = (props) => {
         for (let p of format.prefix.split("/")) {
           prefix = prefix[p];
         }
+        shotStart = shotStart || 0;
+        shotEnd = shotEnd || 0;
         const shotId = props.searchAssets
           ? contentHash + src.prefix
           : contentHash + "_" + shotStart + "_" + shotEnd;
@@ -158,7 +160,7 @@ const TagsPad = (props) => {
         if (props.shotsMemo.current[shotId] == null) {
           props.shotsMemo.current[shotId] = shot;
           if (needToPush && props.dbClient !== null) {
-            await props.dbClient.setShot({ shot });
+            await props.dbClient.setShot({ shot: shot });
           }
         }
       }
@@ -196,7 +198,6 @@ const TagsPad = (props) => {
     const clipStart = clipInfo.start;
     const clipEnd = clipInfo.end;
     const contentHash = clipInfo.hash;
-    console.log(clipInfo);
     try {
       if (props.dbClient !== null) {
         await props.dbClient.setClip({
