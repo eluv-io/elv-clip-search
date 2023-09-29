@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
+import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
+import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
@@ -182,15 +183,25 @@ const loadingUrlContainer = {
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
+  const TOPK_BY_DEFAULT = true;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
-    "characters",
+    // delete for MGM
+    // "characters",
     "display_title",
     "logo",
     "object",
     "segment",
     "speech_to_text",
   ];
+  const ASSETS_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+  ];
+
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
@@ -200,7 +211,9 @@ const App = () => {
   const [tenId, setTenId] = useState("");
   const [url, setUrl] = useState("");
   const [searchTerms, setSearchTerms] = useState([]);
+  const searchAssets = useRef(false);
   const [displayingContents, setDisplayingContents] = useState([]);
+  const [showSearchBox, setShowSearchBox] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -223,7 +236,7 @@ const App = () => {
   const [errMsg, setErrMsg] = useState("");
   const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
   const [haveSearchVersion, setHaveSearchVersion] = useState(false);
-  const [showTopk, setShowTopk] = useState(false);
+  const [showTopk, setShowTopk] = useState(TOPK_BY_DEFAULT);
 
   // processed info
   const network = useRef("main");
@@ -273,7 +286,11 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
-    setShowTopk(false);
+    if (searchVersion.current === "v1") {
+      setShowTopk(false);
+    } else {
+      setShowTopk(TOPK_BY_DEFAULT);
+    }
     setProcessingDB(false);
   };
 
@@ -296,7 +313,7 @@ const App = () => {
         dbClient.current = _dbClient;
         return _dbClient;
       } catch (err) {
-        console.log(`Error occurred when creating the DB client failed`);
+        console.log(`Error occurred when creating the DB client`);
         return null;
       }
     } else {
@@ -350,6 +367,7 @@ const App = () => {
         search,
         fuzzySearchPhrase,
         fuzzySearchField,
+        searchAssets: searchAssets.current,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -380,16 +398,22 @@ const App = () => {
             topkRes,
             topkCount,
           } = await parseSearchRes(
-            searchRes["data"]["contents"],
+            searchRes["data"],
             TOPK,
-            CLIPS_PER_PAGE
+            CLIPS_PER_PAGE,
+            searchAssets.current
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
-          setTotalContent(searchRes["data"]["contents"].length);
+          console.log("search assets", searchAssets.current);
+          setTotalContent(
+            searchAssets.current
+              ? searchRes["data"]["results"].length
+              : searchRes["data"]["contents"].length
+          );
           contents.current = clips_per_content;
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
@@ -464,10 +488,18 @@ const App = () => {
           } finally {
             setProcessingDB(false);
           }
+        } else {
+          // fake a searchId
+          searchId.current = objId;
         }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
-          jumpToContent(firstContentToDisplay);
+          // there are err handling things inside this function
+          if (showTopk) {
+            jumpToPageInTopk(0);
+          } else {
+            jumpToContent(firstContentToDisplay);
+          }
         }
         // finally set have search res to be True
         setHaveSearchRes(true);
@@ -528,28 +560,39 @@ const App = () => {
             if (searchObjMeta["version"] === "2.0") {
               setShowFuzzy(true);
               searchVersion.current = "v2";
+              searchAssets.current = false;
+              try {
+                const indexerType =
+                  searchObjMeta["config"]["indexer"]["arguments"]["document"][
+                    "prefix"
+                  ];
+                if (indexerType.includes("assets")) {
+                  searchAssets.current = true;
+                }
+              } catch (error) {
+                console.log(error);
+              }
             } else {
               setShowFuzzy(false);
+              setShowTopk(false);
               searchVersion.current = "v1";
             }
+            const selectedFields = searchAssets.current
+              ? ASSETS_SEARCH_FIELDS
+              : ALL_SEARCH_FIELDS;
+            console.log("selectedFields", selectedFields);
             filteredSearchFields.current = Object.keys(
               searchObjMeta.config.indexer.arguments.fields
             )
-              .filter((n) => {
-                return ALL_SEARCH_FIELDS.includes(n);
-              })
-              .map((n) => {
-                return `f_${n}`;
-              });
+              .filter((n) => selectedFields.includes(n))
+              .map((n) => `f_${n}`);
             setLoadingSearchVersion(false);
             setHaveSearchVersion(true);
           } catch (err) {
             setHaveSearchVersion(false);
             setLoadingSearchVersion(false);
             setErr(true);
-            setErrMsg(
-              "Permission Error, check you account and the input index please"
-            );
+            setErrMsg(err.message);
           }
           try {
             let fetchedTenId = "";
@@ -627,19 +670,40 @@ const App = () => {
                 statusHandler={resetLoadStatus}
               />
             </div>
-            <div className="row mt-3">
-              <div
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 10,
+                height: 40,
+                width: "100%",
+              }}
+            >
+              <button
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  border: "none",
+                  borderRadius: 10,
+                  height: "90%",
+                  width: 150,
+                }}
+                onClick={() => {
+                  document.getElementById("searchBox").style.display =
+                    showSearchBox ? "none" : "block";
+                  setShowSearchBox((x) => !x);
                 }}
               >
-                More Filters
-              </div>
+                {showSearchBox ? "Hide Filters" : "More filters"}
+              </button>
+            </div>
+
+            <div
+              className="row mt-3"
+              id="searchBox"
+              style={{ display: "none" }}
+            >
               <SearchBox
-                text="Search term"
                 filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
                 searchVersion="2.0"
@@ -827,7 +891,21 @@ const App = () => {
               )}
               {havePlayoutUrl ? (
                 displayingContents.map((clip) => {
-                  return (
+                  return searchAssets.current ? (
+                    <AssetRes
+                      clipInfo={clip}
+                      key={clip.id + clip.rank}
+                      client={getClient()}
+                      network={network.current}
+                      walletAddr={walletAddr.current}
+                      searchId={searchId.current}
+                      searchAssets={searchAssets.current}
+                      contents={contents.current}
+                      searchVersion={searchVersion.current}
+                      engagement={engagement}
+                      dbClient={dbClient.current}
+                    ></AssetRes>
+                  ) : (
                     <ClipRes
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
@@ -835,6 +913,7 @@ const App = () => {
                       network={network.current}
                       walletAddr={walletAddr.current}
                       searchId={searchId.current}
+                      searchAssets={searchAssets.current}
                       contents={contents.current}
                       searchVersion={searchVersion.current}
                       engagement={engagement}

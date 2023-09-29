@@ -187,7 +187,7 @@ class DB {
         const clipDocRef = doc(
           this.db,
           "clipInfo",
-          contentHash + "_" + clipStart + "-" + clipEnd
+          contentHash + "_" + clipStart + "_" + clipEnd
         );
         const clip = await getDoc(clipDocRef);
         if (!clip.exists()) {

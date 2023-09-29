@@ -7,7 +7,16 @@ export const toTimeString = (totalMiliSeconds) => {
   return result;
 };
 
-export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
+export const parseSearchRes = async (
+  searchResults,
+  TOPK,
+  CLIPS_PER_PAGE,
+  searchAssets
+) => {
+  const data =
+    searchAssets === true
+      ? searchResults["results"]
+      : searchResults["contents"];
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -39,11 +48,20 @@ export const parseSearchRes = async (data, TOPK, CLIPS_PER_PAGE) => {
     // get currernt item
     const item = data[i];
     item["rank"] = i + 1;
+    // for asset search res
+    if (searchAssets) {
+      item["start"] = 0;
+      item["end"] = 0;
+      item["f_start_time"] = 0;
+      item["f_end_time"] = 0;
+    }
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
       idNameMap[item["id"]] =
-        item.meta.public.asset_metadata.title.split(",")[0];
+        "public" in item.meta
+          ? item.meta.public.asset_metadata.title.split(",")[0]
+          : item.sources[0]["prefix"].split("/")[1];
       // set the first content to be current content
       if (firstContent === "") {
         firstContent = item["id"];
@@ -87,6 +105,7 @@ export const createSearchUrl = async ({
   search,
   fuzzySearchPhrase,
   fuzzySearchField,
+  searchAssets,
 }) => {
   try {
     if (searchVersion === "v1") {
@@ -120,13 +139,14 @@ export const createSearchUrl = async ({
             : search === ""
             ? fuzzySearchPhrase
             : `((${fuzzySearchPhrase}) AND ${search})`,
-        select: "start_time,end_time,text,/public/asset_metadata/title",
+        select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
-        display_fields: "f_start_time,f_end_time",
+        display_fields: "all",
         clips: true,
         scored: true,
         clips_include_source_tags: true,
+        clips_max_duration: 55,
       };
       if (fuzzySearchField.length > 0) {
         queryParams.search_fields = fuzzySearchField.join(",");
@@ -142,6 +162,10 @@ export const createSearchUrl = async ({
       // if we do not have the exact match filters, we should enable semantic=true
       if (search === "") {
         queryParams.semantic = true;
+      }
+      // for assets index type, disable clip and relevant parms
+      if (searchAssets === true) {
+        queryParams.clips = false;
       }
       const url = await client.Rep({
         libraryId,
@@ -194,5 +218,55 @@ export const getPlayoutUrl = async ({ client, objectId }) => {
   } catch (err) {
     console.log(err);
     return null;
+  }
+};
+
+export const getEmbedUrl = async ({
+  client,
+  objectId,
+  clipStart,
+  clipEnd,
+  duration,
+}) => {
+  try {
+    const permission = await client.Permission({ objectId });
+    if (["owner", "editable", "viewable"].includes(permission)) {
+      const networkInfo = await client.NetworkInfo();
+      const networkName =
+        networkInfo.name === "demov3"
+          ? "demo"
+          : networkInfo.name === "test" && networkInfo.id === 955205
+          ? "testv4"
+          : networkInfo.name;
+      let embedUrl = new URL("https://embed.v3.contentfabric.io");
+
+      embedUrl.searchParams.set("p", "");
+      embedUrl.searchParams.set("net", networkName);
+      embedUrl.searchParams.set("oid", objectId);
+      embedUrl.searchParams.set("end", clipEnd);
+      embedUrl.searchParams.set("start", clipStart);
+      embedUrl.searchParams.set("ct", "s");
+      embedUrl.searchParams.set("st", "");
+      embedUrl.searchParams.set("off", "default");
+
+      const token = await client.CreateSignedToken({
+        objectId,
+        duration,
+      });
+      embedUrl.searchParams.set("ath", token);
+      return {
+        embedUrl: embedUrl.toString(),
+      };
+    } else {
+      // const playoutUrl = await getPlayoutUrl({ client, objectId });
+      // return {
+      //   playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
+      // };
+      return { reason: "Account has no permission to create the embed URL" };
+    }
+  } catch (err) {
+    console.log(err);
+    console.log("Create embed URL error");
+    return { reason: "Create embed URL error" };
   }
 };
