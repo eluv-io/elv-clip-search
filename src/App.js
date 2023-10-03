@@ -800,7 +800,7 @@ const App = () => {
                     }
                   }}
                 >
-                  Sort by relavance
+                  Sort by relevance
                 </button>
                 <button
                   style={{
