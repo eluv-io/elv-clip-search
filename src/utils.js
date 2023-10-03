@@ -23,9 +23,9 @@ export const parseSearchRes = async (
   let firstContent = "";
   let topkCount = 0;
   for (let i = 0; i < data.length; i++) {
-    if (i >= TOPK) {
-      break;
-    }
+    // if (i >= TOPK) {
+    //   break;
+    // }
     // get currernt item
     const item = JSON.parse(JSON.stringify(data[i]));
     item["rank"] = i + 1;
