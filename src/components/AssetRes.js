@@ -1,7 +1,7 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
-import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+
 const container = {
   width: "97%",
   height: 900,
@@ -153,7 +153,7 @@ const AssetRes = (props) => {
           <InfoPad
             clipInfo={props.clipInfo}
             dbClient={props.dbClient}
-            clientAddr={props.clientAddr}
+            walletAddr={props.walletAddr}
             searchId={props.searchId}
             searchAssets={props.searchAssets}
             viewTime={viewTime.current}
