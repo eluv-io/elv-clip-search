@@ -54,7 +54,7 @@ const Feedback = (props) => {
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
   const contentHash = clipInfo.hash;
-  const clipHash = contentHash + "_" + clipStart + "-" + clipEnd;
+  const clipHash = contentHash + "_" + clipStart + "_" + clipEnd;
 
   useEffect(() => {
     if (props.dbClient !== null && props.searchId !== null) {

@@ -137,15 +137,15 @@ class DB {
   async setShot({ shot }) {
     if (this.db !== null) {
       try {
-        const shotDocRef = doc(this.db, "shotInfo", shot.shotId);
-        const shotDoc = await getDoc(shotDocRef);
         const payload = {
           start: shot.start,
           end: shot.end,
           iqHash: shot.iqHash,
-          "iqHash_start-end": shot.shotId,
+          shotId: shot.shotId,
           tags: shot.tags,
         };
+        const shotDocRef = doc(this.db, "shotInfo", shot.shotId);
+        const shotDoc = await getDoc(shotDocRef);
         if (shotDoc.exists()) {
           await updateDoc(shotDocRef, payload);
         } else {
