@@ -23,12 +23,19 @@ export const parseSearchRes = async (
   let firstContent = "";
   let topkCount = 0;
   for (let i = 0; i < data.length; i++) {
-    if (i >= TOPK) {
-      break;
-    }
+    // if (i >= TOPK) {
+    //   break;
+    // }
     // get currernt item
     const item = JSON.parse(JSON.stringify(data[i]));
     item["rank"] = i + 1;
+    // for asset search res
+    if (searchAssets) {
+      item["start"] = 0;
+      item["end"] = 0;
+      item["f_start_time"] = 0;
+      item["f_end_time"] = 0;
+    }
     topkCount += 1;
     item.processed = false;
     topkResPage.push(item);

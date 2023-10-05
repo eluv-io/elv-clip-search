@@ -1,7 +1,6 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
-
 const container = {
   width: "97%",
   height: 900,

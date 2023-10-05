@@ -800,7 +800,7 @@ const App = () => {
                     }
                   }}
                 >
-                  Show Top {topkCnt.current}
+                  Sort by relevance
                 </button>
                 <button
                   style={{
@@ -814,7 +814,7 @@ const App = () => {
                     }
                   }}
                 >
-                  Show {totalContent} returned results
+                  Sort by content id
                 </button>
               </div>
             ) : (
