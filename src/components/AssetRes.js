@@ -120,7 +120,7 @@ const AssetRes = (props) => {
               ) : (
                 <img
                   style={{
-                    width: "auto",
+                    width: "100%",
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
