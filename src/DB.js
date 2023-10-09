@@ -55,21 +55,55 @@ class DB {
       try {
         const userDocRef = doc(this.db, "users", walletAddr);
         const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          console.log("User already exists");
-          await updateDoc(userDocRef, { userLoginTime: serverTimestamp() });
-        } else {
+        if (!userDocSnap.exists()) {
           await setDoc(userDocRef, {
             walletAddress: walletAddr,
             emailAddress: null,
-            userCreateTime: serverTimestamp(),
-            userLoginTime: null, //last login time
             userInformation: {},
           });
           console.log("New user added");
+        } else {
+          console.log("User already exists");
         }
+        const loginHistoryCollectionRef = collection(
+          userDocRef,
+          "loginHistory"
+        );
+        await addDoc(loginHistoryCollectionRef, {
+          timestamp: serverTimestamp(),
+        });
       } catch (err) {
-        console.log("Err: Save user into DB failed");
+        console.log("Err: Save user into DB failed", err);
+      }
+    }
+  }
+
+  async setTenancy({ tenantID }) {
+    if (this.db !== null) {
+      try {
+        const tenantDocRef = doc(this.db, "tenants", tenantID);
+        const tenantDocSnap = await getDoc(tenantDocRef);
+
+        if (!tenantDocSnap.exists()) {
+          // If tenant doesn't exist, create a new tenant document
+          await setDoc(tenantDocRef, {
+            tenantAddress: tenantID,
+          });
+          console.log("New tenant added");
+        } else {
+          console.log("Tenant already exists");
+        }
+
+        const loginHistoryCollectionRef = collection(
+          tenantDocRef,
+          "loginHistory"
+        );
+        await addDoc(loginHistoryCollectionRef, {
+          timestamp: serverTimestamp(),
+        });
+        console.log("Login history updated");
+      } catch (err) {
+        console.log("Err: Save tenant into DB failed", err);
       }
     }
   }

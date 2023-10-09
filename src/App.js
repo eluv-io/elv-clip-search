@@ -256,7 +256,7 @@ const App = () => {
 
   const engagement = useRef({});
 
-  //initialize the DB and store the wallet_address and tenancy
+  //initialize the DB and store the wallet_address
   useEffect(() => {
     const storeUserInfo = async () => {
       try {
@@ -277,6 +277,14 @@ const App = () => {
     };
     storeUserInfo();
   }, []);
+
+  useEffect(() => {
+    // This code will run after the component re-renders
+    if (dbClient.current !== null && tenId !== "") {
+      console.log("Setting tenancy:", tenId);
+      dbClient.current.setTenancy({ tenantID: tenId });
+    }
+  }, [tenId]); // The effect depends on the value of tenId
 
   const resetLoadStatus = () => {
     setHavePlayoutUrl(false);
