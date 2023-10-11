@@ -1,20 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FrameClient } from "@eluvio/elv-client-js/dist/ElvFrameClient-min.js";
+import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
+import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import { parseSearchRes, createSearchUrl } from "./utils";
-
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "./configuration";
-import {
-  getFirestore, collection, addDoc, Timestamp, doc, getDoc, setDoc, updateDoc,
-} from 'firebase/firestore' ;
-
+import { BsSearch } from "react-icons/bs";
+import DB from "./DB";
 
 const title = {
   display: "flex",
@@ -187,24 +183,37 @@ const loadingUrlContainer = {
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
+  const TOPK_BY_DEFAULT = true;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
-    "characters",
+    // delete for MGM
+    // "characters",
     "display_title",
     "logo",
     "object",
     "segment",
     "speech_to_text",
   ];
+  const ASSETS_SEARCH_FIELDS = [
+    "celebrity",
+    "characters",
+    "display_title",
+    "logo",
+    "object",
+  ];
+
   // basic info
   const [search, setSearch] = useState("");
   const [fuzzySearchPhrase, setFuzzySearchPhrase] = useState("");
   const [fuzzySearchField, setFuzzySearchField] = useState([]);
   const [objId, setObjId] = useState("");
   const [libId, setLibId] = useState("");
+  const [tenId, setTenId] = useState("");
   const [url, setUrl] = useState("");
-  const [searchTerms, setSearchTerms] = useState([])
+  const [searchTerms, setSearchTerms] = useState([]);
+  const searchAssets = useRef(false);
   const [displayingContents, setDisplayingContents] = useState([]);
+  const [showSearchBox, setShowSearchBox] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -219,6 +228,7 @@ const App = () => {
   const [haveSearchRes, setHaveSearchRes] = useState(false);
   const [loadingPlayoutUrl, setLoadingPlayoutUrl] = useState(false);
   const [havePlayoutUrl, setHavePlayoutUrl] = useState(false);
+  const [processingDB, setProcessingDB] = useState(false);
 
   // other helpful status
   const [err, setErr] = useState(false);
@@ -226,7 +236,7 @@ const App = () => {
   const [errMsg, setErrMsg] = useState("");
   const [loadingSearchVersion, setLoadingSearchVersion] = useState(false);
   const [haveSearchVersion, setHaveSearchVersion] = useState(false);
-  const [showTopk, setShowTopk] = useState(false);
+  const [showTopk, setShowTopk] = useState(TOPK_BY_DEFAULT);
 
   // processed info
   const network = useRef("main");
@@ -240,54 +250,32 @@ const App = () => {
   const [currentContent, setCurrentContent] = useState("");
   const filteredSearchFields = useRef([]);
 
-  const db = useRef(null);
-  const clientAdd = useRef(null);
-  const searchID = useRef(null);
+  const dbClient = useRef(null);
+  const walletAddr = useRef(null);
+  const searchId = useRef(null);
 
   const engagement = useRef({});
 
-  //initialize the DB and store the useradd
+  //initialize the DB and store the wallet_address and tenancy
   useEffect(() => {
-    try {
-      initializeApp(firebaseConfig);
-      db.current = getFirestore();
-    } catch (err) {
-      console.log("Error occured when initializing the DB");
-      console.log(err);
-    }
+    const storeUserInfo = async () => {
+      try {
+        const _dbClient = getDBClient();
+        if (_dbClient == null) return;
 
-    getClient();
-    try {
-      if (db.current != null) {
-
-        client.current.CurrentAccountAddress().then((val) => {
-          clientAdd.current = val;
-          const userRef = collection(db.current, 'User');
-          const clientRef = doc(userRef, clientAdd.current);
-          getDoc(clientRef).then((thisClient) => {
-            if (!thisClient.exists()) {
-              setDoc(clientRef, {
-                Client_address: clientAdd.current,
-                Wallet_id: null,
-                Email_add: null,
-                Creation_time: null,
-                Updated_time: null,
-                Personal_info: {}
-              }).then(() => {
-                console.log("User info saved");
-              })
-            } else {
-              console.log("This user already exists");
-            }
-          });
-        })
+        const addr = await getClient().CurrentAccountAddress();
+        walletAddr.current = addr;
+        await _dbClient.setUser({ walletAddr: addr });
+      } catch (err) {
+        if (err.message.include("wallet")) {
+          console.log(`Error: getting user wallet address failed`);
+        } else {
+          console.log("Error occured when storing the user info");
+        }
+        console.error(err);
       }
-    } catch (err) {
-      console.log("Error occured when storing the user info");
-      console.error(err)
-    }
-
-
+    };
+    storeUserInfo();
   }, []);
 
   const resetLoadStatus = () => {
@@ -298,92 +286,12 @@ const App = () => {
     setLoadingSearchRes(false);
     setErr(false);
     setTotalContent(0);
-    setShowTopk(false);
-  };
-
-  const initializeEngagement = () => {
-    engagement.current = {};
-    const currContents = contents.current;
-    for (let content in currContents) {
-      for (let page in currContents[content].clips) {
-        const clips_per_page = currContents[content].clips[page];
-        for (let key in clips_per_page) {
-          const clip = clips_per_page[key];
-          if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clip.rank <= 20)) {
-            const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
-            engagement.current[clipID] = {numView: 0, watchedTime: 0};
-          }
-        }
-      }
-    }
-
-    if (db.current !== null) {
-      try {
-        const engTblRef = collection(db.current, "Engagement");
-        const engRef = doc(engTblRef, clientAdd.current + "_" +  searchID.current);
-        setDoc(engRef, {
-          engagement: engagement.current,
-          User_id: clientAdd.current,
-          Search_id: searchID.current
-        }).then(() => {
-          console.log("Engagement table initialized")
-        })
-      } catch (err) {
-        console.log("Error occured when initializing the engagement table");
-        console.log(err);
-      }
-    }
-  }
-
-  const updateEngagement = (clipInfo, watchedTime, numView) => {
-    if (searchVersion.current === "v1" || (searchVersion.current === "v2" && clipInfo.rank <= 20)) {
-      const clipID = clipInfo.hash + "_" + clipInfo.start + "-" + clipInfo.end;
-      const newWatchedTime = watchedTime + engagement.current[clipID].watchedTime;
-      const newNumView = numView + engagement.current[clipID].numView;
-      console.log(newNumView)
-      engagement.current[clipID] = {numView: newNumView, watchedTime: newWatchedTime};
-      if (db.current !== null) {
-        try {
-          const engTblRef = collection(db.current, "Engagement");
-          const engRef = doc(engTblRef, clientAdd.current + "_" + searchID.current);
-          updateDoc(engRef, {
-            engagement: engagement.current
-          }).then(() => {
-            console.log(engagement.current)
-            console.log("engagement updated!")
-          })
-        } catch (err) {
-          console.log("Error occured when updating the engagement table")
-          console.log(err);
-        }
-      }
+    if (searchVersion.current === "v1") {
+      setShowTopk(false);
     } else {
-      console.log("only keep track of the top 20 clips for v2");
+      setShowTopk(TOPK_BY_DEFAULT);
     }
-  }
-
-  const storeSearchHistory = () => {
-    if (db !== null) {
-      try {
-        console.log(searchTerms)
-        const colRef = collection(db.current, "Search_history");
-        const now = Timestamp.now().toDate().toUTCString();
-        addDoc(colRef, {
-          client: clientAdd.current,
-          search_time: now,
-          fuzzySearchPhrase: fuzzySearchPhrase,
-          fuzzySearchFields: fuzzySearchField,
-          searchKeywords: searchTerms,
-        }).then((docRef) => {
-          console.log("search history updated with docID", docRef.id);
-          searchID.current = docRef.id;
-          initializeEngagement();
-        })
-      } catch (err) {
-        console.log("Error occured when storing the search history")
-        console.log(err)
-      }
-    }
+    setProcessingDB(false);
   };
 
   const getClient = () => {
@@ -398,110 +306,33 @@ const App = () => {
     }
   };
 
+  const getDBClient = () => {
+    if (dbClient.current == null) {
+      try {
+        const _dbClient = new DB();
+        dbClient.current = _dbClient;
+        return _dbClient;
+      } catch (err) {
+        console.log(`Error occurred when creating the DB client`);
+        return null;
+      }
+    } else {
+      return dbClient.current;
+    }
+  };
+
   const jumpToPageInAll = (pageIndex) => {
     currentPage.current = pageIndex;
     setDisplayingContents(contents.current[currentContent].clips[pageIndex]);
   };
 
   const jumpToPageInTopk = (pageIndex) => {
-    // setLoadingTopkPage(true);
-    // setHavePlayoutUrl(false);
-    // try {
-    //   for (let i = 0; i < topk.current[pageIndex].length; i++) {
-    //     if (!topk.current[pageIndex][i].processed) {
-    //       const objectId = topk.current[pageIndex][i].id;
-    //       if (objectId in playoutUrlMemo.current) {
-    //         topk.current[pageIndex][i].url = playoutUrlMemo.current[objectId];
-    //       } else {
-    //         const videoUrl = await getPlayoutUrl({
-    //           client: client.current,
-    //           objectId,
-    //         });
-    //         topk.current[pageIndex][i].url = videoUrl;
-    //         if (videoUrl !== null) {
-    //           playoutUrlMemo.current[objectId] = videoUrl;
-    //         }
-    //       }
-    //       if (topk.current[pageIndex][i].url !== null) {
-    //         topk.current[pageIndex][i].processed = true;
-    //       }
-    //     }
-    //   }
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(true);
-    //   setDisplayingContents(topk.current[pageIndex]);
-    // } catch (err) {
-    //   console.log(err);
-    //   setLoadingTopkPage(false);
-    //   setHavePlayoutUrl(false);
-    //   setDisplayingContents([]);
-    //   setErr(true);
-    //   setErrMsg("Loading playout url for contents on this page went wrong");
-    // }
-
-    // after replacing the player, we do not need to load the url explicitly
     setLoadingTopkPage(false);
     setHavePlayoutUrl(true);
     setDisplayingContents(topk.current[pageIndex]);
   };
 
   const jumpToContent = (objectId) => {
-    // try {
-    //   // loading playout url for each clip res
-    //   setHavePlayoutUrl(false);
-    //   setLoadingPlayoutUrl(true);
-    //   currentPage.current = 1;
-    //   const clips_per_content = contents.current;
-    //   if (clips_per_content[objectId].processed) {
-    //     // if it is processed, just return that
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   } else {
-    //     // get the possible offerings
-    //     let videoUrl = "";
-    //     if (objectId in playoutUrlMemo.current) {
-    //       videoUrl = playoutUrlMemo.current[objectId];
-    //     } else {
-    //       videoUrl = await getPlayoutUrl({
-    //         client: client.current,
-    //         objectId,
-    //       });
-    //       if (videoUrl !== null) {
-    //         playoutUrlMemo.current[objectId] = videoUrl;
-    //       }
-    //     }
-    //     for (let pageIndex in clips_per_content[objectId].clips) {
-    //       for (let item of clips_per_content[objectId].clips[pageIndex]) {
-    //         item.url = videoUrl;
-    //       }
-    //     }
-    //     if (videoUrl !== null) {
-    //       clips_per_content[objectId].processed = true;
-    //     }
-    //     contents.current = clips_per_content;
-    //     numPages.current = Object.keys(
-    //       clips_per_content[objectId].clips
-    //     ).length;
-    //     setLoadingPlayoutUrl(false);
-    //     setHavePlayoutUrl(true);
-    //     setDisplayingContents(clips_per_content[objectId].clips[1]);
-    //     return;
-    //   }
-    // } catch (err) {
-    //   console.log(`Error message : ${err.message} - `, err.code);
-    //   setLoadingPlayoutUrl(false);
-    //   setHavePlayoutUrl(false);
-    //   setErrMsg("Playout URL error");
-    //   setErr(true);
-    //   return null;
-    // }
-
-    // after replacing the player, we do not need to load the url explicitly
     currentPage.current = 1;
     numPages.current = Object.keys(contents.current[objectId].clips).length;
     setLoadingPlayoutUrl(false);
@@ -536,6 +367,7 @@ const App = () => {
         search,
         fuzzySearchPhrase,
         fuzzySearchField,
+        searchAssets: searchAssets.current,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -555,6 +387,7 @@ const App = () => {
           );
           return;
         }
+        // try to update DB
         // try to parse
         let firstContentToDisplay = "";
         try {
@@ -565,16 +398,22 @@ const App = () => {
             topkRes,
             topkCount,
           } = await parseSearchRes(
-            searchRes["data"]["contents"],
+            searchRes["data"],
             TOPK,
-            CLIPS_PER_PAGE
+            CLIPS_PER_PAGE,
+            searchAssets.current
           );
           // update the result information for "show topk" display mode
           topkCnt.current = topkCount;
           topk.current = topkRes;
           topkPages.current = topkRes.length;
           // update the result infomation for "group by content" display mode
-          setTotalContent(searchRes["data"]["contents"].length);
+          console.log("search assets", searchAssets.current);
+          setTotalContent(
+            searchAssets.current
+              ? searchRes["data"]["results"].length
+              : searchRes["data"]["contents"].length
+          );
           contents.current = clips_per_content;
           contentsIdNameMap.current = idNameMap;
           setCurrentContent(firstContent);
@@ -585,7 +424,6 @@ const App = () => {
               : 0;
           // update the loading status
           setLoadingSearchRes(false);
-          setHaveSearchRes(true);
         } catch (err) {
           console.log(err);
           setLoadingSearchRes(false);
@@ -595,11 +433,76 @@ const App = () => {
           );
           return;
         }
+        // initial the emgage dic
+        try {
+          engagement.current = {};
+          for (let content in contents.current) {
+            for (let page in contents.current[content].clips) {
+              const clips_per_page = contents.current[content].clips[page];
+              for (let clip of clips_per_page) {
+                if (
+                  searchVersion.current === "v1" ||
+                  (searchVersion.current === "v2" && clip.rank <= 20)
+                ) {
+                  const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
+                  engagement.current[clipID] = { numView: 0, watchedTime: 0 };
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.log(err);
+          setLoadingSearchRes(false);
+          setErr(true);
+          setErrMsg("Initial the engagememt data err");
+          return;
+        }
+        // process about DB: set search History and send engagement data
+        // could have err, but it would not affect whole page. the page can still work
+        if (dbClient.current !== null || walletAddr.current !== null) {
+          setProcessingDB(true);
+          try {
+            const _searchId = await dbClient.current.setSearchHistory({
+              walletAddr: walletAddr.current,
+              fuzzySearchFields: fuzzySearchField,
+              fuzzySearchPhrase: fuzzySearchPhrase,
+              searchKeywords: searchTerms,
+              searchObjId: objId,
+              tenantID: tenId,
+            });
+            if (_searchId !== null) {
+              searchId.current = _searchId;
+              await dbClient.current.setEngagement({
+                searchId: _searchId,
+                walletAddr: walletAddr.current,
+                engagement: engagement.current,
+                init: true,
+              });
+            } else {
+              console.log(
+                "Save search History failed, will not save enegement data"
+              );
+            }
+          } catch (err) {
+            console.log("Err: Set search history and engagement data err");
+          } finally {
+            setProcessingDB(false);
+          }
+        } else {
+          // fake a searchId
+          searchId.current = objId;
+        }
         // try to load and show the first contents infomation
         if (firstContentToDisplay !== "") {
           // there are err handling things inside this function
-          jumpToContent(firstContentToDisplay);
+          if (showTopk) {
+            jumpToPageInTopk(0);
+          } else {
+            jumpToContent(firstContentToDisplay);
+          }
         }
+        // finally set have search res to be True
+        setHaveSearchRes(true);
       } else {
         // create search url err
         setLoadingSearchRes(false);
@@ -645,6 +548,7 @@ const App = () => {
           setErr(true);
           setErrMsg("Invalid search index Id");
         }
+
         if (libId !== "") {
           try {
             setLibId(libId);
@@ -656,28 +560,48 @@ const App = () => {
             if (searchObjMeta["version"] === "2.0") {
               setShowFuzzy(true);
               searchVersion.current = "v2";
+              searchAssets.current = false;
+              try {
+                const indexerType =
+                  searchObjMeta["config"]["indexer"]["arguments"]["document"][
+                    "prefix"
+                  ];
+                if (indexerType.includes("assets")) {
+                  searchAssets.current = true;
+                }
+              } catch (error) {
+                console.log(error);
+              }
             } else {
               setShowFuzzy(false);
+              setShowTopk(false);
               searchVersion.current = "v1";
             }
+            const selectedFields = searchAssets.current
+              ? ASSETS_SEARCH_FIELDS
+              : ALL_SEARCH_FIELDS;
+            console.log("selectedFields", selectedFields);
             filteredSearchFields.current = Object.keys(
               searchObjMeta.config.indexer.arguments.fields
             )
-              .filter((n) => {
-                return ALL_SEARCH_FIELDS.includes(n);
-              })
-              .map((n) => {
-                return `f_${n}`;
-              });
+              .filter((n) => selectedFields.includes(n))
+              .map((n) => `f_${n}`);
             setLoadingSearchVersion(false);
             setHaveSearchVersion(true);
           } catch (err) {
             setHaveSearchVersion(false);
             setLoadingSearchVersion(false);
             setErr(true);
-            setErrMsg(
-              "Permission Error, check you account and the input index please"
-            );
+            setErrMsg(err.message);
+          }
+          try {
+            let fetchedTenId = "";
+            fetchedTenId = await client.ContentObjectTenantId({
+              [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+            });
+            setTenId(fetchedTenId);
+          } catch (err) {
+            console.log("Error: TenantID is not available");
           }
         }
       }}
@@ -746,19 +670,40 @@ const App = () => {
                 statusHandler={resetLoadStatus}
               />
             </div>
-            <div className="row mt-3">
-              <div
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 10,
+                height: 40,
+                width: "100%",
+              }}
+            >
+              <button
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  border: "none",
+                  borderRadius: 10,
+                  height: "90%",
+                  width: 150,
+                }}
+                onClick={() => {
+                  document.getElementById("searchBox").style.display =
+                    showSearchBox ? "none" : "block";
+                  setShowSearchBox((x) => !x);
                 }}
               >
-                More Filters
-              </div>
+                {showSearchBox ? "Hide Filters" : "More filters"}
+              </button>
+            </div>
+
+            <div
+              className="row mt-3"
+              id="searchBox"
+              style={{ display: "none" }}
+            >
               <SearchBox
-                text="Search term"
                 filteredSearchFields={filteredSearchFields.current}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
                 searchVersion="2.0"
@@ -780,46 +725,44 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) && haveSearchVersion && (
-        <div style={inputCheckContainer}>
-          <div style={inputInfoContainer}>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Index:</div>
-              <div style={{ flex: 3 }}>{objId}</div>
-            </div>
-            {showFuzzy && (
+      {!(haveSearchRes || loadingSearchRes) &&
+        haveSearchVersion &&
+        !haveSearchUrl && (
+          <div style={inputCheckContainer}>
+            <div style={inputInfoContainer}>
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                <div style={{ flex: 1 }}>Search Index:</div>
+                <div style={{ flex: 3 }}>{objId}</div>
               </div>
-            )}
-            {showFuzzy && (
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                </div>
+              )}
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                </div>
+              )}
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
-                <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
+                <div style={{ flex: 1 }}>
+                  {showFuzzy ? "More Filters:" : "Search Phrase"}
+                </div>
+                <div style={{ flex: 3 }}>{search}</div>
               </div>
-            )}
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>
-                {showFuzzy ? "More Filters:" : "Search Phrase"}
-              </div>
-              <div style={{ flex: 3 }}>{search}</div>
             </div>
+            <button
+              type="button"
+              style={button}
+              onClick={getRes}
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+            >
+              <BsSearch />
+            </button>
           </div>
-          <button
-            type="button"
-            style={button}
-            onClick={async () => {
-              getRes().then(() => {
-                storeSearchHistory();
-              });
-            }}
-            disabled={loadingSearchRes || loadingPlayoutUrl}
-          >
-            Let's go
-          </button>
-        </div>
-      )}
+        )}
 
       {haveSearchUrl && (
         <div style={curlResContainer}>
@@ -857,7 +800,7 @@ const App = () => {
                     }
                   }}
                 >
-                  Show Top {topkCnt.current}
+                  Sort by relevance
                 </button>
                 <button
                   style={{
@@ -871,7 +814,7 @@ const App = () => {
                     }
                   }}
                 >
-                  Show {totalContent} returned results
+                  Sort by content id
                 </button>
               </div>
             ) : (
@@ -948,19 +891,33 @@ const App = () => {
               )}
               {havePlayoutUrl ? (
                 displayingContents.map((clip) => {
-                  return (
+                  return searchAssets.current ? (
+                    <AssetRes
+                      clipInfo={clip}
+                      key={clip.id + clip.rank}
+                      client={getClient()}
+                      network={network.current}
+                      walletAddr={walletAddr.current}
+                      searchId={searchId.current}
+                      searchAssets={searchAssets.current}
+                      contents={contents.current}
+                      searchVersion={searchVersion.current}
+                      engagement={engagement}
+                      dbClient={dbClient.current}
+                    ></AssetRes>
+                  ) : (
                     <ClipRes
                       clipInfo={clip}
                       key={clip.id + clip.start_time}
                       client={getClient()}
                       network={network.current}
-                      clientadd={clientAdd.current}
-                      searchID={searchID}
+                      walletAddr={walletAddr.current}
+                      searchId={searchId.current}
+                      searchAssets={searchAssets.current}
                       contents={contents.current}
-                      db={db.current}
                       searchVersion={searchVersion.current}
-                      engagement={engagement.current}
-                      updateEngagement={updateEngagement}
+                      engagement={engagement}
+                      dbClient={dbClient.current}
                     ></ClipRes>
                   );
                 })
@@ -981,6 +938,10 @@ const App = () => {
       ) : err ? (
         <div style={hint}>
           <p>{errMsg}</p>
+        </div>
+      ) : processingDB ? (
+        <div style={hint}>
+          <p>Clips are coming ... </p>
         </div>
       ) : null}
     </div>
