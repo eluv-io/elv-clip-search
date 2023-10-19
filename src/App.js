@@ -193,6 +193,7 @@ const App = () => {
     "object",
     "segment",
     "speech_to_text",
+    "action",
   ];
   const ASSETS_SEARCH_FIELDS = [
     "celebrity",
