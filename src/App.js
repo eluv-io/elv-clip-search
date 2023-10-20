@@ -186,8 +186,7 @@ const App = () => {
   const TOPK_BY_DEFAULT = true;
   const ALL_SEARCH_FIELDS = [
     "celebrity",
-    // delete for MGM
-    // "characters",
+    "characters",
     "display_title",
     "logo",
     "object",
