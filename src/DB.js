@@ -1,4 +1,3 @@
-import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
@@ -21,6 +20,8 @@ import {
 class DB {
   constructor() {
     let app;
+    const useEmulator = null;
+    const firebaseConfig = {};
     if (useEmulator) {
       const emulatorConfig = {
         apiKey: "",
