@@ -79,8 +79,10 @@ const button = {
 const FuzzySearchBox = (props) => {
   const [text, setText] = useState("");
   const options = props.filteredSearchFields;
+  const disselectedFields = ["f_action", "f_characters"];
   const [checkedState, setCheckedState] = useState(
-    new Array(props.filteredSearchFields.length).fill(true)
+    // new Array(props.filteredSearchFields.length).fill(true)
+    options.map((x) => (disselectedFields.includes(x) ? false : true))
   );
   const textBox = (
     <input
