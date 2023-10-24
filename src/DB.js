@@ -131,8 +131,7 @@ class DB {
 
         console.log(`Engagement table saved`);
       } catch (err) {
-        console.log("Err: Set the engagement table failed");
-        console.log(err);
+        console.log("Err: Set the engagement table failed", err);
       }
     }
   }
@@ -144,6 +143,7 @@ class DB {
     searchKeywords,
     searchObjId,
     tenantID,
+    searchUrl,
   }) {
     if (this.db !== null) {
       try {
@@ -157,12 +157,12 @@ class DB {
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchFields,
           searchKeywords: searchKeywords,
+          searchURL: searchUrl,
         });
         console.log(`DB: Search history updated with docID ${docRef.id}`);
         return docRef.id;
       } catch (err) {
-        console.log("Error: Failed to Store the search history");
-        console.log(err);
+        console.log("Error: Failed to Store the search history", err);
         return null;
       }
     }
@@ -170,40 +170,42 @@ class DB {
 
   async setShot({ shot }) {
     if (this.db !== null) {
+      let shotId;
       try {
-        const payload = {
-          start: shot.start,
-          end: shot.end,
-          iqHash: shot.iqHash,
-          shotId: shot.shotId,
-          tags: shot.tags,
-        };
-        const shotDocRef = doc(this.db, "shotInfo", shot.shotId);
+        shotId = shot.sid;
+        const shotDocRef = doc(this.db, "shotInfo", shotId);
         const shotDoc = await getDoc(shotDocRef);
         if (shotDoc.exists()) {
-          await updateDoc(shotDocRef, payload);
+          await updateDoc(shotDocRef, { tags: shot.tags });
         } else {
-          await setDoc(shotDocRef, payload);
+          await setDoc(shotDocRef, {
+            start: shot.start,
+            end: shot.end,
+            versionHash: shot.iqHash,
+            tags: shot.tags,
+          });
         }
+        console.log("shotId in DB", shotDocRef.id);
       } catch (err) {
-        console.log(`Err: Save shot info for ${shot.shotId} failed`);
+        console.log(`Err: Save shot info for ${shotId} failed`, err);
       }
     }
   }
 
   async getShot({ shotId }) {
-    if (this.db !== null) {
-      try {
-        const shotRef = doc(this.db, "shotInfo", shotId);
-        const shot = await getDoc(shotRef);
-        if (shot.exists()) {
-          return shot.data();
-        } else return null;
-      } catch (err) {
-        console.log(`Err: Get Shot ${shotId} failed`);
-        return null;
+    if (!this.db) {
+      return null;
+    }
+
+    try {
+      const shotRef = doc(this.db, "shotInfo", shotId);
+      const shot = await getDoc(shotRef);
+      if (shot.exists()) {
+        return shot.data();
       }
-    } else {
+      return null;
+    } catch (err) {
+      console.log(`Err: Get shot ${shotId} failed`, err);
       return null;
     }
   }

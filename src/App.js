@@ -185,8 +185,9 @@ const App = () => {
   const TOPK = 20;
   const TOPK_BY_DEFAULT = true;
   const ALL_SEARCH_FIELDS = [
+    "action",
     "celebrity",
-    // delete for MGM
+    // delete characters for search
     // "characters",
     "display_title",
     "logo",
@@ -276,14 +277,18 @@ const App = () => {
       }
     };
     storeUserInfo();
-  }, []);
+  }, [walletAddr.current]);
 
   useEffect(() => {
     // This code will run after the component re-renders
-    if (dbClient.current !== null && tenId !== "") {
-      console.log("Setting tenancy:", tenId);
-      dbClient.current.setTenancy({ tenantID: tenId });
-    }
+    const storeTenancyInfo = async () => {
+      if (dbClient.current !== null && tenId !== "") {
+        console.log("Setting tenancy:", tenId);
+        await dbClient.current.setTenancy({ tenantID: tenId });
+      }
+    };
+
+    storeTenancyInfo();
   }, [tenId]); // The effect depends on the value of tenId
 
   const resetLoadStatus = () => {
@@ -321,7 +326,7 @@ const App = () => {
         dbClient.current = _dbClient;
         return _dbClient;
       } catch (err) {
-        console.log(`Error occurred when creating the DB client`);
+        console.log("Error occurred when creating the DB client", err);
         return null;
       }
     } else {
@@ -380,7 +385,6 @@ const App = () => {
       if (res.status === 0) {
         // we got the search Url
         setHaveSearchUrl(true);
-        console.log(res.url);
         setUrl(res.url);
         let searchRes = {};
         // try to query
@@ -450,7 +454,7 @@ const App = () => {
               for (let clip of clips_per_page) {
                 if (
                   searchVersion.current === "v1" ||
-                  (searchVersion.current === "v2" && clip.rank <= 20)
+                  (searchVersion.current === "v2" && clip.rank <= TOPK)
                 ) {
                   const clipID = clip.hash + "_" + clip.start + "-" + clip.end;
                   engagement.current[clipID] = { numView: 0, watchedTime: 0 };
@@ -477,6 +481,7 @@ const App = () => {
               searchKeywords: searchTerms,
               searchObjId: objId,
               tenantID: tenId,
+              searchUrl: res.url,
             });
             if (_searchId !== null) {
               searchId.current = _searchId;
@@ -492,7 +497,7 @@ const App = () => {
               );
             }
           } catch (err) {
-            console.log("Err: Set search history and engagement data err");
+            console.log("Err: Set search history and engagement data err", err);
           } finally {
             setProcessingDB(false);
           }
@@ -776,7 +781,7 @@ const App = () => {
         <div style={curlResContainer}>
           <div style={curlRes}>
             <div style={{ flex: 1 }}>
-              Search url {err && !haveSearchRes && "(FAILED)"}
+              Search URL {err && !haveSearchRes && "(FAILED)"}
             </div>
             <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
@@ -788,7 +793,7 @@ const App = () => {
         haveSearchUrl ? (
           <div style={hint}>Query sent, waiting for search engine response</div>
         ) : (
-          <div style={hint}>Creating search url</div>
+          <div style={hint}>Creating search URL</div>
         )
       ) : haveSearchRes ? (
         totalContent > 0 ? (

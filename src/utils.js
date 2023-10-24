@@ -62,7 +62,7 @@ export const parseSearchRes = async (
       item["f_start_time"] = 0;
       item["f_end_time"] = 0;
     }
-    // if not in clips_per_content: need to add them in
+    // if content id not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
       idNameMap[item["id"]] =
@@ -78,6 +78,7 @@ export const parseSearchRes = async (
       clips_per_content[item["id"]].clips.push(item);
     }
   }
+  console.log("clips_per_content", clips_per_content);
   for (let id in clips_per_content) {
     // pagitation the clips under this contents
     const clips = clips_per_content[id].clips;
@@ -272,8 +273,15 @@ export const getEmbedUrl = async ({
       return { reason: "Account has no permission to create the embed URL" };
     }
   } catch (err) {
-    console.log(err);
-    console.log("Create embed URL error");
+    console.log("Create embed URL error", err);
     return { reason: "Create embed URL error" };
+  }
+};
+
+export const parseSearchUrl = (url) => {
+  const queryParams = new URLSearchParams(url);
+  console.log("queryParams", queryParams);
+  for (const [key, value] of Object.entries(queryParams)) {
+    console.log(key, value);
   }
 };

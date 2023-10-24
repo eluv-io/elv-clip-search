@@ -19,6 +19,7 @@ const TagsPad = (props) => {
     _show[track] = true;
   });
   const tags = useRef(_tags);
+  console.log("Tag tracks defined by search engine", tags);
   const [show, setShow] = useState(_show);
 
   const setRefresh = useState(false)[1];
@@ -60,7 +61,7 @@ const TagsPad = (props) => {
     const _hasTags = Object.keys(firstShotTags).some((k) => k in tags.current);
 
     if (_hasTags) {
-      console.log("parsing tags");
+      console.log("Parse shot tags");
       for (let src of sourceData) {
         // each src represent a shot
 
@@ -76,24 +77,25 @@ const TagsPad = (props) => {
         for (let p of format.prefix.split("/")) {
           prefix = prefix[p];
         }
-        shotStart = shotStart || 0;
-        shotEnd = shotEnd || 0;
+        shotStart = !shotStart ? 0 : shotStart[0];
+        shotEnd = !shotEnd ? 0 : shotEnd[0];
         const shotId = props.searchAssets
-          ? contentHash + src.prefix
+          ? contentHash + src.prefix.replace(/\//g, "_")
           : contentHash + "_" + shotStart + "_" + shotEnd;
+        console.log("shotId", shotId);
         const shot = {
+          sid: shotId,
           iqHash: contentHash,
           start: shotStart,
           end: shotEnd,
-          shotId: shotId,
           tags: [],
         };
 
         let needToPush = false;
-        // try to see  if we have this shot in Memo, if not, try to load from DB.
+        // try to see if we have this shot in Memo, if not, try to load from DB.
         // the shot from DB could be null as well
         if (props.shotsMemo.current[shotId] == null) {
-          console.log("trying to load from DB");
+          console.log("Try to load shots from DB");
           if (props.dbClient !== null) {
             const shotInDB = await props.dbClient.getShot({ shotId });
             if (shotInDB == null) {
@@ -104,7 +106,7 @@ const TagsPad = (props) => {
           }
         }
         // tag index inside one shot
-        // since tags in shot is saved as a list, can use this index directly target at that tag
+        // since tags in shot is saved as a list, we can use this index directly to target at that tag
         let currShot = src;
         for (let p of format.tagsPath.split("/")) {
           currShot = currShot[p];
@@ -160,6 +162,7 @@ const TagsPad = (props) => {
         if (props.shotsMemo.current[shotId] == null) {
           props.shotsMemo.current[shotId] = shot;
           if (needToPush && props.dbClient !== null) {
+            console.log("Save shots to DB", shot);
             await props.dbClient.setShot({ shot: shot });
           }
         }
@@ -168,7 +171,7 @@ const TagsPad = (props) => {
   };
 
   const collect = async (lst, t, score) => {
-    console.log("Processing tags review");
+    console.log("Collect tags review");
     const shotId = t.shotId;
     const currTags = props.shotsMemo.current[shotId].tags;
     const allIndices = currTags.reduce((indices, dic, idx) => {
@@ -186,11 +189,16 @@ const TagsPad = (props) => {
     setRefresh((v) => !v);
     try {
       if (props.dbClient !== null) {
+        console.log(
+          "props.shotsMemo.current[shotId]",
+          shotId,
+          props.shotsMemo.current[shotId]
+        );
         await props.dbClient.setShot({ shot: props.shotsMemo.current[shotId] });
-        console.log("Shot saved");
+        console.log("Tag review saved");
       }
     } catch (err) {
-      console.log(err);
+      console.log("Error: save tag review failed", err);
     }
 
     const clipInfo = props.clipInfo;
@@ -241,10 +249,10 @@ const TagsPad = (props) => {
           Loading tags...
         </div>
       ) : null}
-
       {Object.keys(tags.current).map((k) => {
         return tags.current[k].length > 0 ? (
           <div
+            key={k.text}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -255,6 +263,7 @@ const TagsPad = (props) => {
             }}
           >
             <div
+              key={k.text}
               style={{
                 display: "flex",
                 flexDirection: "row",
