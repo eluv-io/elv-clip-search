@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@eluvio/elv-client-js": "^4.0.50",
-    "@eluvio/elv-player-js": "^1.0.115",
+    "@eluvio/elv-client-js": "^4.0.61",
+    "@eluvio/elv-player-js": "^1.0.131",
     "axios": "^1.2.5",
     "bootstrap": "^5.2.3",
     "crypto-browserify": "^3.12.0",
