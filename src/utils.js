@@ -38,6 +38,15 @@ export const parseSearchRes = async (
     }
     topkCount += 1;
     item.processed = false;
+    if (!("meta" in item)) {
+      item["meta"] = {
+        public: {
+          asset_metadata: {
+            title: item.sources[0]["fields"]["f_display_title"],
+          },
+        },
+      };
+    }
     topkResPage.push(item);
     if (topkResPage.length === CLIPS_PER_PAGE) {
       topkRes.push(topkResPage);
@@ -63,12 +72,26 @@ export const parseSearchRes = async (
       item["f_end_time"] = 0;
     }
     // if not in clips_per_content: need to add them in
+    console.log(item);
     if (!(item["id"] in clips_per_content)) {
+      if ("meta" in item) {
+        idNameMap[item["id"]] =
+          "public" in item.meta
+            ? item.meta.public.asset_metadata.title.split(",")[0]
+            : item.sources[0]["prefix"].split("/")[1];
+      } else {
+        idNameMap[item["id"]] = item.sources[0]["fields"]["f_display_title"];
+        item["meta"] = {
+          public: {
+            asset_metadata: {
+              title: item.sources[0]["fields"]["f_display_title"],
+            },
+          },
+        };
+      }
+
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
-      idNameMap[item["id"]] =
-        "public" in item.meta
-          ? item.meta.public.asset_metadata.title.split(",")[0]
-          : item.sources[0]["prefix"].split("/")[1];
+
       // set the first content to be current content
       if (firstContent === "") {
         firstContent = item["id"];
