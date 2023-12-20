@@ -140,12 +140,14 @@ export const createSearchUrl = async ({
       // search v2
       console.log("doing V2 search");
       const queryParams = {
-        terms:
-          fuzzySearchPhrase === ""
-            ? `(${search})`
-            : search === ""
-            ? fuzzySearchPhrase
-            : `((${fuzzySearchPhrase}) AND ${search})`,
+        // terms:
+        //   fuzzySearchPhrase === ""
+        //     ? `(${search})`
+        //     : search === ""
+        //     ? fuzzySearchPhrase
+        //     : `((${fuzzySearchPhrase}) AND ${search})`,
+        terms: fuzzySearchPhrase,
+        filters: search,
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
