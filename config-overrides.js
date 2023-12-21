@@ -1,6 +1,8 @@
 const webpack = require("webpack");
+const { addBabelPlugin } = require("customize-cra");
 
 module.exports = function override(config) {
+  addBabelPlugin(["@babel/plugin-proposal-private-property-in-object", {loose: true}])
   const fallback = config.resolve.fallback || {};
   Object.assign(fallback, {
     crypto: require.resolve("crypto-browserify"),

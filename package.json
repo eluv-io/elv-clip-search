@@ -25,6 +25,11 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@babel/core": "7.22.5",
+    "@babel/eslint-parser": "7.22.5",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "@babel/preset-env": "7.22.5",
+    "customize-cra": "^1.0.0",
     "react-app-rewired": "^2.2.1",
     "sass": "^1.64.1"
   },
