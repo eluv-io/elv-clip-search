@@ -1,5 +1,5 @@
-import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
-import { initializeApp } from "firebase/app";
+// import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
+// import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
