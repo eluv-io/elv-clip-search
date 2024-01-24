@@ -169,9 +169,11 @@ export const createSearchUrl = async ({
       }
       // for the two pass approach,
       // if we do not have the exact match filters, we should enable semantic=true
-      if (search === "") {
-        queryParams.semantic = true;
-      }
+      // if (search === "") {
+      //   queryParams.semantic = true;
+      // }
+      // for now, as required, we should always enable semantic=true
+      queryParams.semantic = true;
       // for assets index type, disable clip and relevant parms
       if (searchAssets === true) {
         queryParams.clips = false;
