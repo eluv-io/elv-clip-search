@@ -140,12 +140,14 @@ export const createSearchUrl = async ({
       // search v2
       console.log("doing V2 search");
       const queryParams = {
-        terms:
-          fuzzySearchPhrase === ""
-            ? `(${search})`
-            : search === ""
-            ? fuzzySearchPhrase
-            : `((${fuzzySearchPhrase}) AND ${search})`,
+        // terms:
+        //   fuzzySearchPhrase === ""
+        //     ? `(${search})`
+        //     : search === ""
+        //     ? fuzzySearchPhrase
+        //     : `((${fuzzySearchPhrase}) AND ${search})`,
+        terms: fuzzySearchPhrase,
+        filters: search,
         select: "/public/asset_metadata/title",
         start: 0,
         limit: 160,
@@ -167,9 +169,11 @@ export const createSearchUrl = async ({
       }
       // for the two pass approach,
       // if we do not have the exact match filters, we should enable semantic=true
-      if (search === "") {
-        queryParams.semantic = true;
-      }
+      // if (search === "") {
+      //   queryParams.semantic = true;
+      // }
+      // for now, as required, we should always enable semantic=true
+      queryParams.semantic = true;
       // for assets index type, disable clip and relevant parms
       if (searchAssets === true) {
         queryParams.clips = false;
