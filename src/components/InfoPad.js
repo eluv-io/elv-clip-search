@@ -1,5 +1,8 @@
 import Feedback from "./Feedback";
 import React, { useState } from "react";
+import { BsCloudDownload } from "react-icons/bs"
+import { BiCopy } from "react-icons/bi";
+
 const videoInfo = {
   width: "100%",
   height: "83%",
@@ -16,7 +19,30 @@ const shortInfo = {
   justifyContent: "space-between",
   width: "100%",
   height: "12%",
+  fontSize: 11,
 };
+
+const urlContainer = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  width: "50%",
+  backgroundColor: "transparent",
+}
+
+const urlDisplay = {
+  height: "85%",
+  width: "100%",
+  backgroundColor: "transparent",
+  padding: 5,
+  borderRadius: 5,
+  overflow:"scroll",
+  wordWrap: "break-word",
+  fontSize: 9
+}
+
 
 const InfoPad = (props) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -111,7 +137,7 @@ const InfoPad = (props) => {
             <div>{props.clipInfo.id}</div>
           </div>
 
-          {props.searchAssets === true ? (
+          {/* {props.searchAssets === true ? (
             <div style={shortInfo}>
               <div>prefix: </div>
               <div>{props.clipInfo.prefix}</div>
@@ -130,7 +156,7 @@ const InfoPad = (props) => {
                 <div>{props.clipInfo.source_count}</div>
               </div>
             </>
-          )}
+          )} */}
 
           {props.searchVersion === "v2" ? (
             <div style={shortInfo}>
@@ -142,26 +168,74 @@ const InfoPad = (props) => {
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
               width: "100%",
-              height: "40%",
+              height: "76%",
             }}
           >
-            <textarea
-              style={{
-                height: "100%",
-                width: "100%",
-                padding: 5,
-                borderRadius: 5,
-                backgroundColor: "transparent",
-              }}
-              readOnly
-              value={props.assetsUrl || props.clipEmbedUrl}
-            ></textarea>
+            <div style={urlContainer} >
+              <div 
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              >
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embed URL</div>
+                <div style={{cursor: "pointer"}}>
+                  <BiCopy onClick={() =>  navigator.clipboard.writeText(props.clipEmbedUrl || props.assetsUrl)}/>
+                </div>
+              </div>
+              <div style={urlDisplay}>
+                {props.clipEmbedUrl || props.assetsUrl}
+              </div>
+            </div>
+            
+            <div style={urlContainer} >
+
+              <div 
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              >
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Download URL</div>
+                <div style={{cursor: "pointer"}}>
+                  <BsCloudDownload 
+                    onClick={() => {
+                      let element = document.createElement("a");
+                      
+                      element.download = `${props.id}_${props.start}_${props.end}.mp4`;
+                      element.href = props.clipDownloadUrl;
+          
+                      element.style.display = "none";
+                      document.body.appendChild(element);
+                    
+                      element.click();
+                    
+                      document.body.removeChild(element);
+                      window.URL.revokeObjectURL(props.clipDownloadUrl);
+                    }}
+                  />
+                </div>
+                
+                
+              </div>
+              
+              <div style={urlDisplay}>
+                {props.clipDownloadUrl}
+              </div>
+            </div>
           </div>
+
         </div>
+
+        
       ) : (
         <div
           style={{
