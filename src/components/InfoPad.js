@@ -49,6 +49,7 @@ const urlDisplay = {
 const InfoPad = (props) => {
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
   return (
     <div
       style={{
@@ -224,13 +225,15 @@ const InfoPad = (props) => {
                       document.body.appendChild(element);
                     
                       element.click();
+
+                      setDownloaded(true)
                     
                       document.body.removeChild(element);
                       window.URL.revokeObjectURL(props.clipDownloadUrl);
                     }}
                   />
                 </div>
-                
+                {downloaded && <BiCheckDouble />}
                 
               </div>
               
