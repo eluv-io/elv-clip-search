@@ -1,7 +1,9 @@
 import Feedback from "./Feedback";
 import React, { useState } from "react";
 import { BsCloudDownload } from "react-icons/bs"
-import { BiCopy } from "react-icons/bi";
+import { BiCopy, BiCheckDouble} from "react-icons/bi";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
+import { set } from "mongoose";
 
 const videoInfo = {
   width: "100%",
@@ -46,6 +48,7 @@ const urlDisplay = {
 
 const InfoPad = (props) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [copied, setCopied] = useState(false)
   return (
     <div
       style={{
@@ -186,8 +189,11 @@ const InfoPad = (props) => {
               >
                 <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embed URL</div>
                 <div style={{cursor: "pointer"}}>
-                  <BiCopy onClick={() =>  navigator.clipboard.writeText(props.clipEmbedUrl || props.assetsUrl)}/>
+                <CopyToClipboard onCopy={()=> {setCopied(true)}} text={props.clipEmbedUrl || props.assetsUrl}>
+                  <BiCopy/>
+                </CopyToClipboard>
                 </div>
+                {copied && <BiCheckDouble />}
               </div>
               <div style={urlDisplay}>
                 {props.clipEmbedUrl || props.assetsUrl}
@@ -209,8 +215,9 @@ const InfoPad = (props) => {
                   <BsCloudDownload 
                     onClick={() => {
                       let element = document.createElement("a");
-                      
-                      element.download = `${props.id}_${props.start}_${props.end}.mp4`;
+
+                      element.download = `${props.clipInfo.id}_${props.clipInfo.start_time}_${props.clipInfo.end_time}.mp4`;
+                      console.log(element.download)
                       element.href = props.clipDownloadUrl;
           
                       element.style.display = "none";
