@@ -405,7 +405,6 @@ const TagsPad = (props) => {
                           height: 30,
                           display: "flex",
                           flexDirection: "row",
-                          justifyContent: "space-between",
                           paddingLeft: "5%",
                           backgroundColor: "transparent",
                           marginBottom: 2,
@@ -418,8 +417,9 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
-                            backgroundColor: "transparent",
+                            backgroundColor: "whitesmoke",
                             margin: 5,
+                            borderRadius: 5,
                           }}
                           onClick={() => {
                             if (props.videoElementRef.current) {
@@ -435,8 +435,9 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
-                            backgroundColor: "transparent",
+                            backgroundColor: "whitesmoke",
                             margin: 5,
+                            borderRadius: 5,
                           }}
                         >
                           dummy time stamp info 
@@ -446,8 +447,9 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
-                            backgroundColor: "transparent",
+                            backgroundColor: "whitesmoke",
                             margin: 5,
+                            borderRadius: 5,
                           }}
                         >
                           dummy time stamp info 
