@@ -312,7 +312,6 @@ const TagsPad = (props) => {
                       newStatus[kk] = show[kk];
                     }
                   }
-
                   setShow(newStatus);
                 }}
               >
@@ -330,11 +329,25 @@ const TagsPad = (props) => {
                     paddingLeft: "5%",
                     backgroundColor: "transparent",
                     borderRadius: 10,
-                    marginBottom: 3,
+                    marginBottom: 2,
+                    marginTop: 2,
+                    border: "solid",
+                    borderWidth: 0.5,
+
                   }}
                   key={`${t.text}`}
                 >
-                  {t.text}
+                  <button
+                    style={{
+                      border: "none",
+                      cursor: "pointer",
+                      borderRadius: 5,
+                      fontSize: 12,
+                    }}
+                    onclick
+                  >
+                    {t.text}
+                  </button>
                   <div>
                     <button
                       style={{ border: "none", backgroundColor: "transparent" }}
