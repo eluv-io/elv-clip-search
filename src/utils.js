@@ -228,21 +228,30 @@ export const getPlayoutUrl = async ({ client, objectId }) => {
   }
 };
 
-export const getDownloadUrl = async ({ client, objectId, libraryId, height, width, clip_start, clip_end}) => {
+export const getDownloadUrl = async ({
+  client,
+  objectId,
+  libraryId,
+  height,
+  width,
+  clip_start,
+  clip_end,
+}) => {
   const offerings = await client.ContentObjectMetadata({
     objectId,
-    libraryId, 
-    metadataSubtree: "offerings"
+    libraryId,
+    metadataSubtree: "offerings",
   });
   const offering = offerings["default"];
-  const playoutKey = Object.keys(offering.playout.streams.video.representations)
-      .find(key => {
-        const playout = offering.playout.streams.video.representations[key];
-        return (
-          playout.height.toString() === height.toString() &&
-          playout.width.toString() === width.toString()
-        );
-      });
+  const playoutKey = Object.keys(
+    offering.playout.streams.video.representations
+  ).find((key) => {
+    const playout = offering.playout.streams.video.representations[key];
+    return (
+      playout.height.toString() === height.toString() &&
+      playout.width.toString() === width.toString()
+    );
+  });
   const url = await client.Rep({
     objectId,
     libraryId,
@@ -250,53 +259,77 @@ export const getDownloadUrl = async ({ client, objectId, libraryId, height, widt
     queryParams: {
       clip_start,
       clip_end,
-    }
-  })
-  return url
+    },
+  });
+  return url;
 };
 
-export const getDownloadUrlWithMaxResolution = async ({ client, objectId, libraryId, clip_start, clip_end}) => {
+export const getDownloadUrlWithMaxResolution = async ({
+  client,
+  objectId,
+  libraryId,
+  clip_start,
+  clip_end,
+}) => {
   const offerings = await client.ContentObjectMetadata({
     objectId,
-    libraryId, 
-    metadataSubtree: "offerings"
+    libraryId,
+    metadataSubtree: "offerings",
   });
-  const offering = offerings["default"]
+  const offering = offerings["default"];
   const representations = offering.playout.streams.video.representations;
   let playoutKey = null;
   let _max_height = 0;
-  for (let key in representations){
+  let _max_width;
+  for (let key in representations) {
     const playout = offering.playout.streams.video.representations[key];
     if (playout.height > _max_height) {
       playoutKey = key;
       _max_height = playout.height;
+      _max_width = playout.width;
     }
   }
+  const title_name = await client.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "public/name",
+  });
+
   const token = await client.CreateSignedToken({
     objectId,
-    duration: 24 * 60 * 60 * 1000
+    duration: 24 * 60 * 60 * 1000,
   });
-  const filename = `${objectId}_${clip_start*1000}_${clip_end*1000}.mp4`
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secondsLeft = Math.floor(seconds % 60);
+
+    const paddedHours = String(hours).padStart(2, "0");
+    const paddedMinutes = String(minutes).padStart(2, "0");
+    const paddedSeconds = String(secondsLeft).padStart(2, "0");
+
+    return `${paddedHours}-${paddedMinutes}-${paddedSeconds}`;
+  }
+  let _clip_start = formatTime(clip_start);
+  let _clip_end = formatTime(clip_end);
+
+  const filename = `Title - ${title_name} (${_max_width}x${_max_height}) (${_clip_start} - ${_clip_end}).mp4`;
   const url = await client.Rep({
     objectId,
     libraryId,
     rep: `media_download/default/${playoutKey}`,
+    noAuth: true,
     queryParams: {
       clip_start,
       clip_end,
       authorization: token,
-      "header-x_set_content_disposition": `attachment;filename=${filename}`
-    }
+      "header-x_set_content_disposition": `attachment;filename=${filename}`,
+    },
   });
-  return url
+  return url;
 };
 
-export const getEmbedUrl = async ({
-  client,
-  objectId,
-  clipStart,
-  clipEnd,
-}) => {
+export const getEmbedUrl = async ({ client, objectId, clipStart, clipEnd }) => {
   try {
     const permission = await client.Permission({ objectId });
     if (["owner", "editable", "viewable"].includes(permission)) {
@@ -308,7 +341,7 @@ export const getEmbedUrl = async ({
           ? "testv4"
           : networkInfo.name;
       let embedUrl = new URL("https://embed.v3.contentfabric.io");
-      const versionHash = await client.LatestVersionHash({objectId})
+      const versionHash = await client.LatestVersionHash({ objectId });
 
       embedUrl.searchParams.set("p", "");
       embedUrl.searchParams.set("net", networkName);
@@ -320,7 +353,6 @@ export const getEmbedUrl = async ({
       // embedUrl.searchParams.set("st", "");
       // embedUrl.searchParams.set("off", "default");
 
-      
       const token = await client.CreateSignedToken({
         objectId,
         versionHash,
