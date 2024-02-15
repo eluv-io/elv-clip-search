@@ -133,7 +133,7 @@ const ClipRes = (props) => {
         clip_end: props.clipInfo.end_time/1000
       })
         .then((url) => {
-          console.log(url)
+          // console.log(url)
           setDownloadUrl(url);
         })
         .catch((err) => {

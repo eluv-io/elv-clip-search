@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { BsCloudDownload } from "react-icons/bs"
 import { BiCopy, BiCheckDouble} from "react-icons/bi";
 import {CopyToClipboard} from 'react-copy-to-clipboard';
-import { set } from "mongoose";
 
 const videoInfo = {
   width: "100%",
@@ -218,7 +217,7 @@ const InfoPad = (props) => {
                       let element = document.createElement("a");
 
                       element.download = `${props.clipInfo.id}_${props.clipInfo.start_time}_${props.clipInfo.end_time}.mp4`;
-                      console.log(element.download)
+
                       element.href = props.clipDownloadUrl;
           
                       element.style.display = "none";

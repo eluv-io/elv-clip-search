@@ -276,6 +276,7 @@ export const getDownloadUrlWithMaxResolution = async ({ client, objectId, librar
     objectId,
     duration: 24 * 60 * 60 * 1000
   });
+  const filename = `${objectId}_${clip_start*1000}_${clip_end*1000}.mp4`
   const url = await client.Rep({
     objectId,
     libraryId,
@@ -283,7 +284,8 @@ export const getDownloadUrlWithMaxResolution = async ({ client, objectId, librar
     queryParams: {
       clip_start,
       clip_end,
-      authorization: token
+      authorization: token,
+      "header-x_set_content_disposition": `attachment;filename=${filename}`
     }
   });
   return url
