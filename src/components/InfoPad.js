@@ -187,7 +187,7 @@ const InfoPad = (props) => {
                   alignItems: "center"
                 }}
               >
-                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embed URL</div>
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embeddable URL</div>
                 <div style={{cursor: "pointer"}}>
                   <CopyToClipboard onCopy={()=> {setCopiedEmbedURL(true); setCopiedDownloadURL(false); }} text={props.clipEmbedUrl || props.assetsUrl}>
                     <BiCopy/>
