@@ -2,7 +2,7 @@ import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
-import { getDownloadUrlWithMaxResolution } from "../utils";
+import { getDownloadUrlWithMaxResolution, getEmbedUrl } from "../utils";
 const container = {
   width: "97%",
   height: 900,
@@ -101,16 +101,22 @@ const ClipRes = (props) => {
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === false) {
       setEmbedUrl("");
-      props.client
-        .EmbedUrl({
-          objectId: props.clipInfo.id,
-          versionHash: props.clipInfo.hash,
-          duration: 7 * 24 * 60 * 60 * 1000,
-          options: {
-            clipStart: props.clipInfo.start_time / 1000,
-            clipEnd: props.clipInfo.end_time / 1000,
-          },
-        })
+      // props.client
+      //   .EmbedUrl({
+      //     objectId: props.clipInfo.id,
+      //     versionHash: props.clipInfo.hash,
+      //     duration: 7 * 24 * 60 * 60 * 1000,
+      //     options: {
+      //       clipStart: props.clipInfo.start_time / 1000,
+      //       clipEnd: props.clipInfo.end_time / 1000,
+      //     },
+      //   })
+      getEmbedUrl({
+        client: props.client,
+        objectId: props.clipInfo.id,
+        clipStart: props.clipInfo.start_time/1000,
+        clipEnd: props.clipInfo.end_time/1000
+      })
         .then((embUrl) => {
           setEmbedUrl(embUrl);
         })
@@ -120,6 +126,7 @@ const ClipRes = (props) => {
         });
     }
   }, [props.searchVersion, props.searchAssets]);
+
 
 
   useEffect(() => {
