@@ -419,6 +419,12 @@ const TagsPad = (props) => {
                             border: "none",
                             margin: 5,
                           }}
+                          onClick={() => {
+                            if (props.videoElementRef.current) {
+                              props.videoElementRef.current.pause();
+                              props.videoElementRef.current.currentTime = 0
+                            }
+                          }}
                         >
                           dummy time stamp info 
                         </button>

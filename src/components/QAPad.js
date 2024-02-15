@@ -58,6 +58,7 @@ const QAPad = (props) => {
             searchAssets={props.searchAssets}
             shotsMemo={props.shotsMemo}
             dbClient={props.dbClient}
+            videoElementRef={props.videoElementRef}
           ></TagsPad>
         </div>
       </div>
