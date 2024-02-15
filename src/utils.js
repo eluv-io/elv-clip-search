@@ -296,7 +296,6 @@ export const getEmbedUrl = async ({
   objectId,
   clipStart,
   clipEnd,
-  duration,
 }) => {
   try {
     const permission = await client.Permission({ objectId });
@@ -309,34 +308,32 @@ export const getEmbedUrl = async ({
           ? "testv4"
           : networkInfo.name;
       let embedUrl = new URL("https://embed.v3.contentfabric.io");
+      const versionHash = await client.LatestVersionHash({objectId})
 
       embedUrl.searchParams.set("p", "");
       embedUrl.searchParams.set("net", networkName);
-      embedUrl.searchParams.set("oid", objectId);
+      embedUrl.searchParams.set("vid", versionHash);
       embedUrl.searchParams.set("end", clipEnd);
       embedUrl.searchParams.set("start", clipStart);
-      embedUrl.searchParams.set("ct", "s");
-      embedUrl.searchParams.set("st", "");
-      embedUrl.searchParams.set("off", "default");
+      embedUrl.searchParams.set("ct", "h");
+      embedUrl.searchParams.set("mt", "v");
+      // embedUrl.searchParams.set("st", "");
+      // embedUrl.searchParams.set("off", "default");
 
+      
       const token = await client.CreateSignedToken({
         objectId,
-        duration,
+        versionHash,
+        duration: 24 * 60 * 60 * 1000,
       });
       embedUrl.searchParams.set("ath", token);
-      return {
-        embedUrl: embedUrl.toString(),
-      };
+      return embedUrl.toString();
     } else {
-      // const playoutUrl = await getPlayoutUrl({ client, objectId });
-      // return {
-      //   playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
-      // };
-      return { reason: "Account has no permission to create the embed URL" };
+      return "Account has no permission to create the embed URL";
     }
   } catch (err) {
     console.log(err);
     console.log("Create embed URL error");
-    return { reason: "Create embed URL error" };
+    return "Create embed URL error";
   }
 };
