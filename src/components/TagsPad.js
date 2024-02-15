@@ -356,6 +356,7 @@ const TagsPad = (props) => {
                         border: "none",
                         cursor: "pointer",
                         borderRadius: 5,
+                        backgroundColor: "transparent",
                         fontSize: 12,
                       }}
                       onClick={() => {
@@ -417,6 +418,7 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
+                            backgroundColor: "transparent",
                             margin: 5,
                           }}
                           onClick={() => {
@@ -433,6 +435,7 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
+                            backgroundColor: "transparent",
                             margin: 5,
                           }}
                         >
@@ -443,6 +446,7 @@ const TagsPad = (props) => {
                           style={{
                             display: "inline-block",
                             border: "none",
+                            backgroundColor: "transparent",
                             margin: 5,
                           }}
                         >
