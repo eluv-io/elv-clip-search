@@ -94,7 +94,7 @@ const TagsPad = (props) => {
     const _hasTags = Object.keys(firstShotTags).some((k) => k in tags.current);
 
     if (_hasTags) {
-      console.log("parsing tags");
+      // console.log("parsing tags");
       for (let src of sourceData) {
         // each src represent a shot
 
@@ -360,7 +360,6 @@ const TagsPad = (props) => {
                         fontSize: 12,
                       }}
                       onClick={() => {
-                        console.log("click")
                         if( showTimeText == t.text && showTimeTrack == k) {
                           setShowTimeTrack("")
                           setShowTimeText("")
