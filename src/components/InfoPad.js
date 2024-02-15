@@ -210,7 +210,7 @@ const InfoPad = (props) => {
                   alignItems: "center"
                 }}
               >
-                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Download URL</div>
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Downloadable URL</div>
                 <div style={{cursor: "pointer"}}>
                   <CopyToClipboard onCopy={()=> {setCopiedDownloadURL(true); setCopiedEmbedURL(false)}} text={props.clipDownloadUrl}>
                     <BiCopy/>
