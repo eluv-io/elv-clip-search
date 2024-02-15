@@ -47,8 +47,8 @@ const urlDisplay = {
 
 const InfoPad = (props) => {
   const [showDetails, setShowDetails] = useState(false);
-  const [copied, setCopied] = useState(false)
-  const [downloaded, setDownloaded] = useState(false)
+  const [copiedEmbedURL, setCopiedEmbedURL] = useState(false)
+  const [copiedDownloadURL, setCopiedDownloadURL] = useState(false)
   return (
     <div
       style={{
@@ -189,11 +189,11 @@ const InfoPad = (props) => {
               >
                 <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embed URL</div>
                 <div style={{cursor: "pointer"}}>
-                <CopyToClipboard onCopy={()=> {setCopied(true)}} text={props.clipEmbedUrl || props.assetsUrl}>
-                  <BiCopy/>
-                </CopyToClipboard>
+                  <CopyToClipboard onCopy={()=> {setCopiedEmbedURL(true); setCopiedDownloadURL(false); }} text={props.clipEmbedUrl || props.assetsUrl}>
+                    <BiCopy/>
+                  </CopyToClipboard>
                 </div>
-                {copied && <BiCheckDouble />}
+                {copiedEmbedURL && <BiCheckDouble />}
               </div>
               <div style={urlDisplay}>
                 {props.clipEmbedUrl || props.assetsUrl}
@@ -212,27 +212,11 @@ const InfoPad = (props) => {
               >
                 <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Download URL</div>
                 <div style={{cursor: "pointer"}}>
-                  <BsCloudDownload 
-                    onClick={() => {
-                      let element = document.createElement("a");
-
-                      element.download = `${props.clipInfo.id}_${props.clipInfo.start_time}_${props.clipInfo.end_time}.mp4`;
-
-                      element.href = props.clipDownloadUrl;
-          
-                      element.style.display = "none";
-                      document.body.appendChild(element);
-                    
-                      element.click();
-
-                      setDownloaded(true)
-                    
-                      document.body.removeChild(element);
-                      window.URL.revokeObjectURL(props.clipDownloadUrl);
-                    }}
-                  />
+                  <CopyToClipboard onCopy={()=> {setCopiedDownloadURL(true); setCopiedEmbedURL(false)}} text={props.clipDownloadUrl}>
+                    <BiCopy/>
+                  </CopyToClipboard>
                 </div>
-                {downloaded && <BiCheckDouble />}
+                {copiedDownloadURL && <BiCheckDouble />}
                 
               </div>
               
