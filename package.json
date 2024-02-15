@@ -15,6 +15,7 @@
     "mongodb": "^5.6.0",
     "mongoose": "^7.3.1",
     "react": "^16.14.0",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^16.14.0",
     "react-icons": "^4.10.1",
     "react-paginate": "^8.1.4",

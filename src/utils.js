@@ -228,6 +228,69 @@ export const getPlayoutUrl = async ({ client, objectId }) => {
   }
 };
 
+export const getDownloadUrl = async ({ client, objectId, libraryId, height, width, clip_start, clip_end}) => {
+  const offerings = await client.ContentObjectMetadata({
+    objectId,
+    libraryId, 
+    metadataSubtree: "offerings"
+  });
+  const offering = offerings["default"];
+  const playoutKey = Object.keys(offering.playout.streams.video.representations)
+      .find(key => {
+        const playout = offering.playout.streams.video.representations[key];
+        return (
+          playout.height.toString() === height.toString() &&
+          playout.width.toString() === width.toString()
+        );
+      });
+  const url = await client.Rep({
+    objectId,
+    libraryId,
+    rep: `media_download/default/${playoutKey}`,
+    queryParams: {
+      clip_start,
+      clip_end,
+    }
+  })
+  return url
+};
+
+export const getDownloadUrlWithMaxResolution = async ({ client, objectId, libraryId, clip_start, clip_end}) => {
+  const offerings = await client.ContentObjectMetadata({
+    objectId,
+    libraryId, 
+    metadataSubtree: "offerings"
+  });
+  const offering = offerings["default"]
+  const representations = offering.playout.streams.video.representations;
+  let playoutKey = null;
+  let _max_height = 0;
+  for (let key in representations){
+    const playout = offering.playout.streams.video.representations[key];
+    if (playout.height > _max_height) {
+      playoutKey = key;
+      _max_height = playout.height;
+    }
+  }
+  const token = await client.CreateSignedToken({
+    objectId,
+    duration: 24 * 60 * 60 * 1000
+  });
+  const filename = `${objectId}_${clip_start*1000}_${clip_end*1000}.mp4`
+  const url = await client.Rep({
+    objectId,
+    libraryId,
+    rep: `media_download/default/${playoutKey}`,
+    queryParams: {
+      clip_start,
+      clip_end,
+      authorization: token,
+      "header-x_set_content_disposition": `attachment;filename=${filename}`
+    }
+  });
+  return url
+};
+
 export const getEmbedUrl = async ({
   client,
   objectId,

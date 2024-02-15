@@ -1,5 +1,5 @@
-import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
-import { initializeApp } from "firebase/app";
+// import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
+// import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
@@ -20,34 +20,35 @@ import {
 
 class DB {
   constructor() {
-    let app;
-    if (useEmulator) {
-      const emulatorConfig = {
-        apiKey: "",
-        authDomain: "",
-        databaseURL: "https://elv-clip-search-default-rtdb.firebaseio.com",
-        projectId: "elv-clip-search",
-        storageBucket: "",
-        messagingSenderId: "426199348320",
-        appId: "",
-        measurementId: "",
-      };
-      app = initializeApp(emulatorConfig);
-      this.db = getFirestore(app);
-      connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
-    } else if (
-      firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId
-    ) {
-      app = initializeApp(firebaseConfig);
-      this.db = getFirestore(app);
-    } else {
-      console.error(
-        "Either set up the local DB emulator for the development environment as per src/firebase/emulator.md or ensure that the production Firebase configuration is present."
-      );
-      this.db = null;
-    }
+    // let app;
+    // if (useEmulator) {
+    //   const emulatorConfig = {
+    //     apiKey: "",
+    //     authDomain: "",
+    //     databaseURL: "https://elv-clip-search-default-rtdb.firebaseio.com",
+    //     projectId: "elv-clip-search",
+    //     storageBucket: "",
+    //     messagingSenderId: "426199348320",
+    //     appId: "",
+    //     measurementId: "",
+    //   };
+    //   app = initializeApp(emulatorConfig);
+    //   this.db = getFirestore(app);
+    //   connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
+    // } else if (
+    //   firebaseConfig.apiKey &&
+    //   firebaseConfig.authDomain &&
+    //   firebaseConfig.projectId
+    // ) {
+    //   app = initializeApp(firebaseConfig);
+    //   this.db = getFirestore(app);
+    // } else {
+    //   console.error(
+    //     "Either set up the local DB emulator for the development environment as per src/firebase/emulator.md or ensure that the production Firebase configuration is present."
+    //   );
+    //   this.db = null;
+    // }
+    this.db = null
   }
 
   async setUser({ walletAddr }) {
