@@ -23,6 +23,7 @@ const TagsPad = (props) => {
 
   const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
+  const timeStampInfo = useRef({})
 
   useEffect(() => {
     try {
@@ -33,6 +34,37 @@ const TagsPad = (props) => {
       console.log(err);
     }
   }, []);
+
+  const prepareTimeInfo = () => {
+    const timeInfo = {}
+    for(let source of props.clipInfo.sources){
+      for(let field in source.fields) {
+        if(field.endsWith("tag")) {
+          const _field = field.slice(0, -4) 
+          if(! _field in timeInfo){
+            timeInfo[_field] = {}
+          }
+          for(let tag of source.fields[field]){
+            const text = tag.text[0]
+            const startTime = tag.start_time
+            const endTime = tag.end_time
+            if (! text in timeInfo[_field]){
+              timeInfo[_field][text] = []
+            }
+            timeInfo[_field][text].push({
+              startTime: startTime,
+              endTime: endTime
+            })
+          }
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    const timeInfo = prepareTimeInfo()
+    timeStampInfo.current = timeInfo
+  }, [])
 
   const prepareTags = async () => {
     const contentHash = props.clipInfo.hash;
