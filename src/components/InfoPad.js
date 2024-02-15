@@ -140,7 +140,7 @@ const InfoPad = (props) => {
             <div>{props.clipInfo.id}</div>
           </div>
 
-          {/* {props.searchAssets === true ? (
+          {props.searchAssets === true ? (
             <div style={shortInfo}>
               <div>prefix: </div>
               <div>{props.clipInfo.prefix}</div>
@@ -154,19 +154,19 @@ const InfoPad = (props) => {
                 </div>
               </div>
 
-              <div style={shortInfo}>
+              {/* <div style={shortInfo}>
                 <div>shot source count: </div>
                 <div>{props.clipInfo.source_count}</div>
-              </div>
+              </div> */}
             </>
-          )} */}
+          )}
 
-          {props.searchVersion === "v2" ? (
+          {/* {props.searchVersion === "v2" ? (
             <div style={shortInfo}>
               <div>BM25 rank: </div>
               <div>{props.clipInfo.rank}</div>
             </div>
-          ) : null}
+          ) : null} */}
 
           <div
             style={{
