@@ -24,6 +24,8 @@ const TagsPad = (props) => {
   const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
   const timeStampInfo = useRef({})
+  const [showTimeTrack, setShowTimeTrack]  = useState("")
+  const [showTimeText, setShowTimeText]  = useState("")
 
   useEffect(() => {
     try {
@@ -324,53 +326,126 @@ const TagsPad = (props) => {
                   style={{
                     width: "90%",
                     display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingLeft: "5%",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
                     backgroundColor: "transparent",
                     borderRadius: 10,
                     marginBottom: 2,
                     marginTop: 2,
-                    border: "solid",
-                    borderWidth: 0.5,
-
                   }}
-                  key={`${t.text}`}
                 >
-                  <button
+                  <div
                     style={{
-                      border: "none",
-                      cursor: "pointer",
-                      borderRadius: 5,
-                      fontSize: 12,
-                    }}
-                    onclick
-                  >
-                    {t.text}
-                  </button>
-                  <div>
-                    <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, 1)}
-                    >
-                      <BiLike
-                        style={{
-                          color: t.like === 1 ? "#EAA14F" : "black",
-                        }}
-                      />
-                    </button>
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingLeft: "5%",
+                      backgroundColor: "transparent",
+                      borderRadius: 10,
+                      marginBottom: 2,
+                      border: "solid",
+                      borderWidth: 0.5,
 
+                    }}
+                    key={`${t.text}`}
+                  >
                     <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, -1)}
+                      style={{
+                        border: "none",
+                        cursor: "pointer",
+                        borderRadius: 5,
+                        fontSize: 12,
+                      }}
+                      onClick={() => {
+                        console.log("click")
+                        if( showTimeText == t.text && showTimeTrack == k) {
+                          setShowTimeTrack("")
+                          setShowTimeText("")
+                        } else {
+                          setShowTimeTrack(k)
+                          setShowTimeText(t.text)
+                        }
+                      }}
                     >
-                      <BiDislike
-                        style={{
-                          color: t.like === -1 ? "#EAA14F" : "black",
-                        }}
-                      />
+                      {t.text}
                     </button>
+                    <div>
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, 1)}
+                      >
+                        <BiLike
+                          style={{
+                            color: t.like === 1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, -1)}
+                      >
+                        <BiDislike
+                          style={{
+                            color: t.like === -1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+                    </div>
                   </div>
+
+                  {
+                    showTimeTrack === k && showTimeText === t.text && (
+                      <div
+                        style={{
+                          width: "90%",
+                          height: 30,
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          paddingLeft: "5%",
+                          backgroundColor: "transparent",
+                          marginBottom: 2,
+                          fontSize: 11,
+                          overflow: "auto",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <button 
+                          style={{
+                            display: "inline-block",
+                            border: "none",
+                            margin: 5,
+                          }}
+                        >
+                          dummy time stamp info 
+                        </button>
+
+                        <button 
+                          style={{
+                            display: "inline-block",
+                            border: "none",
+                            margin: 5,
+                          }}
+                        >
+                          dummy time stamp info 
+                        </button>
+                          
+                        <button 
+                          style={{
+                            display: "inline-block",
+                            border: "none",
+                            margin: 5,
+                          }}
+                        >
+                          dummy time stamp info 
+                        </button>
+                        
+                      </div>
+                    )
+                  }
                 </div>
               ))}
           </div>
