@@ -6,7 +6,7 @@ import {
   BiLike,
 } from "react-icons/bi";
 import { tagsFormat } from "../TagsFormat";
-
+import {toTimeString} from "../utils"
 const TagsPad = (props) => {
   const tagsMap =
     tagsFormat[props.searchVersion][props.searchAssets ? "asset" : "clip"][
@@ -43,14 +43,14 @@ const TagsPad = (props) => {
       for(let field in source.fields) {
         if(field.endsWith("tag")) {
           const _field = field.slice(0, -4) 
-          if(! _field in timeInfo){
+          if(! (_field in timeInfo)){
             timeInfo[_field] = {}
           }
           for(let tag of source.fields[field]){
             const text = tag.text[0]
             const startTime = tag.start_time
             const endTime = tag.end_time
-            if (! text in timeInfo[_field]){
+            if (! (text in timeInfo[_field])){
               timeInfo[_field][text] = []
             }
             timeInfo[_field][text].push({
@@ -61,6 +61,7 @@ const TagsPad = (props) => {
         }
       }
     }
+    return timeInfo
   }
 
   useEffect(() => {
@@ -396,8 +397,7 @@ const TagsPad = (props) => {
                     </div>
                   </div>
 
-                  {
-                    showTimeTrack === k && showTimeText === t.text && (
+                  {showTimeTrack === k && showTimeText === t.text && (
                       <div
                         style={{
                           width: "90%",
@@ -412,51 +412,27 @@ const TagsPad = (props) => {
                           whiteSpace: "nowrap"
                         }}
                       >
-                        <button 
-                          style={{
-                            display: "inline-block",
-                            border: "none",
-                            backgroundColor: "whitesmoke",
-                            margin: 5,
-                            borderRadius: 5,
-                          }}
-                          onClick={() => {
-                            if (props.videoElementRef.current) {
-                              props.videoElementRef.current.pause();
-                              props.videoElementRef.current.currentTime = 0
-                            }
-                          }}
-                        >
-                          dummy time stamp info 
-                        </button>
-
-                        <button 
-                          style={{
-                            display: "inline-block",
-                            border: "none",
-                            backgroundColor: "whitesmoke",
-                            margin: 5,
-                            borderRadius: 5,
-                          }}
-                        >
-                          dummy time stamp info 
-                        </button>
-                          
-                        <button 
-                          style={{
-                            display: "inline-block",
-                            border: "none",
-                            backgroundColor: "whitesmoke",
-                            margin: 5,
-                            borderRadius: 5,
-                          }}
-                        >
-                          dummy time stamp info 
-                        </button>
-                        
+                        {timeStampInfo.current[k][t.text].map((card) => (
+                          <button 
+                            style={{
+                              display: "inline-block",
+                              border: "none",
+                              backgroundColor: "whitesmoke",
+                              margin: 5,
+                              borderRadius: 5,
+                            }}
+                            onClick={() => {
+                              if (props.videoElementRef.current) {
+                                props.videoElementRef.current.pause();
+                                props.videoElementRef.current.currentTime = 0
+                              }
+                            }}
+                          >
+                            {toTimeString(card.startTime)} - {toTimeString(card.endTime)}
+                          </button>
+                        ))}
                       </div>
-                    )
-                  }
+                    )}
                 </div>
               ))}
           </div>
