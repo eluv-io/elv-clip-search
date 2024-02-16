@@ -4,6 +4,7 @@ import {
   BiArrowToTop,
   BiDislike,
   BiLike,
+  BiTrophy,
 } from "react-icons/bi";
 import { tagsFormat } from "../TagsFormat";
 import {toTimeString} from "../utils"
@@ -39,29 +40,35 @@ const TagsPad = (props) => {
 
   const prepareTimeInfo = () => {
     const timeInfo = {}
-    for(let source of props.clipInfo.sources){
-      for(let field in source.fields) {
-        if(field.endsWith("tag")) {
-          const _field = field.slice(0, -4) 
-          if(! (_field in timeInfo)){
-            timeInfo[_field] = {}
-          }
-          for(let tag of source.fields[field]){
-            const text = tag.text[0]
-            const startTime = tag.start_time
-            const endTime = tag.end_time
-            if (! (text in timeInfo[_field])){
-              timeInfo[_field][text] = []
+    try {
+      for(let source of props.clipInfo.sources){
+        for(let field in source.fields) {
+          if(field.endsWith("tag")) {
+            const _field = field.slice(0, -4) 
+            if(! (_field in timeInfo)){
+              timeInfo[_field] = {}
             }
-            timeInfo[_field][text].push({
-              startTime: startTime,
-              endTime: endTime
-            })
+            for(let tag of source.fields[field]){
+              const startTime = tag.start_time
+              const endTime = tag.end_time
+              for(let txt of tag.text){
+                if (! (txt in timeInfo[_field])){
+                  timeInfo[_field][txt] = []
+                }
+                const range = `${startTime}-${endTime}`
+                if (! (timeInfo[_field][txt].includes(range))){
+                  timeInfo[_field][txt].push(range)
+                }
+              }
+            }
           }
         }
       }
+      return timeInfo
+    } catch(e) {
+      console.log(e)
+      return {}
     }
-    return timeInfo
   }
 
   useEffect(() => {
@@ -397,7 +404,7 @@ const TagsPad = (props) => {
                     </div>
                   </div>
 
-                  {showTimeTrack === k && showTimeText === t.text && (
+                  {showTimeTrack === k && showTimeText === t.text && (k in timeStampInfo.current) && (t.text in timeStampInfo.current[k]) && (
                       <div
                         style={{
                           width: "90%",
@@ -423,12 +430,14 @@ const TagsPad = (props) => {
                             }}
                             onClick={() => {
                               if (props.videoElementRef.current) {
+                                const t = Math.floor(Math.max((parseInt(card.split("-")[0]) - props.clipInfo.start_time), 0) / 1000 )
                                 props.videoElementRef.current.pause();
-                                props.videoElementRef.current.currentTime = 0
+                                props.videoElementRef.current.currentTime = t
                               }
                             }}
                           >
-                            {toTimeString(card.startTime)} - {toTimeString(card.endTime)}
+                            {/* global timestamp */}
+                            {toTimeString(parseInt(card.split("-")[0]))} - {toTimeString(parseInt(card.split("-")[1]))}
                           </button>
                         ))}
                       </div>
