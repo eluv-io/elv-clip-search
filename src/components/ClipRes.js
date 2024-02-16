@@ -10,7 +10,7 @@ const container = {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "whitesmoke",
+  // backgroundColor: "whitesmoke",
   padding: 10,
   marginBottom: 10,
   marginTop: 10,
@@ -23,7 +23,7 @@ const videoContainer = {
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "whitesmoke",
+  // backgroundColor: "whitesmoke",
   borderWidth: 2,
   borderColor: "grey",
   border: "solid",
@@ -70,6 +70,9 @@ const ClipRes = (props) => {
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url = props.clipInfo.url;
   const [player, setPlayer] = useState(undefined);
+
+  const videoElementRef = useRef(null)
+
   // debug line: keep it
   // console.log(JSON.stringify(props.client.AllowedMethods(), null, 2));
 
@@ -242,6 +245,7 @@ const ClipRes = (props) => {
       playerOptions: {
         controls: EluvioPlayerParameters.controls.AUTO_HIDE,
         playerCallback: ({ videoElement }) => {
+          videoElementRef.current = videoElement;
           videoElement.style.height = "100%";
           videoElement.style.width = "100%";
           videoElement.addEventListener("play", () => {
@@ -345,6 +349,7 @@ const ClipRes = (props) => {
         searchAssets={props.searchAssets}
         shotsMemo={shotsMemo}
         dbClient={props.dbClient}
+        videoElementRef={videoElementRef}
       ></QAPad>
     </div>
   );

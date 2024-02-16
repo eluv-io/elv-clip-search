@@ -4,9 +4,10 @@ import {
   BiArrowToTop,
   BiDislike,
   BiLike,
+  BiTrophy,
 } from "react-icons/bi";
 import { tagsFormat } from "../TagsFormat";
-
+import {toTimeString} from "../utils"
 const TagsPad = (props) => {
   const tagsMap =
     tagsFormat[props.searchVersion][props.searchAssets ? "asset" : "clip"][
@@ -23,6 +24,9 @@ const TagsPad = (props) => {
 
   const setRefresh = useState(false)[1];
   const [tagsReady, setTagsReady] = useState(false);
+  const timeStampInfo = useRef({})
+  const [showTimeTrack, setShowTimeTrack]  = useState("")
+  const [showTimeText, setShowTimeText]  = useState("")
 
   useEffect(() => {
     try {
@@ -33,6 +37,44 @@ const TagsPad = (props) => {
       console.log(err);
     }
   }, []);
+
+  const prepareTimeInfo = () => {
+    const timeInfo = {}
+    try {
+      for(let source of props.clipInfo.sources){
+        for(let field in source.fields) {
+          if(field.endsWith("tag")) {
+            const _field = field.slice(0, -4) 
+            if(! (_field in timeInfo)){
+              timeInfo[_field] = {}
+            }
+            for(let tag of source.fields[field]){
+              const startTime = tag.start_time
+              const endTime = tag.end_time
+              for(let txt of tag.text){
+                if (! (txt in timeInfo[_field])){
+                  timeInfo[_field][txt] = []
+                }
+                const range = `${startTime}-${endTime}`
+                if (! (timeInfo[_field][txt].includes(range))){
+                  timeInfo[_field][txt].push(range)
+                }
+              }
+            }
+          }
+        }
+      }
+      return timeInfo
+    } catch(e) {
+      console.log(e)
+      return {}
+    }
+  }
+
+  useEffect(() => {
+    const timeInfo = prepareTimeInfo()
+    timeStampInfo.current = timeInfo
+  }, [])
 
   const prepareTags = async () => {
     const contentHash = props.clipInfo.hash;
@@ -60,7 +102,7 @@ const TagsPad = (props) => {
     const _hasTags = Object.keys(firstShotTags).some((k) => k in tags.current);
 
     if (_hasTags) {
-      console.log("parsing tags");
+      // console.log("parsing tags");
       for (let src of sourceData) {
         // each src represent a shot
 
@@ -280,7 +322,6 @@ const TagsPad = (props) => {
                       newStatus[kk] = show[kk];
                     }
                   }
-
                   setShow(newStatus);
                 }}
               >
@@ -293,39 +334,114 @@ const TagsPad = (props) => {
                   style={{
                     width: "90%",
                     display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingLeft: "5%",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
                     backgroundColor: "transparent",
                     borderRadius: 10,
-                    marginBottom: 3,
+                    marginBottom: 2,
+                    marginTop: 2,
                   }}
-                  key={`${t.text}`}
                 >
-                  {t.text}
-                  <div>
-                    <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, 1)}
-                    >
-                      <BiLike
-                        style={{
-                          color: t.like === 1 ? "#EAA14F" : "black",
-                        }}
-                      />
-                    </button>
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingLeft: "5%",
+                      backgroundColor: "transparent",
+                      borderRadius: 10,
+                      marginBottom: 2,
+                      border: "solid",
+                      borderWidth: 0.5,
 
+                    }}
+                    key={`${t.text}`}
+                  >
                     <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, -1)}
+                      style={{
+                        border: "none",
+                        cursor: "pointer",
+                        borderRadius: 5,
+                        backgroundColor: "transparent",
+                        fontSize: 12,
+                      }}
+                      onClick={() => {
+                        if( showTimeText == t.text && showTimeTrack == k) {
+                          setShowTimeTrack("")
+                          setShowTimeText("")
+                        } else {
+                          setShowTimeTrack(k)
+                          setShowTimeText(t.text)
+                        }
+                      }}
                     >
-                      <BiDislike
-                        style={{
-                          color: t.like === -1 ? "#EAA14F" : "black",
-                        }}
-                      />
+                      {t.text}
                     </button>
+                    <div>
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, 1)}
+                      >
+                        <BiLike
+                          style={{
+                            color: t.like === 1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, -1)}
+                      >
+                        <BiDislike
+                          style={{
+                            color: t.like === -1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+                    </div>
                   </div>
+
+                  {showTimeTrack === k && showTimeText === t.text && (k in timeStampInfo.current) && (t.text in timeStampInfo.current[k]) && (
+                      <div
+                        style={{
+                          width: "90%",
+                          height: 30,
+                          display: "flex",
+                          flexDirection: "row",
+                          paddingLeft: "5%",
+                          backgroundColor: "transparent",
+                          marginBottom: 2,
+                          fontSize: 11,
+                          overflow: "auto",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {timeStampInfo.current[k][t.text].map((card) => (
+                          <button 
+                            style={{
+                              display: "inline-block",
+                              border: "none",
+                              backgroundColor: "whitesmoke",
+                              margin: 5,
+                              borderRadius: 5,
+                            }}
+                            onClick={() => {
+                              if (props.videoElementRef.current) {
+                                const t = Math.floor(Math.max((parseInt(card.split("-")[0]) - props.clipInfo.start_time), 0) / 1000 )
+                                props.videoElementRef.current.pause();
+                                props.videoElementRef.current.currentTime = t
+                              }
+                            }}
+                          >
+                            {/* global timestamp */}
+                            {toTimeString(parseInt(card.split("-")[0]))} - {toTimeString(parseInt(card.split("-")[1]))}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
               ))}
           </div>

@@ -163,7 +163,7 @@ const clipResShowContainer = {
   paddingBottom: 10,
   marginBottom: 10,
   marginTop: 20,
-  backgroundColor: "whitesmoke",
+  // backgroundColor: "whitesmoke",
   borderRadius: 10,
 };
 
