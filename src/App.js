@@ -191,8 +191,11 @@ const App = () => {
     "display_title",
     "logo",
     "object",
-    "segment",
+    // "segment",
     "speech_to_text",
+    "game_events",
+    "game_player",
+    "game_team",
   ];
   const ASSETS_SEARCH_FIELDS = [
     "celebrity",
