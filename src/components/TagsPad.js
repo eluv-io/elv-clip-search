@@ -219,7 +219,7 @@ const TagsPad = (props) => {
     <div
       style={{
         width: "100%",
-        maxHeight: 660,
+        maxHeight: 800,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -251,83 +251,120 @@ const TagsPad = (props) => {
               justifyContent: "flex-start",
               alignItems: "center",
               width: "95%",
-              marginBottom: 0,
             }}
           >
             <div
               style={{
                 display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
+                flexDirection: "column",
+                justifyContent: "flex-start",
                 alignItems: "center",
                 width: "100%",
-                backgroundColor: "lightgray",
-                marginTop: 10,
-                paddingLeft: 5,
-                paddingRight: 5,
+                marginTop: 5,
                 borderRadius: 5,
               }}
             >
-              <div>{tagsMap[k]}</div>
-              <button
-                style={{ border: "none", backgroundColor: "lightgray" }}
-                onClick={() => {
-                  const newStatus = {};
-                  for (let kk in show) {
-                    if (kk === k) {
-                      newStatus[kk] = !show[kk];
-                    } else {
-                      newStatus[kk] = show[kk];
-                    }
-                  }
-
-                  setShow(newStatus);
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                  backgroundColor: "lightgray",
+                  padding: 5,
+                  borderRadius: 5,
                 }}
               >
-                {show[k] ? <BiArrowToTop /> : <BiArrowFromTop />}
-              </button>
-            </div>
-            {show[k] &&
-              tags.current[k].map((t) => (
-                <div
-                  style={{
-                    width: "90%",
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingLeft: "5%",
-                    backgroundColor: "transparent",
-                    borderRadius: 10,
-                    marginBottom: 3,
-                  }}
-                  key={`${t.text}`}
-                >
-                  {t.text}
-                  <div>
-                    <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, 1)}
-                    >
-                      <BiLike
-                        style={{
-                          color: t.like === 1 ? "#EAA14F" : "black",
-                        }}
-                      />
-                    </button>
+                <div>{tagsMap[k]}</div>
+                <button
+                  style={{ border: "none", backgroundColor: "lightgray" }}
+                  onClick={() => {
+                    const newStatus = {};
+                    for (let kk in show) {
+                      if (kk === k) {
+                        newStatus[kk] = !show[kk];
+                      } else {
+                        newStatus[kk] = show[kk];
+                      }
+                    }
 
-                    <button
-                      style={{ border: "none", backgroundColor: "transparent" }}
-                      onClick={() => collect(tags.current[k], t, -1)}
+                    setShow(newStatus);
+                  }}
+                >
+                  {show[k] ? <BiArrowToTop /> : <BiArrowFromTop />}
+                </button>
+              </div>
+
+              {show[k] &&
+                tags.current[k].map((t) => (
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      backgroundColor: "transparent",
+                      marginBottom: 10,
+                      fontSize: 12,
+                    }}
+                    key={`${t.text}`}
+                    
+                  >
+                    <div 
+                      style={{
+                        width: "15%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-around",
+                        backgroundColor: "transparent",
+                      }}
                     >
-                      <BiDislike
-                        style={{
-                          color: t.like === -1 ? "#EAA14F" : "black",
-                        }}
-                      />
-                    </button>
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, 1)}
+                      >
+                        <BiLike
+                          style={{
+                            color: t.like === 1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+
+                      <button
+                        style={{ border: "none", backgroundColor: "transparent" }}
+                        onClick={() => collect(tags.current[k], t, -1)}
+                      >
+                        <BiDislike
+                          style={{
+                            color: t.like === -1 ? "#EAA14F" : "black",
+                          }}
+                        />
+                      </button>
+                    </div>
+
+
+                    <div 
+                      style={{
+                        width: "80%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "flex-start",
+                        backgroundColor: "transparent",
+                        borderRadius: 5,
+                        paddingLeft: 5,
+                      }}
+                      onMouseEnter={(event) => {event.target.style.backgroundColor = "lightgrey"}}
+                      onMouseLeave={(event) => {event.target.style.backgroundColor = "transparent"}}
+                    >
+                      {t.text}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              }
+            </div>
+            
+            
           </div>
         ) : null;
       })}

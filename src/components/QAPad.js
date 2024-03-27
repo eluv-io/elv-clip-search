@@ -31,7 +31,7 @@ const tagsContainer = {
   justifyContent: "flex-start",
   alignItems: "center",
   width: "100%",
-  height: 660,
+  height: 800,
   marginBottom: 20,
   backgroundColor: "transparent",
 };
