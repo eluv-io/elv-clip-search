@@ -48,9 +48,6 @@ const SummaryPad = (props) => {
           width: "90%",
           border: "solid"
         }}
-        onClick={() => {
-          setDisplaying(Math.max(displaying-1, 0))
-        }}
       >
         <div
           style={{
@@ -61,6 +58,9 @@ const SummaryPad = (props) => {
             height: "30%",
             width: "15%",
             cursor: "pointer"
+          }}
+          onClick={() => {
+            setDisplaying(Math.max(displaying-1, 0))
           }}
         >
           <BsCaretLeftFill/>
