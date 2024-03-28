@@ -6,7 +6,7 @@ const SummaryPad = (props) => {
   const [summaries, setSummaries] = useState([])
   const [displaying, setDisplaying] = useState(0)
   const [summaryTimestamps, setSummaryTimestamps] = useState([])
-  
+
   useEffect(() => {
     try{
       console.log("paring summarizations")
@@ -129,7 +129,7 @@ const SummaryPad = (props) => {
               justifyContent: "center",
               alignItems: "center",
               height: "90%",
-              width: "30%",
+              width: "20%",
             }}
           >
             <div 
@@ -151,7 +151,7 @@ const SummaryPad = (props) => {
               justifyContent: "center",
               alignItems: "center",
               height: "90%",
-              width: "30%",
+              width: "40%",
             }}
           >
             <div 
