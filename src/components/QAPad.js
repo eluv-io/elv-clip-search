@@ -57,7 +57,7 @@ const QAPad = (props) => {
             width: "90%",
             display: "flex",
             flexDirection: "row",
-            justifyContent: "flex-start",
+            justifyContent: "space-around",
             alignItems: "center",
             marginBottom: 20,
           }}
@@ -66,10 +66,13 @@ const QAPad = (props) => {
             onClick={() => {setShowTags(true)}}
             style={{
               cursor: "pointer",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "45%",
               paddingLeft: 10,
               paddingRight: 10,
-              marginRight: 10,
-              marginLeft: 10,
               borderRadius: 5,
               backgroundColor: showTags ? "lightgray" : "transparent"
             }}
@@ -80,10 +83,13 @@ const QAPad = (props) => {
             onClick={() => {setShowTags(false)}}
             style={{
               cursor: "pointer",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "45%",
               paddingLeft: 10,
               paddingRight: 10,
-              marginRight: 10,
-              marginLeft: 10,
               borderRadius: 5,
               backgroundColor: showTags ? "transparent" : "lightgray"
             }}
