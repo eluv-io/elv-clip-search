@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import TagsPad from "./TagsPad";
+import SummaryPad from "./SummaryPad"
 import { BsXLg } from "react-icons/bs";
 
 const container = {
@@ -98,14 +99,19 @@ const QAPad = (props) => {
           </div>
         </div>
         <div style={tagsContainer}>
-          <TagsPad
-            clipInfo={props.clipInfo}
-            searchId={props.searchId}
-            searchVersion={props.searchVersion}
-            searchAssets={props.searchAssets}
-            shotsMemo={props.shotsMemo}
-            dbClient={props.dbClient}
-          ></TagsPad>
+          {showTags ? 
+            <TagsPad
+              clipInfo={props.clipInfo}
+              searchId={props.searchId}
+              searchVersion={props.searchVersion}
+              searchAssets={props.searchAssets}
+              shotsMemo={props.shotsMemo}
+              dbClient={props.dbClient}
+            ></TagsPad> : 
+            <SummaryPad
+              clipInfo={props.clipInfo}
+            ></SummaryPad>
+          }
         </div>
       </div>
       <div style={ctrContainer}>
