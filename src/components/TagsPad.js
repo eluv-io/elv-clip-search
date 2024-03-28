@@ -219,7 +219,7 @@ const TagsPad = (props) => {
     <div
       style={{
         width: "100%",
-        maxHeight: 800,
+        maxHeight: 750,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
@@ -276,7 +276,7 @@ const TagsPad = (props) => {
                   borderRadius: 5,
                 }}
               >
-                <div>{tagsMap[k]}</div>
+                <div style={{fontSize: 14}}>{tagsMap[k]}</div>
                 <button
                   style={{ border: "none", backgroundColor: "lightgray" }}
                   onClick={() => {
