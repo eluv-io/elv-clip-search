@@ -8,6 +8,7 @@ import ClipRes from "./components/ClipRes";
 import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
+import ChatBox from "./components/ChatBox";
 import { parseSearchRes, createSearchUrl } from "./utils";
 import { BsSearch } from "react-icons/bs";
 import DB from "./DB";
@@ -766,6 +767,22 @@ const App = () => {
             </button>
           </div>
         )}
+
+      <div style={{
+        backgroundColor: "whitesmoke",
+        borderRadius: 10,
+        marginTop: 20,
+        marginBottom: 40,
+        height: 600,
+        flexDirection: "column",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <ChatBox />
+      </div>
+
+      
 
       {haveSearchUrl && (
         <div style={curlResContainer}>
