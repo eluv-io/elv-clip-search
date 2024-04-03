@@ -30,18 +30,7 @@ const messageBox = {
   padding: 15,
   borderWidth: 1,
   borderRadius: 5,
-}
-
-const messages = {
-  flexDirection: "column",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-start",
-  width: "100%",
-  height: "100%",
-  padding: 10,
   overflow: "scroll",
-  backgroundColor: "white",
 }
 
 const inputBox = {
@@ -94,60 +83,21 @@ const Message = ({item}) => {
   )
 }
  
-const MessageBox = ({history}) => {
-  const messagesEndRef = useRef(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.lastElementChild?.scrollIntoView({ behavior: "smooth" })
-  }
-  useEffect(() => {
-    scrollToBottom()
-  }, [history]);
-
-  console.log(messagesEndRef.current)
-  return (
-    <div 
-      style={{
-        flexDirection: "column",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        width: "100%",
-        height: "100%",
-        padding: 10,
-        overflow: "scroll",
-      }} 
-      ref={messagesEndRef}
-    >
-      {
-        history.map((item) => {
-          return (
-            <div style={{
-              flexDirection: "row",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: 60,
-              minHeight: 60,
-              maxHeight: 60,
-              width: "90%",
-              padding: 10,
-              margin: 10,
-              borderRadius: 10,
-            }}>
-              <Message item={item}></Message>
-            </div>
-            
-          )
-        })
-      }
-    </div>
-  )
-}
 
 const ChatBox = (props) => {
   const [inputValue, setInputValue] = useState(""); 
   const [inputHistory, setInputHistory] = useState([])
+  const [scroll, setScroll] = useState(true)
+  const messagesEndRef = useRef(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+  useEffect(() => {
+    console.log("scrolling to bottom")
+    scrollToBottom()
+  }, [scroll]);
+
   return (
     <div style={body}>
       {/* title */}
@@ -157,7 +107,29 @@ const ChatBox = (props) => {
 
       {/* chat history */}
       <div style={messageBox}>
-        <MessageBox history={inputHistory} />
+        {
+          inputHistory.map((item) => {
+            return (
+              <div style={{
+                flexDirection: "row",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 60,
+                minHeight: 60,
+                maxHeight: 60,
+                width: "90%",
+                padding: 10,
+                margin: 10,
+                borderRadius: 10,
+              }}>
+                <Message item={item}></Message>
+              </div>
+              
+            )
+          })
+        }
+        <div ref={messagesEndRef}></div>
       </div>
 
       {/* input box */}
@@ -228,7 +200,7 @@ const ChatBox = (props) => {
               _inputHistory.push([1, "DUMMY RESPONCE"])
               setInputHistory(_inputHistory)
               
-              
+              setScroll((item) => !item)
             }
           }}
         >
