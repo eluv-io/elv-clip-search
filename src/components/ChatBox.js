@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef} from "react";
-import userLogo from "../logo192.png"
+import { CgSpinnerTwo } from "react-icons/cg";
+
+import userLogo from "../user.png"
 import elvLogo from "../elv.png"
 const body={
   flexDirection: "column",
@@ -15,7 +17,7 @@ const title = {
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-start",
-  height: "10%",
+  height: "5%",
   width: "100%",
 }
 
@@ -23,8 +25,8 @@ const messageBox = {
   flexDirection: "column",
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
-  height: "70%",
+  justifyContent: "flex-start",
+  height: "80%",
   width: "100%",
   border: "solid",
   padding: 15,
@@ -38,7 +40,7 @@ const inputBox = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  height: "10%",
+  height: "7%",
   width: "90%",
 }
 
@@ -88,6 +90,8 @@ const ChatBox = (props) => {
   const [inputValue, setInputValue] = useState(""); 
   const [inputHistory, setInputHistory] = useState([])
   const [scroll, setScroll] = useState(true)
+  const [loading, setLoading] = useState(false)
+
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -97,6 +101,22 @@ const ChatBox = (props) => {
     console.log("scrolling to bottom")
     scrollToBottom()
   }, [scroll]);
+
+
+  // handling the request\
+  // dummy waiting req
+  const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+  const handleRequest = async ({query}) => {
+    setLoading(true)
+    await delay(1500)
+    setLoading(false)
+    // get the chatbot response 
+    const _inputHistory = inputHistory
+    _inputHistory.push([1, "DUMMY RESPONCE"])
+    setInputHistory(_inputHistory)
+    setScroll((v) => !v)
+  }
 
   return (
     <div style={body}>
@@ -129,6 +149,7 @@ const ChatBox = (props) => {
             )
           })
         }
+       {loading && "loading"}
         <div ref={messagesEndRef}></div>
       </div>
 
@@ -191,16 +212,14 @@ const ChatBox = (props) => {
             borderRadius: 5,
             cursor: "pointer"
           }}
-          onClick={() => {
+          onClick={async () => {
             if (inputValue.trim() !== "") {
               const _inputHistory = inputHistory;
               setInputValue("")
               _inputHistory.push([0, inputValue])
-              // get the chatbot response 
-              _inputHistory.push([1, "DUMMY RESPONCE"])
               setInputHistory(_inputHistory)
-              
               setScroll((item) => !item)
+              await handleRequest({query: inputValue.trim()})
             }
           }}
         >
