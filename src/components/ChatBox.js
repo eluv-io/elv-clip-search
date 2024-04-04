@@ -107,13 +107,14 @@ const ChatBox = (props) => {
   // dummy waiting req
   const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
-  const handleRequest = async ({query}) => {
+  const handleRequest = async () => {
     setLoading(true)
-    await delay(1500)
+    props.statusHandler()
+    await props.searchHandler(inputValue.trim())
     setLoading(false)
     // get the chatbot response 
     const _inputHistory = inputHistory
-    _inputHistory.push([1, "DUMMY RESPONCE"])
+    _inputHistory.push([1, "Below are clips that may match your search"])
     setInputHistory(_inputHistory)
     setScroll((v) => !v)
   }
@@ -155,7 +156,7 @@ const ChatBox = (props) => {
 
       {/* input box */}
       <div style={inputBox}>
-        <div
+        <button
           style={{
             flexDirection: "row",
             display: "flex",
@@ -163,18 +164,19 @@ const ChatBox = (props) => {
             justifyContent: "center",
             width: "6%",
             height: "90%",
-            backgroundColor: "#3b87eb",
+            backgroundColor: loading ? "gray" : "#3b87eb",
             color: "white",
             borderRadius: 5,
-            cursor: "pointer"
+            border: "none"
           }}
           onClick={() => {
             setInputValue("")
             setInputHistory([])
           }}
+          disabled={loading}
         >
           X
-        </div>
+        </button>
         <input
           style={{
             width: "80%",
@@ -187,19 +189,10 @@ const ChatBox = (props) => {
           onChange={(event) => setInputValue(event.target.value)}
           value={inputValue}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              // if (inputValue.trim() !== "") {
-              //   const _inputHistory = inputHistory;
-              //   _inputHistory.push(inputValue)
-              //   // get the chatbot response 
-              //   _inputHistory.push("DUMMY RESPONSCE")
-              //   setInputHistory(_inputHistory)
-              //   setInputValue("")
-              // }
-            }
+            if (event.key === "Enter") {}
           }}
         ></input>
-        <div
+        <button
           style={{
             flexDirection: "row",
             display: "flex",
@@ -207,11 +200,13 @@ const ChatBox = (props) => {
             justifyContent: "center",
             width: "8%",
             height: "90%",
-            backgroundColor: "#3b87eb",
+            backgroundColor: loading ? "gray" : "#3b87eb",
             color: "white",
+            border: "none",
             borderRadius: 5,
-            cursor: "pointer"
           }}
+          disabled={loading}
+          
           onClick={async () => {
             if (inputValue.trim() !== "") {
               const _inputHistory = inputHistory;
@@ -219,12 +214,12 @@ const ChatBox = (props) => {
               _inputHistory.push([0, inputValue])
               setInputHistory(_inputHistory)
               setScroll((item) => !item)
-              await handleRequest({query: inputValue.trim()})
+              await handleRequest()
             }
           }}
         >
           send
-        </div>
+        </button>
       </div>
     </div>
   )

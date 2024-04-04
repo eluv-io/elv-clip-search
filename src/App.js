@@ -344,10 +344,14 @@ const App = () => {
     setDisplayingContents(contents.current[objectId].clips[1]);
   };
 
-  const getRes = async () => {
+  const getRes = async (
+    _search="",
+    _fuzzySearchPhrase="",
+    _fuzzySearchField=[], 
+  ) => {
     // playoutUrlMemo.current = {};
     const _client = getClient();
-    if (search === "" && fuzzySearchPhrase === "") {
+    if (_search === "" && _fuzzySearchPhrase === "") {
       console.log("err");
       setErr(true);
       setErrMsg("Missing search phrases or filters");
@@ -368,9 +372,9 @@ const App = () => {
         [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
         libraryId: libId,
         searchVersion: searchVersion.current,
-        search,
-        fuzzySearchPhrase,
-        fuzzySearchField,
+        search: _search,
+        fuzzySearchPhrase: _fuzzySearchPhrase,
+        fuzzySearchField: _fuzzySearchField,
         searchAssets: searchAssets.current,
       });
       if (res.status === 0) {
@@ -760,27 +764,37 @@ const App = () => {
             <button
               type="button"
               style={button}
-              onClick={getRes}
+              onClick={async () => {await getRes(search, fuzzySearchPhrase, fuzzySearchField)}}
               disabled={loadingSearchRes || loadingPlayoutUrl}
             >
               <BsSearch />
             </button>
           </div>
         )}
-
-      <div style={{
-        backgroundColor: "whitesmoke",
-        borderRadius: 10,
-        marginTop: 20,
-        marginBottom: 40,
-        height: 600,
-        flexDirection: "column",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}>
-        <ChatBox />
-      </div>
+      {
+        haveSearchVersion && (
+          <div style={{
+            backgroundColor: "whitesmoke",
+            borderRadius: 10,
+            marginTop: 20,
+            marginBottom: 40,
+            height: 600,
+            flexDirection: "column",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <ChatBox 
+              searchHandler={async (v) => {await getRes("", v, filteredSearchFields.current)}} 
+              statusHandler={() => {
+                resetLoadStatus();
+                currentPage.current = 1;
+              }}
+            />
+          </div>
+        )
+      }
+      
 
       
 
