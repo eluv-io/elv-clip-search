@@ -103,19 +103,36 @@ const ChatBox = (props) => {
   }, [scroll]);
 
 
-  // handling the request\
+  // handling the request
+
   // dummy waiting req
   const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
+  // 1. send to LLM to rewrite the query
+  // 2. use function provide by parent compoennt to get search res
   const handleRequest = async () => {
+    // make sure we disabled the buttons in this component 
     setLoading(true)
+
+    // reset the buttons in parent compoennt
     props.statusHandler()
+
+    // mock : using LLM to rewrite the query
+    await delay(1000)
+    const query = inputValue.trim()
+
+    // send request 
     await props.searchHandler(inputValue.trim())
+
+    // got the res, loading = False
     setLoading(false)
-    // get the chatbot response 
+
+    // set the chatbot response 
     const _inputHistory = inputHistory
     _inputHistory.push([1, "Below are clips that may match your search"])
     setInputHistory(_inputHistory)
+
+    // scroll to bottom
     setScroll((v) => !v)
   }
 
