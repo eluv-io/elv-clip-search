@@ -110,6 +110,9 @@ const QAPad = (props) => {
             ></TagsPad> : 
             <SummaryPad
               clipInfo={props.clipInfo}
+              fpsDenominator={props.fpsDenominator}
+              fpsNumerator={props.fpsNumerator}
+              videoElementRef={props.videoElementRef}
             ></SummaryPad>
           }
         </div>

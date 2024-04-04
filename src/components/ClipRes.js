@@ -70,8 +70,13 @@ const ClipRes = (props) => {
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url = props.clipInfo.url;
   const [player, setPlayer] = useState(undefined);
+  const fpsDenominator = useRef(-1)
+  const fpsNumerator = useRef(-1)
   // debug line: keep it
   // console.log(JSON.stringify(props.client.AllowedMethods(), null, 2));
+
+  // for get the elv video player ref
+  const videoElementRef = useRef(null)
 
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === true) {
@@ -150,6 +155,26 @@ const ClipRes = (props) => {
     }
   }, [props.searchVersion, props.searchAssets]);
 
+
+  // get fps
+  useEffect(() => {
+    if (props.searchVersion === "v2" && props.searchAssets === false) {
+      props.client.ContentObjectMetadata({
+        objectId: props.clipInfo.id,
+        libraryId: props.clipInfo.qlib_id, 
+        metadataSubtree: "offerings/default/media_struct/streams/video/rate",
+      }).then((fps) => {
+        const denominator = parseInt(fps.split("/")[0])
+        const numerator = parseInt(fps.split("/")[1])
+        fpsDenominator.current = denominator
+        fpsNumerator.current = numerator
+        console.log(denominator)
+        console.log(numerator)
+      }).catch((err) => {
+        console.log(`[Error] Get content fps error`)
+      })
+    }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -242,6 +267,7 @@ const ClipRes = (props) => {
       playerOptions: {
         controls: EluvioPlayerParameters.controls.AUTO_HIDE,
         playerCallback: ({ videoElement }) => {
+          videoElementRef.current = videoElement;
           videoElement.style.height = "100%";
           videoElement.style.width = "100%";
           videoElement.addEventListener("play", () => {
@@ -345,6 +371,9 @@ const ClipRes = (props) => {
         searchAssets={props.searchAssets}
         shotsMemo={shotsMemo}
         dbClient={props.dbClient}
+        fpsDenominator={fpsDenominator}
+        fpsNumerator={fpsNumerator}
+        videoElementRef={videoElementRef}
       ></QAPad>
     </div>
   );

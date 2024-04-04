@@ -160,7 +160,22 @@ const SummaryPad = (props) => {
               Timestamp
             </div>
             <div 
-              style={{fontSize: 20}}  
+              style={{fontSize: 20, cursor: "pointer"}}  
+              onClick={() => {
+                if (props.videoElementRef.current) {
+                  if((props.fpsDenominator.current > 0) &&  (props.fpsNumerator.current > 0)){
+                    const _globalStart = props.clipInfo.start_time 
+                    const _globalFrame = Math.round(_globalStart * props.fpsDenominator.current / 1000 /  props.fpsNumerator.current)
+                    const _segFrameOffset = _globalFrame % 48  // 48 is a fixed number, fabric is saving 48 frames into a segment
+                    const _segSecOffset = _segFrameOffset * props.fpsNumerator.current / props.fpsDenominator.current
+                    const _insideOffset = (summaryTimestamps[displaying]["start_time"] - _globalStart) / 1000
+                    const t = _insideOffset + _segSecOffset
+                    props.videoElementRef.current.pause();
+                    props.videoElementRef.current.currentTime = t
+                  }
+                  
+                }                 
+              }}
             >
               {summaryTimestamps.length > 0 ? toTimeString(summaryTimestamps[displaying]["start_time"]) : ""}
             </div>
