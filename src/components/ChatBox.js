@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef} from "react";
-import { CgSpinnerTwo } from "react-icons/cg";
 
 import userLogo from "../user.png"
 import elvLogo from "../elv.png"
+import axios from "axios";
+
 const body={
   flexDirection: "column",
   display: "flex",
@@ -86,27 +87,83 @@ const Message = ({item}) => {
 }
  
 
+
 const ChatBox = (props) => {
   const [inputValue, setInputValue] = useState(""); 
-  const [inputHistory, setInputHistory] = useState([])
+  const [chatHistory, setChatHistory] = useState([])
   const [scroll, setScroll] = useState(true)
   const [loading, setLoading] = useState(false)
+  const sessionId = useRef("")
+  const convToken = useRef("")
+
+  const chatBotObjectId = "iq__2NgfyLG6qeZPMDFZsoEnB2C6kpdj"
+  const chatBotAddr = {
+    "init": `http://localhost:8083/q/${chatBotObjectId}/start_session`,
+    "msg": `http://localhost:8083/q/${chatBotObjectId}/message`
+  }
+  const createToken = async () => {
+    const token = await props.client.CreateSignedToken({
+      objectId: chatBotObjectId,
+      duration: 24 * 60 * 60 * 1000,
+    });
+    return token
+  }
 
   const messagesEndRef = useRef(null)
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
+
   useEffect(() => {
     console.log("scrolling to bottom")
     scrollToBottom()
   }, [scroll]);
 
 
+  // demo url, will make the real url later 
+  // const dummyToken = "atxsjcGjxnRDihvFTJin5KTHgRVpMycGYPS85y9Nry3y2TcT59GA1q8EuCYfHfW3L8VE3jcEZAhLhLRopBkKLuDjLsFZkmsysst45FTW1wtxH6EhqVfUpvr27QuNqUJEB4hwCPCkuEnrmuEpHaT21dc8ZCw6qF7RsnGPEWYE21PF8uAx3JokVtofnVkS18nHhqL24Eacs7549TnP16PExJUVe1ApmSY5WYjgqk9LMyLqE4d4EWWXe2E3sNcNDJHcsiSMEP7r9bSuJngueZduZp"
+  
   // handling the request
 
   // dummy waiting req
   const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+  const initConv = async () => {
+    const startSessionUrl = new URL(chatBotAddr["init"])
+    console.log(startSessionUrl)
+    const _token = await createToken()
+    convToken.current = _token
+
+    startSessionUrl.searchParams.set("authorization", convToken.current)
+
+    const res = await axios.get(startSessionUrl.toString())
+    const _sessionId = res.data["session_id"]
+    sessionId.current = _sessionId
+
+    console.log(sessionId.current)
+  }
+
+  const msgConv = async (text) => {
+    const convUrl = new URL(chatBotAddr["msg"])
+    convUrl.searchParams.set("message", text)
+    convUrl.searchParams.set("authorization", convToken.current)
+    
+    console.log(convUrl.toString())
+
+    try{
+      const res = await axios.get(convUrl.toString(), 
+        { withCredentials: true }
+      )
+      const msg = res.data["response"]
+      console.log(msg)
+      return msg
+    } catch (err) {
+      console.log(err)
+      console.log("[Err] talk with LLM error")
+      return ""
+    }
+  }
+
 
   // 1. send to LLM to rewrite the query
   // 2. use function provide by parent compoennt to get search res
@@ -117,20 +174,35 @@ const ChatBox = (props) => {
     // reset the buttons in parent compoennt
     props.statusHandler()
 
-    // mock : using LLM to rewrite the query
-    await delay(1000)
-    const query = inputValue.trim()
+    // record the current chat history
+    const _chatHistory = chatHistory
 
-    // send request 
-    await props.searchHandler(inputValue.trim())
+    if(sessionId.current === ""){
+      await initConv()
+    }
+    const chatbotRes = await msgConv(inputValue.trim())
+    console.log(chatbotRes)
+    if(chatbotRes.startsWith("SEARCH")){
+      // we get the optimized search query, search 
+      await props.searchHandler(chatbotRes.replace("SEARCH", "").trim())
+      // push one msg to chat history
+      _chatHistory.push([1, `${chatbotRes};  Below are clips that may match your search`])
+    } else {
+      // should not do search 
+      if(chatbotRes === ""){
+        // push one msg to chat history
+        _chatHistory.push([1, "Talking with chatbot went wrong, please with the normal search"])
+      }else{
+        // push one msg to chat history
+        _chatHistory.push([1, chatbotRes])
+      }
+    }
 
-    // got the res, loading = False
+    // update chat history
+    setChatHistory(_chatHistory)
+
+    // finish loading process
     setLoading(false)
-
-    // set the chatbot response 
-    const _inputHistory = inputHistory
-    _inputHistory.push([1, "Below are clips that may match your search"])
-    setInputHistory(_inputHistory)
 
     // scroll to bottom
     setScroll((v) => !v)
@@ -146,7 +218,7 @@ const ChatBox = (props) => {
       {/* chat history */}
       <div style={messageBox}>
         {
-          inputHistory.map((item) => {
+          chatHistory.map((item) => {
             return (
               <div style={{
                 flexDirection: "row",
@@ -188,7 +260,8 @@ const ChatBox = (props) => {
           }}
           onClick={() => {
             setInputValue("")
-            setInputHistory([])
+            setChatHistory([])
+            sessionId.current = ""
           }}
           disabled={loading}
         >
@@ -226,10 +299,10 @@ const ChatBox = (props) => {
           
           onClick={async () => {
             if (inputValue.trim() !== "") {
-              const _inputHistory = inputHistory;
+              const _chatHistory = chatHistory;
               setInputValue("")
-              _inputHistory.push([0, inputValue])
-              setInputHistory(_inputHistory)
+              _chatHistory.push([0, inputValue])
+              setChatHistory(_chatHistory)
               setScroll((item) => !item)
               await handleRequest()
             }

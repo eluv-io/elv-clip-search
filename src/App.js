@@ -790,6 +790,7 @@ const App = () => {
                 resetLoadStatus();
                 currentPage.current = 1;
               }}
+              client={getClient()}
             />
           </div>
         )
