@@ -119,10 +119,6 @@ const ChatBox = (props) => {
     scrollToBottom()
   }, [scroll]);
 
-
-  // demo url, will make the real url later 
-  // const dummyToken = "atxsjcGjxnRDihvFTJin5KTHgRVpMycGYPS85y9Nry3y2TcT59GA1q8EuCYfHfW3L8VE3jcEZAhLhLRopBkKLuDjLsFZkmsysst45FTW1wtxH6EhqVfUpvr27QuNqUJEB4hwCPCkuEnrmuEpHaT21dc8ZCw6qF7RsnGPEWYE21PF8uAx3JokVtofnVkS18nHhqL24Eacs7549TnP16PExJUVe1ApmSY5WYjgqk9LMyLqE4d4EWWXe2E3sNcNDJHcsiSMEP7r9bSuJngueZduZp"
-  
   // handling the request
 
   // dummy waiting req
@@ -177,25 +173,33 @@ const ChatBox = (props) => {
     // record the current chat history
     const _chatHistory = chatHistory
 
-    if(sessionId.current === ""){
-      await initConv()
-    }
-    const chatbotRes = await msgConv(inputValue.trim())
-    console.log(chatbotRes)
-    if(chatbotRes.startsWith("SEARCH")){
-      // we get the optimized search query, search 
-      await props.searchHandler(chatbotRes.replace("SEARCH", "").trim())
-      // push one msg to chat history
-      _chatHistory.push([1, `${chatbotRes};  Below are clips that may match your search`])
-    } else {
-      // should not do search 
-      if(chatbotRes === ""){
-        // push one msg to chat history
-        _chatHistory.push([1, "Talking with chatbot went wrong, please with the normal search"])
-      }else{
-        // push one msg to chat history
-        _chatHistory.push([1, chatbotRes])
+    try{
+      if(sessionId.current === ""){
+        await initConv()
       }
+      const chatbotRes = await msgConv(inputValue.trim())
+      console.log(chatbotRes)
+      if(chatbotRes.startsWith("SEARCH")){
+        // we get the optimized search query, search 
+        const _query = chatbotRes.split(".")[0]
+        await props.searchHandler(_query.replace("SEARCH", "").trim())
+        // push one msg to chat history
+        _chatHistory.push([1, "Here are the results for the search"])
+      } else {
+        // should not do search 
+        if(chatbotRes === ""){
+          // push one msg to chat history
+          _chatHistory.push([1, "Talking with chatbot went wrong, please use the keyword search"])
+        }else{
+          // push one msg to chat history
+          _chatHistory.push([1, chatbotRes])
+        }
+      }
+    } catch (err) {
+      // if anything goes wrong: either search / llm
+      console.log(err)
+      console.log(`[Error] Prompt search err`)
+      _chatHistory.push([1, "Prompt search error, please use the keyword search"])
     }
 
     // update chat history
