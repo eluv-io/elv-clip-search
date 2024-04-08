@@ -132,7 +132,9 @@ const ChatBox = (props) => {
 
     startSessionUrl.searchParams.set("authorization", convToken.current)
 
-    const res = await axios.get(startSessionUrl.toString())
+    const res = await axios.get(startSessionUrl.toString(), 
+      { withCredentials: true }
+    )
     const _sessionId = res.data["session_id"]
     sessionId.current = _sessionId
 
@@ -178,6 +180,7 @@ const ChatBox = (props) => {
         await initConv()
       }
       const chatbotRes = await msgConv(inputValue.trim())
+      // const chatbotRes = `SEARCH ${inputValue.trim()}`
       console.log(chatbotRes)
       if(chatbotRes.startsWith("SEARCH")){
         // we get the optimized search query, search 
