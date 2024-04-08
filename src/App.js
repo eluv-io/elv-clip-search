@@ -381,8 +381,8 @@ const App = () => {
         client: _client,
         objectId: objId,
         libraryId: libId,
-        searchPhrase: fuzzySearchPhrase,
-        searchFields: fuzzySearchField,
+        searchPhrase: _fuzzySearchPhrase,
+        searchFields: _fuzzySearchField,
       });
       if (res.status === 0) {
         // we got the search Url
