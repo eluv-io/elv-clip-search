@@ -65,10 +65,11 @@ export const parseSearchRes = async (
     // if not in clips_per_content: need to add them in
     if (!(item["id"] in clips_per_content)) {
       clips_per_content[item["id"]] = { processed: false, clips: [item] };
-      idNameMap[item["id"]] =
-        "public" in item.meta
-          ? item.meta.public.asset_metadata.title.split(",")[0]
-          : item.sources[0]["prefix"].split("/")[1];
+      if(("meta" in item) && ("public" in item.meta)){
+        idNameMap[item["id"]] = item.meta.public.asset_metadata.title.split(",")[0]
+      }else{
+        idNameMap[item["id"]] = searchAssets ? item.sources[0]["prefix"].split("/")[1] : item.sources[0]["fields"]["f_display_title_as_string"][0]
+      }
       // set the first content to be current content
       if (firstContent === "") {
         firstContent = item["id"];
@@ -102,6 +103,50 @@ export const parseSearchRes = async (
     topkCount,
   };
 };
+
+export const createVecSearchUrl = async ({
+  client,
+  objectId,
+  libraryId,
+  searchPhrase,
+  searchFields,
+}) => {
+  try {
+    
+    console.log(`Creating vector search url for ${objectId} `);
+    const queryParams = {
+      terms: searchPhrase,
+      search_fields: searchFields.join(","),
+      start: 0,
+      limit: 160,
+      display_fields: "all",
+      clips: true,
+      clips_include_source_tags: true,
+      debug: true,
+      clips_max_duration: 55,
+      max_total: 5,
+      select: "/public/asset_metadata/title",
+    };
+
+    const url = await client.Rep({
+      libraryId,
+      objectId,
+      select: "/public/asset_metadata/title",
+      rep: "search",
+      service: "search",
+      makeAccessRequest: true,
+      queryParams: queryParams,
+    });
+    
+    const _pos = url.indexOf("/qlibs/");
+    const newUrl = "http://127.0.0.1:8084".concat(url.slice(_pos));
+    return { url: newUrl, status: 0 };
+   
+  } catch (err) {
+    console.log(err);
+    return { url: "", status: 1 };
+  }
+}
 
 export const createSearchUrl = async ({
   client,

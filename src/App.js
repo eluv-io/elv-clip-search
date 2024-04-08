@@ -9,7 +9,7 @@ import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import ChatBox from "./components/ChatBox";
-import { parseSearchRes, createSearchUrl } from "./utils";
+import { parseSearchRes, createSearchUrl, createVecSearchUrl} from "./utils";
 import { BsSearch } from "react-icons/bs";
 import DB from "./DB";
 
@@ -348,6 +348,7 @@ const App = () => {
     _search="",
     _fuzzySearchPhrase="",
     _fuzzySearchField=[], 
+    _keyword=true
   ) => {
     // playoutUrlMemo.current = {};
     const _client = getClient();
@@ -367,7 +368,7 @@ const App = () => {
       setLoadingSearchRes(true);
       setDisplayingContents([]);
       // try to create the search url
-      const res = await createSearchUrl({
+      const res = _keyword ? await createSearchUrl({
         client: _client,
         [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
         libraryId: libId,
@@ -376,6 +377,12 @@ const App = () => {
         fuzzySearchPhrase: _fuzzySearchPhrase,
         fuzzySearchField: _fuzzySearchField,
         searchAssets: searchAssets.current,
+      }) : await createVecSearchUrl({
+        client: _client,
+        objectId: objId,
+        libraryId: libId,
+        searchPhrase: fuzzySearchPhrase,
+        searchFields: fuzzySearchField,
       });
       if (res.status === 0) {
         // we got the search Url
@@ -785,7 +792,7 @@ const App = () => {
             justifyContent: "center",
           }}>
             <ChatBox 
-              searchHandler={async (v) => {await getRes("", v, filteredSearchFields.current)}} 
+              searchHandler={async (v) => {await getRes("", v, filteredSearchFields.current, false)}} 
               statusHandler={() => {
                 resetLoadStatus();
                 currentPage.current = 1;
