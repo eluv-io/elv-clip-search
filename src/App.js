@@ -11,6 +11,8 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import ChatBox from "./components/ChatBox";
 import { parseSearchRes, createSearchUrl, createVecSearchUrl} from "./utils";
 import { BsSearch } from "react-icons/bs";
+import { BsRobot } from "react-icons/bs";
+
 import DB from "./DB";
 
 const title = {
@@ -218,6 +220,7 @@ const App = () => {
   const searchAssets = useRef(false);
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
+  const [showChatBox, setShowChatBox] = useState(false);
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -625,7 +628,7 @@ const App = () => {
   return (
     <div className="container" style={{ maxWidth: 1600 }}>
       <div style={title}>
-        <h1 className="mt-3">Eluvio Clip Generation & Search</h1>
+        <h1 className="mt-3">Eluvio Clip Generation & Vector Search</h1>
       </div>
 
       <div className="row mt-3">{searchIndexInputBlock}</div>
@@ -662,16 +665,6 @@ const App = () => {
         ) : (
           <div>
             <div className="row mt-3">
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                Search (BM 25)
-              </div>
               <FuzzySearchBox
                 text="Search Phrase"
                 disabled={loadingSearchRes || loadingPlayoutUrl}
@@ -684,34 +677,7 @@ const App = () => {
                 }}
                 statusHandler={resetLoadStatus}
               />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 10,
-                height: 40,
-                width: "100%",
-              }}
-            >
-              <button
-                style={{
-                  border: "none",
-                  borderRadius: 10,
-                  height: "90%",
-                  width: 150,
-                }}
-                onClick={() => {
-                  document.getElementById("searchBox").style.display =
-                    showSearchBox ? "none" : "block";
-                  setShowSearchBox((x) => !x);
-                }}
-              >
-                {showSearchBox ? "Hide Filters" : "More filters"}
-              </button>
-            </div>
+            </div>            
 
             <div
               className="row mt-3"
@@ -746,51 +712,77 @@ const App = () => {
           <div style={inputCheckContainer}>
             <div style={inputInfoContainer}>
               <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Index:</div>
+                <div style={{ flex: 1 }}>Search Index :</div>
                 <div style={{ flex: 3 }}>{objId}</div>
               </div>
               {showFuzzy && (
                 <div style={inputInfo}>
-                  <div style={{ flex: 1 }}>Search Phrase (BM 25):</div>
+                  <div style={{ flex: 1 }}>Search Phrase :</div>
                   <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
                 </div>
               )}
-              {showFuzzy && (
-                <div style={inputInfo}>
-                  <div style={{ flex: 1 }}>Search Fields (BM 25):</div>
-                  <div style={{ flex: 3 }}>{fuzzySearchField.join(",")}</div>
-                </div>
-              )}
-              <div style={inputInfo}>
-                <div style={{ flex: 1 }}>
-                  {showFuzzy ? "More Filters:" : "Search Phrase"}
-                </div>
-                <div style={{ flex: 3 }}>{search}</div>
-              </div>
             </div>
-            <button
-              type="button"
-              style={button}
-              onClick={async () => {await getRes(search, fuzzySearchPhrase, fuzzySearchField)}}
-              disabled={loadingSearchRes || loadingPlayoutUrl}
-            >
-              <BsSearch />
-            </button>
+            <div style={{
+              width: "30%",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-around",
+              
+            }}>
+              <button
+                type="button"
+                style={{
+                  width: "40%",
+                  border: "None",
+                  borderRadius: 5,
+                  padding: 5,
+                  color: "white",
+                  backgroundColor: "#3b87eb"
+                }}
+                onClick={async () => {await getRes(search, fuzzySearchPhrase, fuzzySearchField)}}
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+              >
+                <BsSearch />
+              </button>
+              <button
+                type="button"
+                style={{
+                  width: "40%",
+                  border: "None",
+                  borderRadius: 5,
+                  padding: 5,
+                  color: "white",
+                  backgroundColor: "#3b87eb"
+                }}
+                onClick={() => {
+                  document.getElementById("chatBox").style.display = "flex"
+                  setShowChatBox(true);
+                }}
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+              >
+                <BsRobot /> 
+              </button>
+            </div>
+            
           </div>
         )}
+          
       {
         haveSearchVersion && (
-          <div style={{
-            backgroundColor: "whitesmoke",
-            borderRadius: 10,
-            marginTop: 20,
-            marginBottom: 40,
-            height: 600,
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
+          <div 
+            style={{
+              backgroundColor: "whitesmoke",
+              borderRadius: 10,
+              marginTop: 20,
+              marginBottom: 40,
+              height: 600,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              display: "none"
+            }}
+            id="chatBox"
+          >
             <ChatBox 
               searchHandler={async (v) => {await getRes("", v, filteredSearchFields.current, false)}} 
               statusHandler={() => {
@@ -798,6 +790,12 @@ const App = () => {
                 currentPage.current = 1;
               }}
               client={getClient()}
+              closeHandler = {
+                () => {
+                  document.getElementById("chatBox").style.display = "none"
+                  setShowChatBox(false);
+                }
+              }
             />
           </div>
         )

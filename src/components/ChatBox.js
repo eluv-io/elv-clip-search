@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef} from "react";
+import { BsXLg } from "react-icons/bs";
 
 import userLogo from "../user.png"
 import elvLogo from "../elv.png"
@@ -13,13 +14,14 @@ const body={
   width: "90%"
 }
 
-const title = {
+const close = {
   flexDirection: "row",
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-start",
+  justifyContent: "flex-end",
   height: "5%",
   width: "100%",
+  cursor: "pointer"
 }
 
 const messageBox = {
@@ -192,7 +194,7 @@ const ChatBox = (props) => {
         // should not do search 
         if(chatbotRes === ""){
           // push one msg to chat history
-          _chatHistory.push([1, "Talking with chatbot went wrong, please use the keyword search"])
+          _chatHistory.push([1, "Talking with chatbot went wrong, please use the search box above"])
         }else{
           // push one msg to chat history
           _chatHistory.push([1, chatbotRes])
@@ -202,7 +204,7 @@ const ChatBox = (props) => {
       // if anything goes wrong: either search / llm
       console.log(err)
       console.log(`[Error] Prompt search err`)
-      _chatHistory.push([1, "Prompt search error, please use the keyword search"])
+      _chatHistory.push([1, "Talking with chatbot went wrong, please use the search box above"])
     }
 
     // update chat history
@@ -218,8 +220,8 @@ const ChatBox = (props) => {
   return (
     <div style={body}>
       {/* title */}
-      <div style={title}>
-          Search Assistant
+      <div style={close} onClick={props.closeHandler}>
+        <BsXLg />
       </div>
 
       {/* chat history */}

@@ -169,7 +169,7 @@ const FuzzySearchBox = (props) => {
       <div style={middle}>
         {textBox}
         {props.display ? ` Field ` : ""}
-        {fieldBox}
+        {/* {fieldBox} */}
       </div>
 
       <div style={right}>{control}</div>
