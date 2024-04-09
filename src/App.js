@@ -706,9 +706,12 @@ const App = () => {
       ) : null}
 
       {/* show the text info for both input and the search output */}
-      {!(haveSearchRes || loadingSearchRes) &&
+      {/* {!(haveSearchRes || loadingSearchRes) &&
         haveSearchVersion &&
-        !haveSearchUrl && (
+        !haveSearchUrl && ( */}
+      {
+        haveSearchVersion &&
+        (
           <div style={inputCheckContainer}>
             <div style={inputInfoContainer}>
               <div style={inputInfo}>
@@ -739,7 +742,9 @@ const App = () => {
                   color: "white",
                   backgroundColor: "#3b87eb"
                 }}
-                onClick={async () => {await getRes(search, fuzzySearchPhrase, fuzzySearchField)}}
+                onClick={
+                  async (v) => {await getRes("", fuzzySearchPhrase, filteredSearchFields.current, false)}
+                }
                 disabled={loadingSearchRes || loadingPlayoutUrl}
               >
                 <BsSearch />
