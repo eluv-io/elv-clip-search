@@ -139,7 +139,7 @@ export const createVecSearchUrl = async ({
     });
     
     const _pos = url.indexOf("/qlibs/");
-    const newUrl = "http://127.0.0.1:8084".concat(url.slice(_pos));
+    const newUrl = "https://ai.contentfabric.io/search".concat(url.slice(_pos));
     return { url: newUrl, status: 0 };
    
   } catch (err) {
