@@ -12,7 +12,7 @@ import ChatBox from "./components/ChatBox";
 import { parseSearchRes, createSearchUrl, createVecSearchUrl} from "./utils";
 import { BsSearch } from "react-icons/bs";
 import { BsRobot } from "react-icons/bs";
-
+import elvLogo from "./elv.png"
 import DB from "./DB";
 
 const title = {
@@ -765,7 +765,22 @@ const App = () => {
                 }}
                 disabled={loadingSearchRes || loadingPlayoutUrl}
               >
-                <BsRobot /> 
+                <div style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                  <img 
+                    src={elvLogo} 
+                    width="25px"
+                  ></img>
+                  <div style={{marginLeft: 10, fontSize: 12}}>
+                    Chatbot
+                  </div>
+                </div>
+                
+                
               </button>
             </div>
             

@@ -14,15 +14,25 @@ const body={
   width: "90%"
 }
 
-const close = {
+const bar = {
   flexDirection: "row",
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
   height: "5%",
   width: "100%",
+}
+
+const close = {
+  flexDirection: "row",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  width: "8%",
   cursor: "pointer"
 }
+
 
 const messageBox = {
   flexDirection: "column",
@@ -92,7 +102,7 @@ const Message = ({item}) => {
 
 const ChatBox = (props) => {
   const [inputValue, setInputValue] = useState(""); 
-  const [chatHistory, setChatHistory] = useState([])
+  const [chatHistory, setChatHistory] = useState([[1, "Hi, how can I help ?"]])
   const [scroll, setScroll] = useState(true)
   const [loading, setLoading] = useState(false)
   const sessionId = useRef("")
@@ -220,9 +230,12 @@ const ChatBox = (props) => {
   return (
     <div style={body}>
       {/* title */}
-      <div style={close} onClick={props.closeHandler}>
-        <BsXLg />
+      <div style={bar}>
+        <div style={close} onClick={props.closeHandler}>
+          <BsXLg />
+        </div>
       </div>
+      
 
       {/* chat history */}
       <div style={messageBox}>
@@ -269,12 +282,12 @@ const ChatBox = (props) => {
           }}
           onClick={() => {
             setInputValue("")
-            setChatHistory([])
+            setChatHistory([[1, "Hi, how can I help ?"]])
             sessionId.current = ""
           }}
           disabled={loading}
         >
-          X
+          Clear
         </button>
         <input
           style={{
