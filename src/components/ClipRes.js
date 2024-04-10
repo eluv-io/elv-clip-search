@@ -165,7 +165,7 @@ const ClipRes = (props) => {
         metadataSubtree: "offerings/default/media_struct/streams/video/rate",
       }).then((fps) => {
         const denominator = parseInt(fps.split("/")[0])
-        const numerator = parseInt(fps.split("/")[1])
+        const numerator = parseInt(fps.split("/")[1]) || 1
         fpsDenominator.current = denominator
         fpsNumerator.current = numerator
         console.log(denominator)
