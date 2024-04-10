@@ -27,8 +27,8 @@ const SummaryPad = (props) => {
   const getSummary = () => {
     const res = []
     for(let source of props.clipInfo.sources){
-      if("f_llava" in source["fields"]){
-        for(let summary of source["fields"]["f_llava"]){
+      if("f_llava_as_string" in source["fields"]){
+        for(let summary of source["fields"]["f_llava_as_string"]){
           res.push(summary)
         }
       }
