@@ -628,7 +628,7 @@ const App = () => {
   return (
     <div className="container" style={{ maxWidth: 1600 }}>
       <div style={title}>
-        <h1 className="mt-3">Eluvio Clip Generation & Vector Search</h1>
+        <h1 className="mt-3">AI Clip Generation and Vector Search</h1>
       </div>
 
       <div className="row mt-3">{searchIndexInputBlock}</div>
@@ -816,6 +816,7 @@ const App = () => {
                   setShowChatBox(false);
                 }
               }
+              chatBotObjectId={objId}
             />
           </div>
         )
