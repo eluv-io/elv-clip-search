@@ -108,14 +108,18 @@ const ChatBox = (props) => {
   const sessionId = useRef("")
   const convToken = useRef("")
 
-  const chatBotObjectId = "iq__2NgfyLG6qeZPMDFZsoEnB2C6kpdj"
   const chatBotAddr = {
-    "init": `http://localhost:8083/q/${chatBotObjectId}/start_session`,
-    "msg": `http://localhost:8083/q/${chatBotObjectId}/message`
+    "init": `https://ai.contentfabric.io/chat/q/${props.chatBotObjectId}/start_session`,
+    "msg": `https://ai.contentfabric.io/chat/q/${props.chatBotObjectId}/message`
+
+    // "init": `http://localhost:8083/q/${props.chatBotObjectId}/start_session`,
+    // "msg": `http://localhost:8083/q/${props.chatBotObjectId}/message`
+
+    
   }
   const createToken = async () => {
     const token = await props.client.CreateSignedToken({
-      objectId: chatBotObjectId,
+      objectId: props.chatBotObjectId,
       duration: 24 * 60 * 60 * 1000,
     });
     return token
@@ -127,7 +131,6 @@ const ChatBox = (props) => {
   }
 
   useEffect(() => {
-    console.log("scrolling to bottom")
     scrollToBottom()
   }, [scroll]);
 
@@ -138,14 +141,13 @@ const ChatBox = (props) => {
 
   const initConv = async () => {
     const startSessionUrl = new URL(chatBotAddr["init"])
-    console.log(startSessionUrl)
     const _token = await createToken()
     convToken.current = _token
 
     startSessionUrl.searchParams.set("authorization", convToken.current)
-
+    console.log(startSessionUrl.toString())
     const res = await axios.get(startSessionUrl.toString(), 
-      { withCredentials: true }
+      // { withCredentials: true }
     )
     const _sessionId = res.data["session_id"]
     sessionId.current = _sessionId
@@ -155,14 +157,24 @@ const ChatBox = (props) => {
 
   const msgConv = async (text) => {
     const convUrl = new URL(chatBotAddr["msg"])
-    convUrl.searchParams.set("message", text)
+    // convUrl.searchParams.set("message", text)
     convUrl.searchParams.set("authorization", convToken.current)
     
     console.log(convUrl.toString())
 
     try{
-      const res = await axios.get(convUrl.toString(), 
-        { withCredentials: true }
+      const res = await axios.post(convUrl.toString(), 
+        {
+          message: text,
+          // authorization: convToken.current,
+          session_id: sessionId.current
+        },
+        { 
+          // withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       )
       const msg = res.data["response"]
       console.log(msg)
