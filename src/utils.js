@@ -124,7 +124,7 @@ export const createVecSearchUrl = async ({
       clips_include_source_tags: true,
       debug: true,
       clips_max_duration: 55,
-      max_total: 5,
+      max_total: 20,
       select: "/public/asset_metadata/title",
     };
 
