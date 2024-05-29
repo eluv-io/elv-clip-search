@@ -17,6 +17,16 @@ export const parseSearchRes = async (
     searchAssets === true
       ? searchResults["results"]
       : searchResults["contents"];
+export const parseSearchRes = async (
+  searchResults,
+  TOPK,
+  CLIPS_PER_PAGE,
+  searchAssets
+) => {
+  const data =
+    searchAssets === true
+      ? searchResults["results"]
+      : searchResults["contents"];
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];
@@ -229,13 +239,108 @@ export const getPlayoutUrl = async ({ client, objectId }) => {
   }
 };
 
-export const getEmbedUrl = async ({
+export const getDownloadUrl = async ({
   client,
   objectId,
-  clipStart,
-  clipEnd,
-  duration,
+  libraryId,
+  height,
+  width,
+  clip_start,
+  clip_end,
 }) => {
+  const offerings = await client.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "offerings",
+  });
+  const offering = offerings["default"];
+  const playoutKey = Object.keys(
+    offering.playout.streams.video.representations
+  ).find((key) => {
+    const playout = offering.playout.streams.video.representations[key];
+    return (
+      playout.height.toString() === height.toString() &&
+      playout.width.toString() === width.toString()
+    );
+  });
+  const url = await client.Rep({
+    objectId,
+    libraryId,
+    rep: `media_download/default/${playoutKey}`,
+    queryParams: {
+      clip_start,
+      clip_end,
+    },
+  });
+  return url;
+};
+
+export const getDownloadUrlWithMaxResolution = async ({
+  client,
+  objectId,
+  libraryId,
+  clip_start,
+  clip_end,
+}) => {
+  const offerings = await client.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "offerings",
+  });
+  const offering = offerings["default"];
+  const representations = offering.playout.streams.video.representations;
+  let playoutKey = null;
+  let _max_height = 0;
+  let _max_width;
+  for (let key in representations) {
+    const playout = offering.playout.streams.video.representations[key];
+    if (playout.height > _max_height) {
+      playoutKey = key;
+      _max_height = playout.height;
+      _max_width = playout.width;
+    }
+  }
+  const title_name = await client.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "public/name",
+  });
+
+  const token = await client.CreateSignedToken({
+    objectId,
+    duration: 24 * 60 * 60 * 1000,
+  });
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secondsLeft = Math.floor(seconds % 60);
+
+    const paddedHours = String(hours).padStart(2, "0");
+    const paddedMinutes = String(minutes).padStart(2, "0");
+    const paddedSeconds = String(secondsLeft).padStart(2, "0");
+
+    return `${paddedHours}-${paddedMinutes}-${paddedSeconds}`;
+  }
+  let _clip_start = formatTime(clip_start);
+  let _clip_end = formatTime(clip_end);
+
+  const filename = `Title - ${title_name} (${_max_width}x${_max_height}) (${_clip_start} - ${_clip_end}).mp4`;
+  const url = await client.Rep({
+    objectId,
+    libraryId,
+    rep: `media_download/default/${playoutKey}`,
+    noAuth: true,
+    queryParams: {
+      clip_start,
+      clip_end,
+      authorization: token,
+      "header-x_set_content_disposition": `attachment;filename=${filename}`,
+    },
+  });
+  return url;
+};
+
+export const getEmbedUrl = async ({ client, objectId, clipStart, clipEnd }) => {
   try {
     const permission = await client.Permission({ objectId });
     if (["owner", "editable", "viewable"].includes(permission)) {
@@ -247,41 +352,31 @@ export const getEmbedUrl = async ({
           ? "testv4"
           : networkInfo.name;
       let embedUrl = new URL("https://embed.v3.contentfabric.io");
+      const versionHash = await client.LatestVersionHash({ objectId });
 
       embedUrl.searchParams.set("p", "");
       embedUrl.searchParams.set("net", networkName);
-      embedUrl.searchParams.set("oid", objectId);
+      embedUrl.searchParams.set("vid", versionHash);
       embedUrl.searchParams.set("end", clipEnd);
       embedUrl.searchParams.set("start", clipStart);
-      embedUrl.searchParams.set("ct", "s");
-      embedUrl.searchParams.set("st", "");
-      embedUrl.searchParams.set("off", "default");
+      embedUrl.searchParams.set("ct", "h");
+      embedUrl.searchParams.set("mt", "v");
+      // embedUrl.searchParams.set("st", "");
+      // embedUrl.searchParams.set("off", "default");
 
       const token = await client.CreateSignedToken({
         objectId,
-        duration,
+        versionHash,
+        duration: 24 * 60 * 60 * 1000,
       });
       embedUrl.searchParams.set("ath", token);
-      return {
-        embedUrl: embedUrl.toString(),
-      };
+      return embedUrl.toString();
     } else {
-      // const playoutUrl = await getPlayoutUrl({ client, objectId });
-      // return {
-      //   playoutUrl: `${playoutUrl}&resolve=false&clip_start=${clipStart}&clip_end=${clipEnd}&ignore_trimming=true`,
-      // };
-      return { reason: "Account has no permission to create the embed URL" };
+      return "Account has no permission to create the embed URL";
     }
   } catch (err) {
-    console.log("Create embed URL error", err);
-    return { reason: "Create embed URL error" };
-  }
-};
-
-export const parseSearchUrl = (url) => {
-  const queryParams = new URLSearchParams(url);
-  console.log("queryParams", queryParams);
-  for (const [key, value] of Object.entries(queryParams)) {
-    console.log(key, value);
+    console.log(err);
+    console.log("Create embed URL error");
+    return "Create embed URL error";
   }
 };

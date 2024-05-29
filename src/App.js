@@ -187,13 +187,16 @@ const App = () => {
   const ALL_SEARCH_FIELDS = [
     "action",
     "celebrity",
-    // delete characters for search
+    // delete for MGM
     // "characters",
     "display_title",
     "logo",
     "object",
-    "segment",
+    // "segment",
     "speech_to_text",
+    "game_events",
+    "game_player",
+    "game_team",
   ];
   const ASSETS_SEARCH_FIELDS = [
     "celebrity",
@@ -257,7 +260,7 @@ const App = () => {
 
   const engagement = useRef({});
 
-  //initialize the DB and store the wallet_address
+  //initialize the DB and store the wallet_address and tenancy
   useEffect(() => {
     const storeUserInfo = async () => {
       try {

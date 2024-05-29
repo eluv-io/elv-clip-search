@@ -2,6 +2,7 @@ import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
 import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+import { getDownloadUrlWithMaxResolution, getEmbedUrl } from "../utils";
 const container = {
   width: "97%",
   height: 900,
@@ -64,6 +65,7 @@ const ClipRes = (props) => {
   const viewed = useRef(false);
   const [imgUrl, setImgUrl] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("")
   const [loadingImgUrl, setLoadingImgUrl] = useState(false);
   const [loadingImgUrlErr, setLoadingImgUrlErr] = useState(false);
   const url = props.clipInfo.url;
@@ -99,16 +101,22 @@ const ClipRes = (props) => {
   useEffect(() => {
     if (props.searchVersion === "v2" && props.searchAssets === false) {
       setEmbedUrl("");
-      props.client
-        .EmbedUrl({
-          objectId: props.clipInfo.id,
-          versionHash: props.clipInfo.hash,
-          duration: 7 * 24 * 60 * 60 * 1000,
-          options: {
-            clipStart: props.clipInfo.start_time / 1000,
-            clipEnd: props.clipInfo.end_time / 1000,
-          },
-        })
+      // props.client
+      //   .EmbedUrl({
+      //     objectId: props.clipInfo.id,
+      //     versionHash: props.clipInfo.hash,
+      //     duration: 7 * 24 * 60 * 60 * 1000,
+      //     options: {
+      //       clipStart: props.clipInfo.start_time / 1000,
+      //       clipEnd: props.clipInfo.end_time / 1000,
+      //     },
+      //   })
+      getEmbedUrl({
+        client: props.client,
+        objectId: props.clipInfo.id,
+        clipStart: props.clipInfo.start_time/1000,
+        clipEnd: props.clipInfo.end_time/1000
+      })
         .then((embUrl) => {
           setEmbedUrl(embUrl);
         })
@@ -118,6 +126,30 @@ const ClipRes = (props) => {
         });
     }
   }, [props.searchVersion, props.searchAssets]);
+
+
+
+  useEffect(() => {
+    if (props.searchVersion === "v2" && props.searchAssets === false) {
+      setDownloadUrl("");
+      getDownloadUrlWithMaxResolution({
+        client: props.client,
+        objectId: props.clipInfo.id,
+        libraryId: props.clipInfo.qlib_id, 
+        clip_start: props.clipInfo.start_time/1000,
+        clip_end: props.clipInfo.end_time/1000
+      })
+        .then((url) => {
+          // console.log(url)
+          setDownloadUrl(url);
+        })
+        .catch((err) => {
+          setDownloadUrl("Create Download URL error");
+          console.log(err);
+        });
+    }
+  }, [props.searchVersion, props.searchAssets]);
+
 
   useEffect(() => {
     return () => {
@@ -301,6 +333,7 @@ const ClipRes = (props) => {
             searchVersion={props.searchVersion}
             assetsUrl={imgUrl}
             clipEmbedUrl={embedUrl}
+            clipDownloadUrl={downloadUrl}
           ></InfoPad>
         </div>
       </div>

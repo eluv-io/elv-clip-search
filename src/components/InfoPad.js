@@ -1,5 +1,9 @@
 import Feedback from "./Feedback";
 import React, { useState } from "react";
+import { BsCloudDownload } from "react-icons/bs"
+import { BiCopy, BiCheckDouble} from "react-icons/bi";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
+
 const videoInfo = {
   width: "100%",
   height: "83%",
@@ -16,10 +20,35 @@ const shortInfo = {
   justifyContent: "space-between",
   width: "100%",
   height: "12%",
+  fontSize: 11,
 };
+
+const urlContainer = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  width: "50%",
+  backgroundColor: "transparent",
+}
+
+const urlDisplay = {
+  height: "85%",
+  width: "100%",
+  backgroundColor: "transparent",
+  padding: 5,
+  borderRadius: 5,
+  overflow:"scroll",
+  wordWrap: "break-word",
+  fontSize: 9
+}
+
 
 const InfoPad = (props) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [copiedEmbedURL, setCopiedEmbedURL] = useState(false)
+  const [copiedDownloadURL, setCopiedDownloadURL] = useState(false)
   return (
     <div
       style={{
@@ -125,43 +154,81 @@ const InfoPad = (props) => {
                 </div>
               </div>
 
-              <div style={shortInfo}>
+              {/* <div style={shortInfo}>
                 <div>shot source count: </div>
                 <div>{props.clipInfo.source_count}</div>
-              </div>
+              </div> */}
             </>
           )}
 
-          {props.searchVersion === "v2" ? (
+          {/* {props.searchVersion === "v2" ? (
             <div style={shortInfo}>
               <div>BM25 rank: </div>
               <div>{props.clipInfo.rank}</div>
             </div>
-          ) : null}
+          ) : null} */}
 
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
               width: "100%",
-              height: "40%",
+              height: "76%",
             }}
           >
-            <textarea
-              style={{
-                height: "100%",
-                width: "100%",
-                padding: 5,
-                borderRadius: 5,
-                backgroundColor: "transparent",
-              }}
-              readOnly
-              value={props.assetsUrl || props.clipEmbedUrl}
-            ></textarea>
+            <div style={urlContainer} >
+              <div 
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              >
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Embeddable URL</div>
+                <div style={{cursor: "pointer"}}>
+                  <CopyToClipboard onCopy={()=> {setCopiedEmbedURL(true); setCopiedDownloadURL(false); }} text={props.clipEmbedUrl || props.assetsUrl}>
+                    <BiCopy/>
+                  </CopyToClipboard>
+                </div>
+                {copiedEmbedURL && <BiCheckDouble />}
+              </div>
+              <div style={urlDisplay}>
+                {props.clipEmbedUrl || props.assetsUrl}
+              </div>
+            </div>
+            
+            <div style={urlContainer} >
+
+              <div 
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              >
+                <div style={{fontSize: 10, fontWeight: "bold", marginRight: 10}}>Downloadable URL</div>
+                <div style={{cursor: "pointer"}}>
+                  <CopyToClipboard onCopy={()=> {setCopiedDownloadURL(true); setCopiedEmbedURL(false)}} text={props.clipDownloadUrl}>
+                    <BiCopy/>
+                  </CopyToClipboard>
+                </div>
+                {copiedDownloadURL && <BiCheckDouble />}
+                
+              </div>
+              
+              <div style={urlDisplay}>
+                {props.clipDownloadUrl}
+              </div>
+            </div>
           </div>
+
         </div>
+
+        
       ) : (
         <div
           style={{
