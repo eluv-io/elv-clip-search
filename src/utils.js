@@ -17,16 +17,6 @@ export const parseSearchRes = async (
     searchAssets === true
       ? searchResults["results"]
       : searchResults["contents"];
-export const parseSearchRes = async (
-  searchResults,
-  TOPK,
-  CLIPS_PER_PAGE,
-  searchAssets
-) => {
-  const data =
-    searchAssets === true
-      ? searchResults["results"]
-      : searchResults["contents"];
   // pagination on topk res for search v2 fuzzy method
   const topkRes = [];
   let topkResPage = [];

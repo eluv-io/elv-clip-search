@@ -6,13 +6,6 @@ import {
   BiLike,
 } from "react-icons/bi";
 import { tagsFormat } from "../TagsFormat";
-import {
-  BiArrowFromTop,
-  BiArrowToTop,
-  BiDislike,
-  BiLike,
-} from "react-icons/bi";
-import { tagsFormat } from "../TagsFormat";
 
 const TagsPad = (props) => {
   const tagsMap =
@@ -43,30 +36,6 @@ const TagsPad = (props) => {
   }, []);
 
   const prepareTags = async () => {
-    const contentHash = props.clipInfo.hash;
-    const format =
-      tagsFormat[props.searchVersion][props.searchAssets ? "asset" : "clip"];
-    const entry = format.entry;
-    const tagPaths = format.tagsPath.split("/");
-
-    let sourceData;
-    if (entry === "") {
-      sourceData = props.clipInfo;
-    } else {
-      sourceData = props.clipInfo[entry];
-    }
-    if (!format.srcInListFormat) {
-      sourceData = [sourceData];
-    }
-
-    // srcData is a list of shots
-    // just to check if it has tags=
-    let firstShotTags = sourceData[0];
-    for (let path of tagPaths) {
-      firstShotTags = firstShotTags[path];
-    }
-    const _hasTags = Object.keys(firstShotTags).some((k) => k in tags.current);
-
     const contentHash = props.clipInfo.hash;
     const format =
       tagsFormat[props.searchVersion][props.searchAssets ? "asset" : "clip"];
@@ -349,9 +318,8 @@ const TagsPad = (props) => {
                       fontSize: 12,
                     }}
                     key={`${t.text}`}
-                    
                   >
-                    <div 
+                    <div
                       style={{
                         width: "15%",
                         display: "flex",
@@ -361,7 +329,10 @@ const TagsPad = (props) => {
                       }}
                     >
                       <button
-                        style={{ border: "none", backgroundColor: "transparent" }}
+                        style={{
+                          border: "none",
+                          backgroundColor: "transparent",
+                        }}
                         onClick={() => collect(tags.current[k], t, 1)}
                       >
                         <BiLike
@@ -372,7 +343,10 @@ const TagsPad = (props) => {
                       </button>
 
                       <button
-                        style={{ border: "none", backgroundColor: "transparent" }}
+                        style={{
+                          border: "none",
+                          backgroundColor: "transparent",
+                        }}
                         onClick={() => collect(tags.current[k], t, -1)}
                       >
                         <BiDislike
@@ -383,8 +357,7 @@ const TagsPad = (props) => {
                       </button>
                     </div>
 
-
-                    <div 
+                    <div
                       style={{
                         width: "80%",
                         display: "flex",
@@ -394,17 +367,18 @@ const TagsPad = (props) => {
                         borderRadius: 5,
                         paddingLeft: 5,
                       }}
-                      onMouseEnter={(event) => {event.target.style.backgroundColor = "lightgrey"}}
-                      onMouseLeave={(event) => {event.target.style.backgroundColor = "transparent"}}
+                      onMouseEnter={(event) => {
+                        event.target.style.backgroundColor = "lightgrey";
+                      }}
+                      onMouseLeave={(event) => {
+                        event.target.style.backgroundColor = "transparent";
+                      }}
                     >
                       {t.text}
                     </div>
                   </div>
-                ))
-              }
+                ))}
             </div>
-            
-            
           </div>
         ) : null;
       })}
