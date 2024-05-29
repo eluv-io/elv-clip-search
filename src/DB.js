@@ -1,5 +1,5 @@
-// import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
-// import { initializeApp } from "firebase/app";
+import { firebaseConfig, useEmulator } from "./firebaseConfiguration";
+import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
@@ -20,35 +20,34 @@ import {
 
 class DB {
   constructor() {
-    // let app;
-    // if (useEmulator) {
-    //   const emulatorConfig = {
-    //     apiKey: "",
-    //     authDomain: "",
-    //     databaseURL: "https://elv-clip-search-default-rtdb.firebaseio.com",
-    //     projectId: "elv-clip-search",
-    //     storageBucket: "",
-    //     messagingSenderId: "426199348320",
-    //     appId: "",
-    //     measurementId: "",
-    //   };
-    //   app = initializeApp(emulatorConfig);
-    //   this.db = getFirestore(app);
-    //   connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
-    // } else if (
-    //   firebaseConfig.apiKey &&
-    //   firebaseConfig.authDomain &&
-    //   firebaseConfig.projectId
-    // ) {
-    //   app = initializeApp(firebaseConfig);
-    //   this.db = getFirestore(app);
-    // } else {
-    //   console.error(
-    //     "Either set up the local DB emulator for the development environment as per src/firebase/emulator.md or ensure that the production Firebase configuration is present."
-    //   );
-    //   this.db = null;
-    // }
-    this.db = null
+    let app;
+    if (useEmulator) {
+      const emulatorConfig = {
+        apiKey: "",
+        authDomain: "",
+        databaseURL: "https://elv-clip-search-default-rtdb.firebaseio.com",
+        projectId: "elv-clip-search",
+        storageBucket: "",
+        messagingSenderId: "426199348320",
+        appId: "",
+        measurementId: "",
+      };
+      app = initializeApp(emulatorConfig);
+      this.db = getFirestore(app);
+      connectFirestoreEmulator(this.db, "127.0.0.1", 8080);
+    } else if (
+      firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.projectId
+    ) {
+      app = initializeApp(firebaseConfig);
+      this.db = getFirestore(app);
+    } else {
+      console.error(
+        "Either set up the local DB emulator for the development environment as per src/firebase/emulator.md or ensure that the production Firebase configuration is present."
+      );
+      this.db = null;
+    }
   }
 
   async setUser({ walletAddr }) {
@@ -56,21 +55,55 @@ class DB {
       try {
         const userDocRef = doc(this.db, "users", walletAddr);
         const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          console.log("User already exists");
-          await updateDoc(userDocRef, { userLoginTime: serverTimestamp() });
-        } else {
+        if (!userDocSnap.exists()) {
           await setDoc(userDocRef, {
             walletAddress: walletAddr,
             emailAddress: null,
-            userCreateTime: serverTimestamp(),
-            userLoginTime: null, //last login time
             userInformation: {},
           });
           console.log("New user added");
+        } else {
+          console.log("User already exists");
         }
+        const loginHistoryCollectionRef = collection(
+          userDocRef,
+          "loginHistory"
+        );
+        await addDoc(loginHistoryCollectionRef, {
+          timestamp: serverTimestamp(),
+        });
       } catch (err) {
-        console.log("Err: Save user into DB failed");
+        console.log("Err: Save user into DB failed", err);
+      }
+    }
+  }
+
+  async setTenancy({ tenantID }) {
+    if (this.db !== null) {
+      try {
+        const tenantDocRef = doc(this.db, "tenants", tenantID);
+        const tenantDocSnap = await getDoc(tenantDocRef);
+
+        if (!tenantDocSnap.exists()) {
+          // If tenant doesn't exist, create a new tenant document
+          await setDoc(tenantDocRef, {
+            tenantAddress: tenantID,
+          });
+          console.log("New tenant added");
+        } else {
+          console.log("Tenant already exists");
+        }
+
+        const loginHistoryCollectionRef = collection(
+          tenantDocRef,
+          "loginHistory"
+        );
+        await addDoc(loginHistoryCollectionRef, {
+          timestamp: serverTimestamp(),
+        });
+        console.log("Login history updated");
+      } catch (err) {
+        console.log("Err: Save tenant into DB failed", err);
       }
     }
   }
@@ -98,8 +131,7 @@ class DB {
 
         console.log(`Engagement table saved`);
       } catch (err) {
-        console.log("Err: Set the engagement table failed");
-        console.log(err);
+        console.log("Err: Set the engagement table failed", err);
       }
     }
   }
@@ -111,6 +143,7 @@ class DB {
     searchKeywords,
     searchObjId,
     tenantID,
+    searchUrl,
   }) {
     if (this.db !== null) {
       try {
@@ -124,12 +157,12 @@ class DB {
           fuzzySearchPhrase: fuzzySearchPhrase,
           fuzzySearchFields: fuzzySearchFields,
           searchKeywords: searchKeywords,
+          searchURL: searchUrl,
         });
         console.log(`DB: Search history updated with docID ${docRef.id}`);
         return docRef.id;
       } catch (err) {
-        console.log("Error: Failed to Store the search history");
-        console.log(err);
+        console.log("Error: Failed to Store the search history", err);
         return null;
       }
     }
@@ -137,40 +170,42 @@ class DB {
 
   async setShot({ shot }) {
     if (this.db !== null) {
+      let shotId;
       try {
-        const payload = {
-          start: shot.start,
-          end: shot.end,
-          iqHash: shot.iqHash,
-          shotId: shot.shotId,
-          tags: shot.tags,
-        };
-        const shotDocRef = doc(this.db, "shotInfo", shot.shotId);
+        shotId = shot.sid;
+        const shotDocRef = doc(this.db, "shotInfo", shotId);
         const shotDoc = await getDoc(shotDocRef);
         if (shotDoc.exists()) {
-          await updateDoc(shotDocRef, payload);
+          await updateDoc(shotDocRef, { tags: shot.tags });
         } else {
-          await setDoc(shotDocRef, payload);
+          await setDoc(shotDocRef, {
+            start: shot.start,
+            end: shot.end,
+            versionHash: shot.iqHash,
+            tags: shot.tags,
+          });
         }
+        console.log("shotId in DB", shotDocRef.id);
       } catch (err) {
-        console.log(`Err: Save shot info for ${shot.shotId} failed`);
+        console.log(`Err: Save shot info for ${shotId} failed`, err);
       }
     }
   }
 
   async getShot({ shotId }) {
-    if (this.db !== null) {
-      try {
-        const shotRef = doc(this.db, "shotInfo", shotId);
-        const shot = await getDoc(shotRef);
-        if (shot.exists()) {
-          return shot.data();
-        } else return null;
-      } catch (err) {
-        console.log(`Err: Get Shot ${shotId} failed`);
-        return null;
+    if (!this.db) {
+      return null;
+    }
+
+    try {
+      const shotRef = doc(this.db, "shotInfo", shotId);
+      const shot = await getDoc(shotRef);
+      if (shot.exists()) {
+        return shot.data();
       }
-    } else {
+      return null;
+    } catch (err) {
+      console.log(`Err: Get shot ${shotId} failed`, err);
       return null;
     }
   }
