@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import TagsPad from "./TagsPad";
+import SummaryPad from "./SummaryPad"
+import { BsXLg } from "react-icons/bs";
 
 const container = {
   width: "30%",
@@ -31,7 +33,7 @@ const tagsContainer = {
   justifyContent: "flex-start",
   alignItems: "center",
   width: "100%",
-  height: 800,
+  height: 750,
   marginBottom: 20,
   backgroundColor: "transparent",
 };
@@ -39,7 +41,7 @@ const tagsContainer = {
 const ctrContainer = {
   display: "flex",
   flexDirection: "column",
-  justifyContent: "center",
+  justifyContent: "flex-start",
   alignItems: "center",
   width: "8%",
   height: "100%",
@@ -47,18 +49,72 @@ const ctrContainer = {
 
 const QAPad = (props) => {
   const [hidden, setHidden] = useState(true);
+  const [showTags, setShowTags] = useState(true)
   return !hidden ? (
     <div style={container}>
       <div style={QAContainer}>
+        <div
+          style={{
+            width: "90%",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-around",
+            alignItems: "center",
+            marginBottom: 20,
+          }}
+        >
+          <div
+            onClick={() => {setShowTags(true)}}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "45%",
+              paddingLeft: 10,
+              paddingRight: 10,
+              borderRadius: 5,
+              backgroundColor: showTags ? "lightgray" : "transparent"
+            }}
+          >
+            Tags
+          </div>
+          <div
+            onClick={() => {setShowTags(false)}}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "45%",
+              paddingLeft: 10,
+              paddingRight: 10,
+              borderRadius: 5,
+              backgroundColor: showTags ? "transparent" : "lightgray"
+            }}
+          >
+            Summary
+          </div>
+        </div>
         <div style={tagsContainer}>
-          <TagsPad
-            clipInfo={props.clipInfo}
-            searchId={props.searchId}
-            searchVersion={props.searchVersion}
-            searchAssets={props.searchAssets}
-            shotsMemo={props.shotsMemo}
-            dbClient={props.dbClient}
-          ></TagsPad>
+          {showTags ? 
+            <TagsPad
+              clipInfo={props.clipInfo}
+              searchId={props.searchId}
+              searchVersion={props.searchVersion}
+              searchAssets={props.searchAssets}
+              shotsMemo={props.shotsMemo}
+              dbClient={props.dbClient}
+            ></TagsPad> : 
+            <SummaryPad
+              clipInfo={props.clipInfo}
+              fpsDenominator={props.fpsDenominator}
+              fpsNumerator={props.fpsNumerator}
+              videoElementRef={props.videoElementRef}
+            ></SummaryPad>
+          }
         </div>
       </div>
       <div style={ctrContainer}>
@@ -66,21 +122,18 @@ const QAPad = (props) => {
           style={{
             border: "none",
             width: "100%",
-            height: "10%",
-            backgroundColor: "lightgray",
-            borderTopLeftRadius: 10,
-            borderBottomLeftRadius: 10,
+            backgroundColor: "transparent",
           }}
           onClick={() => {
             setHidden(true);
           }}
         >
-          ◀️
+          <BsXLg />
         </button>
       </div>
     </div>
   ) : (
-    <div style={{ ...ctrContainer, width: "2%" }}>
+    <div style={{ ...ctrContainer, width: "2%", justifyContent: "center"}}>
       <button
         style={{
           border: "none",
@@ -93,6 +146,7 @@ const QAPad = (props) => {
         onClick={() => {
           setHidden(false);
         }}
+
       >
         ▶️
       </button>
