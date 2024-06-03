@@ -332,37 +332,36 @@ export const getDownloadUrlWithMaxResolution = async ({
 export const getEmbedUrl = async ({ client, objectId, clipStart, clipEnd }) => {
   try {
     const permission = await client.Permission({ objectId });
-    if (["owner", "editable", "viewable"].includes(permission)) {
-      const networkInfo = await client.NetworkInfo();
-      const networkName =
-        networkInfo.name === "demov3"
-          ? "demo"
-          : networkInfo.name === "test" && networkInfo.id === 955205
-          ? "testv4"
-          : networkInfo.name;
-      let embedUrl = new URL("https://embed.v3.contentfabric.io");
-      const versionHash = await client.LatestVersionHash({ objectId });
+    const networkInfo = await client.NetworkInfo();
+    const networkName =
+      networkInfo.name === "demov3"
+        ? "demo"
+        : networkInfo.name === "test" && networkInfo.id === 955205
+        ? "testv4"
+        : networkInfo.name;
+    let embedUrl = new URL("https://embed.v3.contentfabric.io");
+    const versionHash = await client.LatestVersionHash({ objectId });
 
-      embedUrl.searchParams.set("p", "");
-      embedUrl.searchParams.set("net", networkName);
-      embedUrl.searchParams.set("vid", versionHash);
-      embedUrl.searchParams.set("end", clipEnd);
-      embedUrl.searchParams.set("start", clipStart);
-      embedUrl.searchParams.set("ct", "h");
-      embedUrl.searchParams.set("mt", "v");
-      // embedUrl.searchParams.set("st", "");
-      // embedUrl.searchParams.set("off", "default");
-
-      const token = await client.CreateSignedToken({
-        objectId,
-        versionHash,
-        duration: 24 * 60 * 60 * 1000,
-      });
-      embedUrl.searchParams.set("ath", token);
-      return embedUrl.toString();
-    } else {
-      return "Account has no permission to create the embed URL";
+    embedUrl.searchParams.set("p", "");
+    embedUrl.searchParams.set("net", networkName);
+    embedUrl.searchParams.set("vid", versionHash);
+    embedUrl.searchParams.set("end", clipEnd);
+    embedUrl.searchParams.set("start", clipStart);
+    embedUrl.searchParams.set("ct", "h");
+    embedUrl.searchParams.set("mt", "v");
+    // embedUrl.searchParams.set("st", "");
+    // embedUrl.searchParams.set("off", "default");
+    if (permission.toLowerCase().includes("public")){
+      return embedUrl.toString()
     }
+    //["owner", "editable", "viewable"].includes(permission)
+    const token = await client.CreateSignedToken({
+      objectId,
+      versionHash,
+      duration: 24 * 60 * 60 * 1000,
+    });
+    embedUrl.searchParams.set("ath", token);
+    return embedUrl.toString();
   } catch (err) {
     console.log(err);
     console.log("Create embed URL error");
