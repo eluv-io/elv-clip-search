@@ -9,10 +9,10 @@ import AssetRes from "./components/AssetRes";
 import PaginationBar from "./components/Pagination";
 import FuzzySearchBox from "./components/FuzzySearch";
 import ChatBox from "./components/ChatBox";
-import { parseSearchRes, createSearchUrl, createVecSearchUrl} from "./utils";
+import { parseSearchRes, createSearchUrl, createVecSearchUrl } from "./utils";
 import { BsSearch } from "react-icons/bs";
 import { BsRobot } from "react-icons/bs";
-import elvLogo from "./elv.png"
+import elvLogo from "./elv.png";
 import DB from "./DB";
 
 const title = {
@@ -190,9 +190,10 @@ const App = () => {
   const ALL_SEARCH_FIELDS = [
     "celebrity",
     // delete for MGM
-    // "characters",
+    "characters",
     "display_title",
     "logo",
+    "llava",
     "object",
     // "segment",
     "speech_to_text",
@@ -348,10 +349,10 @@ const App = () => {
   };
 
   const getRes = async (
-    _search="",
-    _fuzzySearchPhrase="",
-    _fuzzySearchField=[], 
-    _keyword=true
+    _search = "",
+    _fuzzySearchPhrase = "",
+    _fuzzySearchField = [],
+    _keyword = true
   ) => {
     // playoutUrlMemo.current = {};
     const _client = getClient();
@@ -371,22 +372,24 @@ const App = () => {
       setLoadingSearchRes(true);
       setDisplayingContents([]);
       // try to create the search url
-      const res = _keyword ? await createSearchUrl({
-        client: _client,
-        [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
-        libraryId: libId,
-        searchVersion: searchVersion.current,
-        search: _search,
-        fuzzySearchPhrase: _fuzzySearchPhrase,
-        fuzzySearchField: _fuzzySearchField,
-        searchAssets: searchAssets.current,
-      }) : await createVecSearchUrl({
-        client: _client,
-        objectId: objId,
-        libraryId: libId,
-        searchPhrase: _fuzzySearchPhrase,
-        searchFields: _fuzzySearchField,
-      });
+      const res = _keyword
+        ? await createSearchUrl({
+            client: _client,
+            [objId.startsWith("iq") ? "objectId" : "versionHash"]: objId,
+            libraryId: libId,
+            searchVersion: searchVersion.current,
+            search: _search,
+            fuzzySearchPhrase: _fuzzySearchPhrase,
+            fuzzySearchField: _fuzzySearchField,
+            searchAssets: searchAssets.current,
+          })
+        : await createVecSearchUrl({
+            client: _client,
+            objectId: objId,
+            libraryId: libId,
+            searchPhrase: _fuzzySearchPhrase,
+            searchFields: _fuzzySearchField,
+          });
       if (res.status === 0) {
         // we got the search Url
         setHaveSearchUrl(true);
@@ -677,7 +680,7 @@ const App = () => {
                 }}
                 statusHandler={resetLoadStatus}
               />
-            </div>            
+            </div>
 
             <div
               className="row mt-3"
@@ -709,121 +712,114 @@ const App = () => {
       {/* {!(haveSearchRes || loadingSearchRes) &&
         haveSearchVersion &&
         !haveSearchUrl && ( */}
-      {
-        haveSearchVersion &&
-        (
-          <div style={inputCheckContainer}>
-            <div style={inputInfoContainer}>
-              <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Index :</div>
-                <div style={{ flex: 3 }}>{objId}</div>
-              </div>
-              {showFuzzy && (
-                <div style={inputInfo}>
-                  <div style={{ flex: 1 }}>Search Phrase :</div>
-                  <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
-                </div>
-              )}
+      {haveSearchVersion && (
+        <div style={inputCheckContainer}>
+          <div style={inputInfoContainer}>
+            <div style={inputInfo}>
+              <div style={{ flex: 1 }}>Search Index :</div>
+              <div style={{ flex: 3 }}>{objId}</div>
             </div>
-            <div style={{
+            {showFuzzy && (
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Search Phrase :</div>
+                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+              </div>
+            )}
+          </div>
+          <div
+            style={{
               width: "30%",
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-around",
-              
-            }}>
-              <button
-                type="button"
+            }}
+          >
+            <button
+              type="button"
+              style={{
+                width: "40%",
+                border: "None",
+                borderRadius: 5,
+                padding: 5,
+                color: "white",
+                backgroundColor: "#3b87eb",
+              }}
+              onClick={async (v) => {
+                await getRes(
+                  "",
+                  fuzzySearchPhrase,
+                  filteredSearchFields.current,
+                  false
+                );
+              }}
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+            >
+              <BsSearch />
+            </button>
+            <button
+              type="button"
+              style={{
+                width: "40%",
+                border: "None",
+                borderRadius: 5,
+                padding: 5,
+                color: "white",
+                backgroundColor: "#3b87eb",
+              }}
+              onClick={() => {
+                document.getElementById("chatBox").style.display = "flex";
+                setShowChatBox(true);
+              }}
+              disabled={loadingSearchRes || loadingPlayoutUrl}
+            >
+              <div
                 style={{
-                  width: "40%",
-                  border: "None",
-                  borderRadius: 5,
-                  padding: 5,
-                  color: "white",
-                  backgroundColor: "#3b87eb"
-                }}
-                onClick={
-                  async (v) => {await getRes("", fuzzySearchPhrase, filteredSearchFields.current, false)}
-                }
-                disabled={loadingSearchRes || loadingPlayoutUrl}
-              >
-                <BsSearch />
-              </button>
-              <button
-                type="button"
-                style={{
-                  width: "40%",
-                  border: "None",
-                  borderRadius: 5,
-                  padding: 5,
-                  color: "white",
-                  backgroundColor: "#3b87eb"
-                }}
-                onClick={() => {
-                  document.getElementById("chatBox").style.display = "flex"
-                  setShowChatBox(true);
-                }}
-                disabled={loadingSearchRes || loadingPlayoutUrl}
-              >
-                <div style={{
                   display: "flex",
                   flexDirection: "row",
                   justifyContent: "center",
-                  alignItems: "center"
-                }}>
-                  <img 
-                    src={elvLogo} 
-                    width="25px"
-                  ></img>
-                  <div style={{marginLeft: 10, fontSize: 12}}>
-                    Chatbot
-                  </div>
-                </div>
-                
-                
-              </button>
-            </div>
-            
+                  alignItems: "center",
+                }}
+              >
+                <img src={elvLogo} width="25px"></img>
+                <div style={{ marginLeft: 10, fontSize: 12 }}>Chatbot</div>
+              </div>
+            </button>
           </div>
-        )}
-          
-      {
-        haveSearchVersion && (
-          <div 
-            style={{
-              backgroundColor: "whitesmoke",
-              borderRadius: 10,
-              marginTop: 20,
-              marginBottom: 40,
-              height: 600,
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              display: "none"
-            }}
-            id="chatBox"
-          >
-            <ChatBox 
-              searchHandler={async (v) => {await getRes("", v, filteredSearchFields.current, false)}} 
-              statusHandler={() => {
-                resetLoadStatus();
-                currentPage.current = 1;
-              }}
-              client={getClient()}
-              closeHandler = {
-                () => {
-                  document.getElementById("chatBox").style.display = "none"
-                  setShowChatBox(false);
-                }
-              }
-              chatBotObjectId={objId}
-            />
-          </div>
-        )
-      }
-      
+        </div>
+      )}
 
-      
+      {haveSearchVersion && (
+        <div
+          style={{
+            backgroundColor: "whitesmoke",
+            borderRadius: 10,
+            marginTop: 20,
+            marginBottom: 40,
+            height: 600,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            display: "none",
+          }}
+          id="chatBox"
+        >
+          <ChatBox
+            searchHandler={async (v) => {
+              await getRes("", v, filteredSearchFields.current, false);
+            }}
+            statusHandler={() => {
+              resetLoadStatus();
+              currentPage.current = 1;
+            }}
+            client={getClient()}
+            closeHandler={() => {
+              document.getElementById("chatBox").style.display = "none";
+              setShowChatBox(false);
+            }}
+            chatBotObjectId={objId}
+          />
+        </div>
+      )}
 
       {haveSearchUrl && (
         <div style={curlResContainer}>
