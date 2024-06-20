@@ -43,13 +43,12 @@ const starStyle = {
 
 const Feedback = (props) => {
   const [wantinput, setWantinput] = useState(false);
-  const otherreasons = useRef("");
+  const [otherreasons, setOtherReasons] = useState("");
   const [reason, setReason] = useState("");
   const [reasonId, setReasonId] = useState(0);
   const hasReason = useRef(false);
   const [rating, setRating] = useState(0);
   const hasRating = useRef(false);
-  const prevOtherReason = useRef("");
   const clipInfo = props.clipInfo;
   const clipStart = clipInfo.start;
   const clipEnd = clipInfo.end;
@@ -67,7 +66,7 @@ const Feedback = (props) => {
         .then((results) => {
           results.forEach((res) => {
             const data = res.data();
-            otherreasons.current = data.other_reasons;
+            setOtherReasons(data.other_reasons);
             setReason(data.reason);
             for (let option of options) {
               if (option.label === data.reason) {
@@ -149,7 +148,7 @@ const Feedback = (props) => {
           searchId: props.searchId,
           score: score,
           reason: reason,
-          otherReasons: otherreasons.current,
+          otherReasons: otherreasons,
         });
       }
       const textElement = document.getElementById(
@@ -208,9 +207,9 @@ const Feedback = (props) => {
             rows="2"
             cols="30"
             placeholder="Tell us your thoughts..."
-            value={prevOtherReason.current}
+            value={otherreasons}
             onChange={(event) => {
-              otherreasons.current = event.target.value;
+              setOtherReasons(event.target.value);
             }}
             style={{ width: "100%" }}
           ></textarea>
