@@ -196,6 +196,7 @@ const App = () => {
     "llava",
     "object",
     // "segment",
+    "genre",
     "landmark",
     "speech_to_text",
     "game_events",
