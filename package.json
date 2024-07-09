@@ -6,6 +6,7 @@
   "dependencies": {
     "@eluvio/elv-client-js": "^4.0.50",
     "@eluvio/elv-player-js": "^1.0.115",
+    "@mantine/core": "^7.11.1",
     "axios": "^1.2.5",
     "bootstrap": "^5.2.3",
     "crypto-browserify": "^3.12.0",
