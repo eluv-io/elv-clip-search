@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FrameClient } from "@eluvio/elv-client-js/src/FrameClient";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "@mantine/core/styles.css";
 import axios from "axios";
-import InputBox from "./components/InputBox";
 import SearchBox from "./components/SearchBox";
 import ClipRes from "./components/ClipRes";
 import AssetRes from "./components/AssetRes";
@@ -11,10 +11,10 @@ import FuzzySearchBox from "./components/FuzzySearch";
 import ChatBox from "./components/ChatBox";
 import { parseSearchRes, createSearchUrl, createVecSearchUrl } from "./utils";
 import { BsSearch } from "react-icons/bs";
-import { BsRobot } from "react-icons/bs";
 import elvLogo from "./elv.png";
 import DB from "./DB";
-import SearchIndexField from "./components/SearchIndexField.jsx";
+import SearchIndexBox from "./components/SearchIndexBox.jsx";
+import {MantineProvider} from "@mantine/core";
 
 const title = {
   display: "flex",
@@ -51,15 +51,6 @@ const inputInfo = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-};
-
-const button = {
-  width: "10%",
-  border: "None",
-  borderRadius: 5,
-  padding: 5,
-  color: "white",
-  backgroundColor: "#3b87eb",
 };
 
 const curlResContainer = {
@@ -184,6 +175,30 @@ const loadingUrlContainer = {
   borderRadius: 10,
 };
 
+const ALL_SEARCH_FIELDS = [
+  "celebrity",
+  // delete for MGM
+  "characters",
+  "display_title",
+  "logo",
+  "llava",
+  "object",
+  // "segment",
+  "landmark",
+  "speech_to_text",
+  "game_events",
+  "game_player",
+  "game_team",
+];
+
+const ASSETS_SEARCH_FIELDS = [
+  "celebrity",
+  "characters",
+  "display_title",
+  "logo",
+  "object",
+];
+
 const App = () => {
   const CLIPS_PER_PAGE = 3;
   const TOPK = 20;
@@ -202,6 +217,7 @@ const App = () => {
   const [displayingContents, setDisplayingContents] = useState([]);
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [showChatBox, setShowChatBox] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   // for help the topk showing method to rescue the BM25 matching results
   const topk = useRef([]);
@@ -513,71 +529,148 @@ const App = () => {
     }
   };
 
+  const handleAddIndex = async (txt) => {
+    setUrl("");
+    resetLoadStatus();
+    setObjId(txt);
+    setHaveSearchVersion(false);
+    setLoadingSearchVersion(true);
+    setSearch("");
+    setFuzzySearchField([]);
+    setFuzzySearchPhrase("");
+    setSearchTerms("");
+
+    currentPage.current = 1;
+    let libId = "";
+    const client = getClient();
+    try {
+      network.current = await client.NetworkInfo().name;
+    } catch (err) {
+      setHaveSearchVersion(false);
+      setLoadingSearchVersion(false);
+      setErr(true);
+      setErrMsg("Extract network err");
+    }
+    try {
+      libId = await client.ContentObjectLibraryId({
+        [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+      });
+    } catch (err) {
+      setHaveSearchVersion(false);
+      setLoadingSearchVersion(false);
+      setErr(true);
+      setErrMsg("Invalid search index Id");
+    }
+
+    if (libId !== "") {
+      try {
+        setLibId(libId);
+        const searchObjMeta = await client.ContentObjectMetadata({
+          libraryId: libId,
+          [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+          metadataSubtree: "indexer",
+        });
+        if (searchObjMeta["version"] === "2.0") {
+          setShowFuzzy(true);
+          searchVersion.current = "v2";
+          searchAssets.current = false;
+          try {
+            const indexerType =
+              searchObjMeta["config"]["indexer"]["arguments"]["document"][
+                "prefix"
+                ];
+            if (indexerType.includes("assets")) {
+              searchAssets.current = true;
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        } else {
+          setShowFuzzy(false);
+          setShowTopk(false);
+          searchVersion.current = "v1";
+        }
+        const selectedFields = searchAssets.current
+          ? ASSETS_SEARCH_FIELDS
+          : ALL_SEARCH_FIELDS;
+        console.log("selectedFields", selectedFields);
+        filteredSearchFields.current = Object.keys(
+          searchObjMeta.config.indexer.arguments.fields
+        )
+          .filter((n) => selectedFields.includes(n))
+          .map((n) => `f_${n}`);
+        setLoadingSearchVersion(false);
+        setHaveSearchVersion(true);
+      } catch (err) {
+        setHaveSearchVersion(false);
+        setLoadingSearchVersion(false);
+        setErr(true);
+        setErrMsg(err.message);
+      }
+      try {
+        let fetchedTenId = "";
+        fetchedTenId = await client.ContentObjectTenantId({
+          [txt.startsWith("iq") ? "objectId" : "versionHash"]: txt,
+        });
+        setTenId(fetchedTenId);
+      } catch (err) {
+        console.log("Error: TenantID is not available");
+      }
+    }
+  };
+
   return (
-    <div className="container" style={{ maxWidth: 1600 }}>
-      <div style={title}>
-        <h1 className="mt-3">AI Clip Generation and Vector Search</h1>
-      </div>
+    <MantineProvider>
+      <div className="container" style={{ maxWidth: 1600 }}>
+        <div style={title}>
+          <h1 className="mt-3">AI Clip Generation and Vector Search</h1>
+        </div>
 
-      <div className="row mt-3">
-        <SearchIndexField
-          setUrl={setUrl}
-          setObjId={setObjId}
-          setHaveSearchVersion={setHaveSearchVersion}
-          setLoadingSearchVersion={setLoadingSearchVersion}
-          setSearch={setSearch}
-          setFuzzySearchField={setFuzzySearchField}
-          setFuzzySearchPhrase={setFuzzySearchPhrase}
-          setSearchTerms={setSearchTerms}
-          resetLoadStatus={() => resetLoadStatus}
-          setErr={setErr}
-          setErrMsg={setErrMsg}
-          loadingSearchRes={loadingSearchRes}
-          loadingPlayoutUrl={loadingPlayoutUrl}
-          currentPage={currentPage}
-          setLibId={setLibId}
-          setShowFuzzy={setShowFuzzy}
-          setShowTopk={setShowTopk}
-          setTenId={setTenId}
-          getClient={getClient}
-          searchVersion={searchVersion}
-          searchAssets={searchAssets}
-          filteredSearchFields={filteredSearchFields}
-        />
-      </div>
+        {/*<div className="row mt-3">*/}
+          <SearchIndexBox
+            getClient={getClient}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            handleAddItem={async () => {
+              if (searchValue.trim() !== "") {
+                await handleAddIndex(searchValue.trim());
+              }
+            }}
+            disabled={loadingSearchRes || loadingPlayoutUrl}
+          />
+        {/*</div>*/}
 
-      {haveSearchVersion ? (
-        searchVersion.current === "v1" ? (
-          <div className="row mt-3">
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              Search
-            </div>
-            <SearchBox
-              text="Search term"
-              disabled={loadingSearchRes || loadingPlayoutUrl}
-              filteredSearchFields={filteredSearchFields.current}
-              searchVersion="1.0"
-              handleSubmitClick={(txt) => {
-                resetLoadStatus();
-                setSearch(txt.trim());
-                currentPage.current = 1;
-              }}
-              setSearchTerm={(terms) => {
-                setSearchTerms(terms);
-              }}
-              statusHandler={resetLoadStatus}
-            />
-          </div>
-        ) : (
-          <div>
+        {haveSearchVersion ? (
+          searchVersion.current === "v1" ? (
             <div className="row mt-3">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                Search
+              </div>
+              <SearchBox
+                text="Search term"
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+                filteredSearchFields={filteredSearchFields.current}
+                searchVersion="1.0"
+                handleSubmitClick={(txt) => {
+                  resetLoadStatus();
+                  setSearch(txt.trim());
+                  currentPage.current = 1;
+                }}
+                setSearchTerm={(terms) => {
+                  setSearchTerms(terms);
+                }}
+                statusHandler={resetLoadStatus}
+              />
+            </div>
+          ) : (
+            <div>
               <FuzzySearchBox
                 text="Search Phrase"
                 disabled={loadingSearchRes || loadingPlayoutUrl}
@@ -590,328 +683,328 @@ const App = () => {
                 }}
                 statusHandler={resetLoadStatus}
               />
-            </div>
 
-            <div
-              className="row mt-3"
-              id="searchBox"
-              style={{ display: "none" }}
-            >
-              <SearchBox
-                filteredSearchFields={filteredSearchFields.current}
-                disabled={loadingSearchRes || loadingPlayoutUrl}
-                searchVersion="2.0"
-                handleSubmitClick={(txt) => {
-                  resetLoadStatus();
-                  setSearch(txt.trim());
-                  currentPage.current = 1;
-                }}
-                setSearchTerm={(terms) => {
-                  setSearchTerms(terms);
-                }}
-                statusHandler={resetLoadStatus}
-              />
-            </div>
-          </div>
-        )
-      ) : loadingSearchVersion ? (
-        <div style={hint}> Checking Search index Version</div>
-      ) : null}
-
-      {/* show the text info for both input and the search output */}
-      {/* {!(haveSearchRes || loadingSearchRes) &&
-        haveSearchVersion &&
-        !haveSearchUrl && ( */}
-      {haveSearchVersion && (
-        <div style={inputCheckContainer}>
-          <div style={inputInfoContainer}>
-            <div style={inputInfo}>
-              <div style={{ flex: 1 }}>Search Index :</div>
-              <div style={{ flex: 3 }}>{objId}</div>
-            </div>
-            {showFuzzy && (
-              <div style={inputInfo}>
-                <div style={{ flex: 1 }}>Search Phrase :</div>
-                <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+              <div
+                className="row mt-3"
+                id="searchBox"
+                style={{ display: "none" }}
+              >
+                <SearchBox
+                  filteredSearchFields={filteredSearchFields.current}
+                  disabled={loadingSearchRes || loadingPlayoutUrl}
+                  searchVersion="2.0"
+                  handleSubmitClick={(txt) => {
+                    resetLoadStatus();
+                    setSearch(txt.trim());
+                    currentPage.current = 1;
+                  }}
+                  setSearchTerm={(terms) => {
+                    setSearchTerms(terms);
+                  }}
+                  statusHandler={resetLoadStatus}
+                />
               </div>
-            )}
+            </div>
+          )
+        ) : loadingSearchVersion ? (
+          <div style={hint}> Checking Search index Version</div>
+        ) : null}
+
+        {/* show the text info for both input and the search output */}
+        {/* {!(haveSearchRes || loadingSearchRes) &&
+          haveSearchVersion &&
+          !haveSearchUrl && ( */}
+        {haveSearchVersion && (
+          <div style={inputCheckContainer}>
+            <div style={inputInfoContainer}>
+              <div style={inputInfo}>
+                <div style={{ flex: 1 }}>Search Index :</div>
+                <div style={{ flex: 3 }}>{objId}</div>
+              </div>
+              {showFuzzy && (
+                <div style={inputInfo}>
+                  <div style={{ flex: 1 }}>Search Phrase :</div>
+                  <div style={{ flex: 3 }}>{fuzzySearchPhrase}</div>
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                width: "30%",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-around",
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  width: "40%",
+                  border: "None",
+                  borderRadius: 5,
+                  padding: 5,
+                  color: "white",
+                  backgroundColor: "#3b87eb",
+                }}
+                onClick={async (v) => {
+                  await getRes(
+                    "",
+                    fuzzySearchPhrase,
+                    filteredSearchFields.current,
+                    false
+                  );
+                }}
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+              >
+                <BsSearch />
+              </button>
+              <button
+                type="button"
+                style={{
+                  width: "40%",
+                  border: "None",
+                  borderRadius: 5,
+                  padding: 5,
+                  color: "white",
+                  backgroundColor: "#3b87eb",
+                }}
+                onClick={() => {
+                  document.getElementById("chatBox").style.display = "flex";
+                  setShowChatBox(true);
+                }}
+                disabled={loadingSearchRes || loadingPlayoutUrl}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <img src={elvLogo} width="25px"></img>
+                  <div style={{ marginLeft: 10, fontSize: 12 }}>Chatbot</div>
+                </div>
+              </button>
+            </div>
           </div>
+        )}
+
+        {haveSearchVersion && (
           <div
             style={{
-              width: "30%",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-around",
+              backgroundColor: "whitesmoke",
+              borderRadius: 10,
+              marginTop: 20,
+              marginBottom: 40,
+              height: 600,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              display: "none",
             }}
+            id="chatBox"
           >
-            <button
-              type="button"
-              style={{
-                width: "40%",
-                border: "None",
-                borderRadius: 5,
-                padding: 5,
-                color: "white",
-                backgroundColor: "#3b87eb",
+            <ChatBox
+              searchHandler={async (v) => {
+                await getRes("", v, filteredSearchFields.current, false);
               }}
-              onClick={async (v) => {
-                await getRes(
-                  "",
-                  fuzzySearchPhrase,
-                  filteredSearchFields.current,
-                  false
-                );
+              statusHandler={() => {
+                resetLoadStatus();
+                currentPage.current = 1;
               }}
-              disabled={loadingSearchRes || loadingPlayoutUrl}
-            >
-              <BsSearch />
-            </button>
-            <button
-              type="button"
-              style={{
-                width: "40%",
-                border: "None",
-                borderRadius: 5,
-                padding: 5,
-                color: "white",
-                backgroundColor: "#3b87eb",
+              client={getClient()}
+              closeHandler={() => {
+                document.getElementById("chatBox").style.display = "none";
+                setShowChatBox(false);
               }}
-              onClick={() => {
-                document.getElementById("chatBox").style.display = "flex";
-                setShowChatBox(true);
-              }}
-              disabled={loadingSearchRes || loadingPlayoutUrl}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <img src={elvLogo} width="25px"></img>
-                <div style={{ marginLeft: 10, fontSize: 12 }}>Chatbot</div>
-              </div>
-            </button>
+              chatBotObjectId={objId}
+            />
           </div>
-        </div>
-      )}
+        )}
 
-      {haveSearchVersion && (
-        <div
-          style={{
-            backgroundColor: "whitesmoke",
-            borderRadius: 10,
-            marginTop: 20,
-            marginBottom: 40,
-            height: 600,
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            display: "none",
-          }}
-          id="chatBox"
-        >
-          <ChatBox
-            searchHandler={async (v) => {
-              await getRes("", v, filteredSearchFields.current, false);
-            }}
-            statusHandler={() => {
-              resetLoadStatus();
-              currentPage.current = 1;
-            }}
-            client={getClient()}
-            closeHandler={() => {
-              document.getElementById("chatBox").style.display = "none";
-              setShowChatBox(false);
-            }}
-            chatBotObjectId={objId}
-          />
-        </div>
-      )}
-
-      {haveSearchUrl && (
-        <div style={curlResContainer}>
-          <div style={curlRes}>
-            <div style={{ flex: 1 }}>
-              Search url {err && !haveSearchRes && "(FAILED)"}
+        {haveSearchUrl && (
+          <div style={curlResContainer}>
+            <div style={curlRes}>
+              <div style={{ flex: 1 }}>
+                Search url {err && !haveSearchRes && "(FAILED)"}
+              </div>
+              <textarea style={curlResTextArea} value={url} readOnly></textarea>
             </div>
-            <textarea style={curlResTextArea} value={url} readOnly></textarea>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* loading status or video player */}
-      {loadingSearchRes ? (
-        haveSearchUrl ? (
-          <div style={hint}>Query sent, waiting for search engine response</div>
-        ) : (
-          <div style={hint}>Creating search url</div>
-        )
-      ) : haveSearchRes ? (
-        totalContent > 0 ? (
-          <div style={clipResContainer}>
-            {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
-            {searchVersion.current === "v2" ? (
-              <div style={clipResShowMethodContainer}>
-                <button
-                  style={{
-                    ...clipResShowMethodButton,
-                    ...(!showTopk && { border: "none" }),
-                  }}
-                  onClick={() => {
-                    if (!showTopk) {
-                      setShowTopk(true);
-                      jumpToPageInTopk(0);
-                    }
-                  }}
-                >
-                  Sort by relevance
-                </button>
-                <button
-                  style={{
-                    ...clipResShowMethodButton,
-                    ...(showTopk && { border: "none" }),
-                  }}
-                  onClick={() => {
-                    if (showTopk) {
-                      setShowTopk(false);
-                      jumpToContent(currentContent);
-                    }
-                  }}
-                >
-                  Sort by content id
-                </button>
-              </div>
-            ) : (
-              <div style={clipResInfoContainer}>
-                <div style={clipResTotal}>total results {totalContent}</div>
-                <select
-                  style={clipResTitleSelector}
-                  value={currentContent}
-                  onChange={(event) => {
-                    setCurrentContent(event.target.value);
-                    jumpToContent(event.target.value);
-                  }}
-                >
-                  {Object.keys(contents.current).map((k) => {
-                    return (
-                      <option value={k} key={k}>
-                        {contentsIdNameMap.current[k]}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
-
-            {/* need to display the movie selector is search version is V2 and grouping by movir title */}
-            {!showTopk && searchVersion.current === "v2" && (
-              <div
-                style={{
-                  ...clipResInfoContainer,
-                  justifyContent: "center",
-                }}
-              >
-                <select
-                  style={{
-                    ...clipResTitleSelector,
-                    width: "90%",
-                  }}
-                  value={currentContent}
-                  onChange={(event) => {
-                    setCurrentContent(event.target.value);
-                    jumpToContent(event.target.value);
-                  }}
-                >
-                  {Object.keys(contents.current).map((k) => {
-                    return (
-                      <option value={k} key={k}>
-                        {contentsIdNameMap.current[k]}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
-
-            <div style={clipResShowContainer}>
-              {/* if have multiplr pages, we need to display the navigation bar */}
-              {!showTopk && numPages.current > 1 && (
-                <PaginationBar
-                  pageCount={numPages.current}
-                  onPageChangeHandler={(data) => {
-                    const pageIndex = data.selected + 1;
-                    jumpToPageInAll(pageIndex);
-                  }}
-                />
-              )}
-              {showTopk && topkPages.current > 1 && (
-                <PaginationBar
-                  pageCount={topkPages.current}
-                  onPageChangeHandler={async (data) => {
-                    const pageIndex = data.selected;
-                    jumpToPageInTopk(pageIndex);
-                  }}
-                />
-              )}
-              {havePlayoutUrl ? (
-                displayingContents.map((clip) => {
-                  return searchAssets.current ? (
-                    <AssetRes
-                      clipInfo={clip}
-                      key={clip.id + clip.rank}
-                      client={getClient()}
-                      network={network.current}
-                      walletAddr={walletAddr.current}
-                      searchId={searchId.current}
-                      searchAssets={searchAssets.current}
-                      contents={contents.current}
-                      searchVersion={searchVersion.current}
-                      engagement={engagement}
-                      dbClient={dbClient.current}
-                    ></AssetRes>
-                  ) : (
-                    <ClipRes
-                      clipInfo={clip}
-                      key={clip.id + clip.start_time}
-                      client={getClient()}
-                      network={network.current}
-                      walletAddr={walletAddr.current}
-                      searchId={searchId.current}
-                      searchAssets={searchAssets.current}
-                      contents={contents.current}
-                      searchVersion={searchVersion.current}
-                      engagement={engagement}
-                      dbClient={dbClient.current}
-                    ></ClipRes>
-                  );
-                })
-              ) : loadingPlayoutUrl || loadingTopkPage ? (
-                <div style={loadingUrlContainer}>Loading playout URL</div>
-              ) : err ? (
-                <div style={hint}>
-                  <p>{errMsg}</p>
+        {/* loading status or video player */}
+        {loadingSearchRes ? (
+          haveSearchUrl ? (
+            <div style={hint}>Query sent, waiting for search engine response</div>
+          ) : (
+            <div style={hint}>Creating search url</div>
+          )
+        ) : haveSearchRes ? (
+          totalContent > 0 ? (
+            <div style={clipResContainer}>
+              {/* if search version is V2,  we have two display options: either group by movie title or show top k and keep the original order */}
+              {searchVersion.current === "v2" ? (
+                <div style={clipResShowMethodContainer}>
+                  <button
+                    style={{
+                      ...clipResShowMethodButton,
+                      ...(!showTopk && { border: "none" }),
+                    }}
+                    onClick={() => {
+                      if (!showTopk) {
+                        setShowTopk(true);
+                        jumpToPageInTopk(0);
+                      }
+                    }}
+                  >
+                    Sort by relevance
+                  </button>
+                  <button
+                    style={{
+                      ...clipResShowMethodButton,
+                      ...(showTopk && { border: "none" }),
+                    }}
+                    onClick={() => {
+                      if (showTopk) {
+                        setShowTopk(false);
+                        jumpToContent(currentContent);
+                      }
+                    }}
+                  >
+                    Sort by content id
+                  </button>
                 </div>
-              ) : null}
+              ) : (
+                <div style={clipResInfoContainer}>
+                  <div style={clipResTotal}>total results {totalContent}</div>
+                  <select
+                    style={clipResTitleSelector}
+                    value={currentContent}
+                    onChange={(event) => {
+                      setCurrentContent(event.target.value);
+                      jumpToContent(event.target.value);
+                    }}
+                  >
+                    {Object.keys(contents.current).map((k) => {
+                      return (
+                        <option value={k} key={k}>
+                          {contentsIdNameMap.current[k]}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+
+              {/* need to display the movie selector is search version is V2 and grouping by movir title */}
+              {!showTopk && searchVersion.current === "v2" && (
+                <div
+                  style={{
+                    ...clipResInfoContainer,
+                    justifyContent: "center",
+                  }}
+                >
+                  <select
+                    style={{
+                      ...clipResTitleSelector,
+                      width: "90%",
+                    }}
+                    value={currentContent}
+                    onChange={(event) => {
+                      setCurrentContent(event.target.value);
+                      jumpToContent(event.target.value);
+                    }}
+                  >
+                    {Object.keys(contents.current).map((k) => {
+                      return (
+                        <option value={k} key={k}>
+                          {contentsIdNameMap.current[k]}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+
+              <div style={clipResShowContainer}>
+                {/* if have multiplr pages, we need to display the navigation bar */}
+                {!showTopk && numPages.current > 1 && (
+                  <PaginationBar
+                    pageCount={numPages.current}
+                    onPageChangeHandler={(data) => {
+                      const pageIndex = data.selected + 1;
+                      jumpToPageInAll(pageIndex);
+                    }}
+                  />
+                )}
+                {showTopk && topkPages.current > 1 && (
+                  <PaginationBar
+                    pageCount={topkPages.current}
+                    onPageChangeHandler={async (data) => {
+                      const pageIndex = data.selected;
+                      jumpToPageInTopk(pageIndex);
+                    }}
+                  />
+                )}
+                {havePlayoutUrl ? (
+                  displayingContents.map((clip) => {
+                    return searchAssets.current ? (
+                      <AssetRes
+                        clipInfo={clip}
+                        key={clip.id + clip.rank}
+                        client={getClient()}
+                        network={network.current}
+                        walletAddr={walletAddr.current}
+                        searchId={searchId.current}
+                        searchAssets={searchAssets.current}
+                        contents={contents.current}
+                        searchVersion={searchVersion.current}
+                        engagement={engagement}
+                        dbClient={dbClient.current}
+                      ></AssetRes>
+                    ) : (
+                      <ClipRes
+                        clipInfo={clip}
+                        key={clip.id + clip.start_time}
+                        client={getClient()}
+                        network={network.current}
+                        walletAddr={walletAddr.current}
+                        searchId={searchId.current}
+                        searchAssets={searchAssets.current}
+                        contents={contents.current}
+                        searchVersion={searchVersion.current}
+                        engagement={engagement}
+                        dbClient={dbClient.current}
+                      ></ClipRes>
+                    );
+                  })
+                ) : loadingPlayoutUrl || loadingTopkPage ? (
+                  <div style={loadingUrlContainer}>Loading playout URL</div>
+                ) : err ? (
+                  <div style={hint}>
+                    <p>{errMsg}</p>
+                  </div>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : (
+          ) : (
+            <div style={hint}>
+              <p>No clip returned! </p>
+            </div>
+          )
+        ) : err ? (
           <div style={hint}>
-            <p>No clip returned! </p>
+            <p>{errMsg}</p>
           </div>
-        )
-      ) : err ? (
-        <div style={hint}>
-          <p>{errMsg}</p>
-        </div>
-      ) : processingDB ? (
-        <div style={hint}>
-          <p>Clips are coming ... </p>
-        </div>
-      ) : null}
-    </div>
+        ) : processingDB ? (
+          <div style={hint}>
+            <p>Clips are coming ... </p>
+          </div>
+        ) : null}
+      </div>
+    </MantineProvider>
   );
 };
 

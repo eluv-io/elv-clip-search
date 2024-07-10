@@ -1,42 +1,5 @@
 import React, { useState } from "react";
-
-const body = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  width: "100%",
-  marginTop: 5,
-};
-
-const left = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "flex-start",
-  justifyContent: "center",
-  width: "10%",
-  height: "100%",
-};
-
-const middle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "space-between",
-  width: "80%",
-  height: "100%",
-};
-const box = {
-  width: "100%",
-  height: "90%",
-  paddingLeft: 20,
-  borderRadius: 5,
-  paddingTop: 5,
-  paddingBottom: 5,
-  borderWidth: 1,
-  borderColor: "grey",
-  borderStyle: "ridge",
-};
+import {CloseButton, Flex, Text, TextInput} from "@mantine/core";
 
 const selecter = {
   display: "flex",
@@ -59,20 +22,10 @@ const checker = {
   justifyContent: "flex-start",
 };
 
-const right = {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "flex-start",
-  justifyContent: "center",
-  width: "5%",
-  height: "100%",
-};
-
 const button = {
-  width: "100%",
   border: "None",
   borderRadius: 5,
-  padding: 5,
+  padding: "5px 25px",
   color: "white",
 };
 
@@ -83,11 +36,10 @@ const FuzzySearchBox = (props) => {
     new Array(props.filteredSearchFields.length).fill(true)
   );
   const textBox = (
-    <input
+    <TextInput
       id="textInputer"
-      required="required"
-      type="text"
-      style={box}
+      required={true}
+      w="100%"
       value={text}
       onChange={(event) => {
         setText(event.target.value);
@@ -109,6 +61,17 @@ const FuzzySearchBox = (props) => {
           props.statusHandler();
         }
       }}
+      rightSection={
+        text !== "" ? (
+          <CloseButton
+            size="sm"
+            onMouseDown={event => event.preventDefault()}
+            onClick={() => setText("")}
+            aria-label="Clear Value"
+          />
+        ) : null
+      }
+      rightSectionPointerEvents={text === "" ? "none" : "all"}
     />
   );
   const fieldBox = (
@@ -164,16 +127,27 @@ const FuzzySearchBox = (props) => {
     </button>
   );
   return (
-    <div style={body}>
-      <div style={left}>{props.text}</div>
-      <div style={middle}>
+    <Flex
+      w="100%"
+      align="center"
+      gap={16}
+      mt={16}
+      p="0 12"
+    >
+      <Text style={{textWrap: "nowrap", display: "flex", flex: "0 0 170px"}}>Search Phrase</Text>
+      <Flex
+        direction="column"
+        align="center"
+        w="100%"
+        justify="space-between"
+      >
         {textBox}
         {props.display ? ` Field ` : ""}
         {/* {fieldBox} */}
-      </div>
+      </Flex>
 
-      <div style={right}>{control}</div>
-    </div>
+      {control}
+    </Flex>
   );
 };
 
