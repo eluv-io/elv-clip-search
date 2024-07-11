@@ -12,14 +12,14 @@ const button = {
 const SelectOption = ({value, description}) => {
   return (
     <Group>
-      <div>
+      <Flex direction="column">
         <Text fz="sm" fw={500}>
           {value}
         </Text>
         <Text fz="xs" opacity={0.6}>
           {description}
         </Text>
-      </div>
+      </Flex>
     </Group>
   );
 }
@@ -87,7 +87,7 @@ const SearchIndexBox = ({
           <Combobox.Target>
             <TextInput
               value={searchValue}
-              placeholder="Select or enter an index"
+              placeholder={indexes.length > 0 ? "Select or enter an object ID" : "Enter an object ID"}
               onChange={(event) => {
                 setSearchValue(event.currentTarget.value);
                 combobox.toggleDropdown();
