@@ -9,15 +9,15 @@ const button = {
   backgroundColor: "#3b87eb",
 };
 
-const SelectOption = ({value, description}) => {
+const SelectOption = ({name, id}) => {
   return (
     <Group>
       <Flex direction="column">
         <Text fz="sm" fw={500}>
-          {value}
+          {name || id}
         </Text>
         <Text fz="xs" opacity={0.6}>
-          {description}
+          {name ? id : ""}
         </Text>
       </Flex>
     </Group>
@@ -61,7 +61,7 @@ const SearchIndexBox = ({
   }, []);
 
   const options = indexes.map((item) => (
-    <Combobox.Option value={item.value} key={item.value}>
+    <Combobox.Option value={item.id} key={item.id}>
       <SelectOption {...item} />
     </Combobox.Option>
   ));
