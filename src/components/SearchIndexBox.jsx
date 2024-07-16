@@ -87,7 +87,7 @@ const SearchIndexBox = ({
           <Combobox.Target>
             <TextInput
               value={searchValue}
-              placeholder={indexes.length > 0 ? "Select or enter an object ID" : "Enter an object ID"}
+              placeholder={indexes.length > 0 ? "Select or enter a search index object ID" : "Enter a search index object ID"}
               onChange={(event) => {
                 setSearchValue(event.currentTarget.value);
                 combobox.toggleDropdown();
