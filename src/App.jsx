@@ -14,7 +14,7 @@ import { BsSearch } from "react-icons/bs";
 import elvLogo from "./elv.png";
 import DB from "./DB";
 import SearchIndexBox from "./components/SearchIndexBox.jsx";
-import {MantineProvider} from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 
 const title = {
   display: "flex",
@@ -184,6 +184,7 @@ const ALL_SEARCH_FIELDS = [
   "llava",
   "object",
   // "segment",
+  "genre",
   "landmark",
   "speech_to_text",
   "game_events",
@@ -578,7 +579,7 @@ const App = () => {
             const indexerType =
               searchObjMeta["config"]["indexer"]["arguments"]["document"][
                 "prefix"
-                ];
+              ];
             if (indexerType.includes("assets")) {
               searchAssets.current = true;
             }
@@ -627,17 +628,17 @@ const App = () => {
         </div>
 
         {/*<div className="row mt-3">*/}
-          <SearchIndexBox
-            getClient={getClient}
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
-            handleAddItem={async () => {
-              if (searchValue.trim() !== "") {
-                await handleAddIndex(searchValue.trim());
-              }
-            }}
-            disabled={loadingSearchRes || loadingPlayoutUrl}
-          />
+        <SearchIndexBox
+          getClient={getClient}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          handleAddItem={async () => {
+            if (searchValue.trim() !== "") {
+              await handleAddIndex(searchValue.trim());
+            }
+          }}
+          disabled={loadingSearchRes || loadingPlayoutUrl}
+        />
         {/*</div>*/}
 
         {haveSearchVersion ? (
@@ -837,7 +838,9 @@ const App = () => {
         {/* loading status or video player */}
         {loadingSearchRes ? (
           haveSearchUrl ? (
-            <div style={hint}>Query sent, waiting for search engine response</div>
+            <div style={hint}>
+              Query sent, waiting for search engine response
+            </div>
           ) : (
             <div style={hint}>Creating search url</div>
           )
