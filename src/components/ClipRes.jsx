@@ -1,7 +1,7 @@
 import QAPad from "./QAPad";
 import InfoPad from "./InfoPad";
 import React, { useEffect, useRef, useState } from "react";
-import EluvioPlayer, { EluvioPlayerParameters } from "@eluvio/elv-player-js";
+import { InitializeEluvioPlayer, EluvioPlayerParameters } from "@eluvio/elv-player-js/lib/index";
 import { getDownloadUrlWithMaxResolution, getEmbedUrl } from "../utils";
 const container = {
   width: "97%",
@@ -140,7 +140,7 @@ const ClipRes = (props) => {
       getDownloadUrlWithMaxResolution({
         client: props.client,
         objectId: props.clipInfo.id,
-        libraryId: props.clipInfo.qlib_id, 
+        libraryId: props.clipInfo.qlib_id,
         clip_start: props.clipInfo.start_time/1000,
         clip_end: props.clipInfo.end_time/1000
       })
@@ -161,7 +161,7 @@ const ClipRes = (props) => {
     if (props.searchVersion === "v2" && props.searchAssets === false) {
       props.client.ContentObjectMetadata({
         objectId: props.clipInfo.id,
-        libraryId: props.clipInfo.qlib_id, 
+        libraryId: props.clipInfo.qlib_id,
         metadataSubtree: "offerings/default/media_struct/streams/video/rate",
       }).then((fps) => {
         const denominator = parseInt(fps.split("/")[0])
@@ -182,7 +182,7 @@ const ClipRes = (props) => {
         player.Destroy();
       }
     };
-  }, []);
+  }, [player]);
 
   useEffect(() => {
     if (props.searchVersion === "v1") {
@@ -248,7 +248,8 @@ const ClipRes = (props) => {
     if (!element || player) {
       return;
     }
-    const _player = new EluvioPlayer(element, {
+
+    InitializeEluvioPlayer(element, {
       clientOptions: {
         network:
           EluvioPlayerParameters.networks[
@@ -283,9 +284,8 @@ const ClipRes = (props) => {
           });
         },
       },
-    });
-    // console.log("EluvioPlayer", _player);
-    setPlayer(_player);
+    })
+      .then(newPlayer => setPlayer(newPlayer));
   };
 
   return (
