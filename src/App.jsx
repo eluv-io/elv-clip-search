@@ -176,6 +176,7 @@ const loadingUrlContainer = {
 };
 
 const ALL_SEARCH_FIELDS = [
+  "athlete_event",
   "celebrity",
   // delete for MGM
   "characters",
